@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estoque — Data Curta</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#C67C2A;--pc:#F5E6D0;--ps:#A0621F;
+  --sec:#8B5020;
+  --sur:#F5EFE6;--sur1:#EDE4D7;--sur2:#E5D9C8;--surv:#EDE4D7;
+  --bg:#DDD0BF;
+  --out:#B8A898;--outv:#CEC0AE;
+  --tx:#2C2016;--txs:#6B5744;
+  --err:#B3261E;--errc:#F5DDD9;
+  --ws:#F5EDD5;--wb:#C8941A;--wt:#6B4A00;
+  --os:#D9EDDD;--ob:#2E8B50;--ot:#1A5C30;
+  --cs:#F5DDD9;--cb:#C0392B;--ct:#8B1A14;
+  --r8:8px;--r12:12px;--r16:16px;--r28:28px;
+  --sh1:0 1px 3px rgba(80,50,20,.12),0 1px 2px rgba(80,50,20,.08);
+  --sh2:0 4px 12px rgba(80,50,20,.14),0 2px 4px rgba(80,50,20,.08);
+}
+body{background:var(--bg);color:var(--tx);font-family:'Google Sans',sans-serif;min-height:100vh}
+
+/* TOP BAR */
+.bar{
+  background:var(--sur);border-bottom:1px solid var(--outv);
+  padding:0 24px;height:64px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:200;box-shadow:var(--sh1);
+}
+.bar-logo{width:36px;height:36px;border-radius:10px;background:var(--p);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.bar-title{font-family:'Google Sans Display',sans-serif;font-size:18px;font-weight:500}
+.bar-sub{font-size:12px;color:var(--txs);margin-top:1px}
+.bar-r{margin-left:auto}
+.chip{display:none;align-items:center;gap:6px;background:var(--pc);color:var(--sec);border-radius:20px;padding:5px 14px 5px 10px;font-size:13px;font-weight:500}
+.chip svg{width:16px;height:16px;flex-shrink:0}
+
+main{max-width:1160px;margin:0 auto;padding:24px 16px 100px}
+
+/* CARD */
+.card{background:var(--sur);border-radius:var(--r28);padding:24px 28px;margin-bottom:16px;box-shadow:var(--sh1);border:1px solid var(--outv)}
+.ch{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.ci{width:40px;height:40px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.ci.bl{background:var(--pc)} .ci.am{background:#FFF8E1} .ci.gn{background:var(--os)}
+.ct{font-family:'Google Sans Display',sans-serif;font-size:17px;font-weight:500}
+.cs{font-size:12px;color:var(--txs);margin-top:2px}
+
+/* FIELD */
+.f{margin-bottom:14px}
+.f label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--txs);display:block;margin-bottom:5px}
+.f input,.f select,.f textarea{
+  width:100%;background:var(--surv);border:1.5px solid var(--out);border-radius:var(--r12);
+  color:var(--tx);font-family:'Google Sans',sans-serif;font-size:14px;padding:11px 14px;outline:none;
+  transition:border-color .15s,background .15s;
+}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--p);background:var(--sur);box-shadow:0 0 0 3px rgba(198,124,42,.15)}
+.f select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B5744' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:none;border-radius:20px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+.btn:active{transform:scale(.98);opacity:1}
+.btn-f{background:var(--p);color:#fff;box-shadow:var(--sh1)}
+.btn-t{background:var(--pc);color:var(--sec)}
+.btn-o{background:transparent;border:1.5px solid var(--out);color:var(--txs)}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none!important}
+
+/* HIGHLIGHTED DOWNLOAD BTN */
+.btn-g{
+  background:#1E8E3E;color:#fff;
+  padding:14px 28px;font-size:16px;font-weight:700;
+  border-radius:28px;text-transform:uppercase;letter-spacing:.05em;
+  box-shadow:0 6px 16px rgba(30,142,62,.3);
+  animation:pulseBtn 2s infinite;
+}
+@keyframes pulseBtn{
+  0%{box-shadow:0 0 0 0 rgba(30,142,62,.5)}
+  70%{box-shadow:0 0 0 12px rgba(30,142,62,0)}
+  100%{box-shadow:0 0 0 0 rgba(30,142,62,0)}
+}
+
+/* DROP */
+.dz{border:2px dashed var(--out);border-radius:var(--r28);padding:40px;text-align:center;cursor:pointer;position:relative;background:var(--surv);transition:border-color .2s,background .2s}
+.dz:hover,.dz.on{border-color:var(--p);background:var(--pc)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.di{font-size:40px;margin-bottom:10px;line-height:1}
+.dl{font-size:14px;color:var(--txs)}
+.dl strong{color:var(--p)}
+.fbadge{display:none;align-items:center;gap:8px;margin:14px auto 0;background:var(--os);border:1px solid var(--ob);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:500;color:var(--ot);width:fit-content}
+
+/* PROGRESS */
+.pw{height:4px;background:var(--outv);border-radius:4px;margin-top:14px;overflow:hidden}
+.pb{height:100%;width:0%;background:var(--p);border-radius:4px;transition:width .3s}
+.pl{font-size:12px;color:var(--txs);margin-top:6px}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.sc{background:var(--sur1);border-radius:var(--r16);padding:16px 18px;border:1px solid var(--outv)}
+.sc .sv{font-family:'Google Sans Display',sans-serif;font-size:32px;font-weight:500;line-height:1;margin-bottom:4px}
+.sc .sl{font-size:11px;color:var(--txs);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.sc.w .sv{color:var(--ct)} .sc.b .sv{color:var(--p)}
+
+/* BANNER */
+.bn{border-radius:var(--r16);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;font-size:13px;line-height:1.5}
+.bn svg{width:18px;height:18px;flex-shrink:0;margin-top:1px}
+.bn-w{background:var(--ws);border:1px solid var(--wb);color:var(--wt)}
+.bn-i{background:var(--pc);border:1px solid rgba(26,115,232,.25);color:var(--sec)}
+
+/* BULK PANEL */
+.bulk{
+  background:linear-gradient(135deg,#EEE0CC,#F0E6D8);
+  border:1.5px solid rgba(198,124,42,.28);
+  border-radius:var(--r28);padding:22px 26px;margin-bottom:20px;
+}
+.bulk-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.bulk-badge{background:var(--p);color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:500}
+.bulk-title{font-size:15px;font-weight:500;color:var(--sec)}
+.bulk-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+@media(max-width:640px){.bulk-grid{grid-template-columns:1fr}}
+.cw{display:none;margin-top:6px}
+
+/* FILL PILL */
+.fpill{display:none;align-items:center;gap:6px;background:var(--sur2);border:1px solid var(--outv);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--txs);margin-bottom:14px;width:fit-content}
+.fpill svg{width:14px;height:14px}
+.fdn{color:var(--ot);font-weight:700}
+
+/* TABLE */
+.tw{overflow-x:auto;overflow-y:auto;max-height:65vh;border-radius:var(--r16);border:1px solid var(--outv)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{z-index:10}
+th{position:sticky;top:0;background:var(--sur1);z-index:10;padding:11px 14px;text-align:left;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--txs);border-bottom:1.5px solid var(--outv);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--outv);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.wr td{background:#F5EDD0}
+tr:not(.wr):hover td{background:var(--surv)}
+tr.wr:hover td{background:#EDD8A8}
+.pc{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500}
+.pcr{background:var(--cs);color:var(--ct)} .pca{background:var(--ws);color:var(--wt)} .pco{background:var(--os);color:var(--ot)}
+.skun{font-weight:500} .codn{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--txs)} .ukn{font-size:12px;color:var(--txs);font-style:italic}
+td .rf{background:var(--surv);border:1.5px solid var(--out);border-radius:var(--r8);color:var(--tx);font-family:'Google Sans',sans-serif;font-size:12px;padding:7px 10px;width:100%;outline:none;transition:border-color .15s}
+td .rf:focus{border-color:var(--p)}
+td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B5744' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px}
+.rcd{display:none;margin-top:5px}
+
+/* DL BAR */
+#dlbar{position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:1px solid var(--outv);padding:18px 24px;display:none;align-items:center;justify-content:center;gap:16px;box-shadow:0 -8px 24px rgba(0,0,0,.1);z-index:300}
+#dlbar .di2{font-size:14px;color:var(--txs)} #dlbar .di2 strong{color:var(--p)}
+
+/* MODAL */
+#mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal{background:var(--sur);border-radius:28px;padding:36px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.mico{width:72px;height:72px;border-radius:24px;background:var(--pc);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:32px}
+.modal h2{font-family:'Google Sans Display',sans-serif;font-size:22px;font-weight:500;margin-bottom:8px}
+.modal p{font-size:14px;color:var(--txs);line-height:1.6;margin-bottom:22px}
+.modal .f input{font-size:15px;text-align:center;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
+.modal .btn{width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:14px;margin-top:6px}
+
+/* MANUAL ENTRY */
+.tab-bar{display:flex;gap:4px;background:var(--surv);border:1.5px solid var(--outv);border-radius:20px;padding:4px;margin-bottom:20px;width:fit-content}
+.tab-btn{padding:8px 20px;border:none;border-radius:16px;font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--txs);transition:all .15s}
+.tab-btn.active{background:var(--p);color:#fff;box-shadow:var(--sh1)}
+.me-search{position:relative;margin-bottom:16px}
+.me-search input{width:100%;background:var(--surv);border:1.5px solid var(--out);border-radius:var(--r12);color:var(--tx);font-family:'Google Sans',sans-serif;font-size:14px;padding:11px 14px 11px 42px;outline:none;transition:border-color .15s}
+.me-search input:focus{border-color:var(--p);background:var(--sur);box-shadow:0 0 0 3px rgba(198,124,42,.15)}
+.me-search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--txs);pointer-events:none}
+.me-counter{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--txs)}
+.me-counter strong{color:var(--p);font-size:15px}
+
+/* SKU LIST — vertical */
+.me-list{display:flex;flex-direction:column;gap:0;max-height:65vh;overflow-y:auto;border:1px solid var(--outv);border-radius:var(--r16)}
+.me-sku-row{border-bottom:1px solid var(--outv);background:var(--sur)}
+.me-sku-row:last-child{border-bottom:none}
+.me-sku-row.has-data{background:var(--sur1)}
+.me-sku-row.has-warn{background:#F5EDD0}
+
+/* SKU header line */
+.me-sku-hd{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.me-sku-info{flex:1;min-width:0}
+.me-sku-cod{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--txs);line-height:1}
+.me-sku-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* + button */
+.me-add-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--out);background:var(--sur);color:var(--txs);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-weight:600;padding:0}
+.me-add-btn:hover{border-color:var(--p);color:var(--p);background:var(--pc)}
+
+/* Date rows inside a SKU */
+.me-dates{display:flex;flex-direction:column;gap:0;padding:0 14px 0 38px}
+.me-date-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed var(--outv)}
+.me-date-row:first-child{border-top:1px dashed var(--outv)}
+.me-inp{background:var(--sur);border:1.5px solid var(--out);border-radius:var(--r8);color:var(--tx);font-family:'Google Sans',sans-serif;font-size:12px;padding:6px 9px;outline:none;transition:border-color .15s}
+.me-inp:focus{border-color:var(--p)}
+.me-inp.qtd{width:80px}
+.me-inp.dat{width:130px}
+.me-inp.ok{border-color:var(--ob)}
+.me-inp.wn{border-color:var(--wb)}
+.me-prazo-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.me-del-btn{width:18px;height:18px;border-radius:50%;border:none;background:transparent;color:var(--out);font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;transition:color .15s;margin-left:auto}
+.me-del-btn:hover{color:var(--err)}
+.hidden{display:none!important}
+
+/* Estilos para Destino e Motivo na Aba Manual */
+.me-extra-fields { display: flex; gap: 8px; flex: 1; margin-left: 10px; align-items: center; }
+.me-extra-fields.hidden { display: none !important; }
+.me-inp.dest { width: 140px; height: 32px; font-size: 11px; border-radius: 4px; border: 1px solid var(--out); background: var(--sur); }
+.me-inp.mot { flex: 1; min-width: 140px; height: 32px; font-size: 11px; border-radius: 4px; border: 1px solid var(--out); background: var(--sur); }
+.me-del-btn { background: none; border: none; color: #d93025; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; margin-left: 5px; }
+.me-del-btn:hover { background: #fce8e6; }
+</style>
+</head>
+<body>
+
+<div id="mo">
+  <div class="modal">
+    <div class="mico">📍</div>
+    <h2>Identificação do CD</h2>
+    <p>Informe o nome do <strong>Centro de Distribuição</strong> antes de continuar.<br><span style="color:var(--txs);font-size:13px">Ex: CD MATRIZ · CD BAURU · CD BARUERI</span></p>
+    <div class="f"><input type="text" id="li" placeholder="NOME DO CD" maxlength="60" autocomplete="off"></div>
+    <button class="btn btn-f" onclick="okLocal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Confirmar e continuar
+    </button>
+  </div>
+</div>
+
+<header class="bar">
+  <div class="bar-logo">RE</div>
+  <div><div class="bar-title">Relatório de Estoque</div><div class="bar-sub">Gestão de data curta — padrão CDs</div></div>
+  <div class="bar-r">
+    <div class="chip" id="chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      <span id="chip-txt"></span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-import" onclick="switchTab('import')">📂 Importar Planilha</button>
+    <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✏️ Lançamento Manual</button>
+  </div>
+
+  <!-- ===== IMPORT TAB ===== -->
+  <div id="tab-import-content">
+  <div class="card" id="s1">
+    <div class="ch"><div class="ci bl">📂</div><div><div class="ct">Importar planilha de estoque</div><div class="cs">Arquivo .xlsx com colunas COD · QTD_TOTAL · VALIDADE · PRAZO</div></div></div>
+    <div class="bn bn-i">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+      <span>Os nomes dos SKUs são vinculados automaticamente — basta importar a planilha com COD.</span>
+    </div>
+    <div class="dz" id="dz">
+      <input type="file" id="fi" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+      <div class="di">🗂️</div>
+      <div class="dl">Arraste o arquivo <strong>.xlsx</strong> ou <strong>clique para selecionar</strong></div>
+      <div class="fbadge" id="fb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="fn"></span></div>
+    </div>
+    <div id="pp" class="hidden" style="margin-top:14px"><div class="pw"><div class="pb" id="pb"></div></div><div class="pl" id="pl">Processando...</div></div>
+  </div><!-- end s1 card -->
+
+  <div id="s2" class="hidden">
+    <div class="sg" id="sg"></div>
+
+    <div class="bulk hidden" id="bulk">
+      <div class="bulk-hd">
+        <span class="bulk-badge">✦ Preenchimento em lote</span>
+        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade ≤ 22 dias de uma só vez</span>
+      </div>
+      <div class="bulk-grid">
+        <div class="f" style="margin:0">
+          <label>Direcionamento — todos</label>
+          <select id="bd" onchange="onBD()">
+            <option value="">— Selecione o destino —</option>
+            <option value="SAIRÁ EM ROTA">🚛 Sairá em Rota</option>
+            <option value="OUTRO">✏️ Outro destino...</option>
+          </select>
+          <div class="cw" id="bcw"><input type="text" id="bcd" placeholder="Digite o destino personalizado" style="margin-top:6px;background:var(--surv);border:1.5px solid var(--out);border-radius:var(--r12);color:var(--tx);font-family:'Google Sans',sans-serif;font-size:14px;padding:11px 14px;outline:none;width:100%;transition:border-color .15s" onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--out)'"></div>
+        </div>
+        <div class="f" style="margin:0">
+          <label>Motivo — todos</label>
+          <input type="text" id="bm" placeholder="Ex: Recebimento antigo, devolução...">
+        </div>
+        <div>
+          <button class="btn btn-f" onclick="applyBulk()" style="border-radius:12px;white-space:nowrap;height:46px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Aplicar a todos
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--txs)">💡 Após aplicar em lote, você ainda pode editar cada linha individualmente na tabela abaixo.</div>
+    </div>
+
+    <div class="bn bn-w hidden" id="wb2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span>Há pães com validade ≤ 22 dias. Preencha <strong>Direcionamento</strong> e <strong>Motivo</strong> para todos eles — use o painel acima para agilizar.</span>
+    </div>
+
+    <div class="fpill" id="fpill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Preenchidos: <span class="fdn" id="fd">0</span>&nbsp;/&nbsp;<span id="ft">0</span> linhas em data curta
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;box-shadow:var(--sh2)">
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>Cód</th><th>SKU / Produto</th><th>Validade</th><th>Prazo</th>
+            <th style="text-align:right">Qtd</th>
+            <th id="thd" class="hidden">Direcionamento</th>
+            <th id="thm" class="hidden">Motivo</th>
+          </tr></thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <button class="btn btn-o" onclick="reset()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Reiniciar
+      </button>
+    </div>
+  </div>
+
+  </div><!-- end tab-import-content -->
+
+  <!-- ===== MANUAL TAB ===== -->
+  <div id="tab-manual-content" class="hidden">
+    <div class="card">
+      <div class="ch"><div class="ci am">✏️</div><div><div class="ct">Lançamento Manual de Estoque</div><div class="cs">Digite a quantidade e a menor data de validade para cada SKU que desejar. Preencha ao menos 1.</div></div></div>
+      <div class="bn bn-i">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <span>Itens com validade ≤ 22 dias exigirão <strong>Direcionamento</strong> e <strong>Motivo</strong> antes de exportar — igual ao fluxo de importação.</span>
+      </div>
+      <div class="me-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="me-filter" placeholder="Buscar SKU ou nome do produto..." oninput="meFilter()">
+      </div>
+      <div class="me-counter">Preenchidos: <strong id="me-filled-count">0</strong> de <span id="me-total-count">0</span> SKUs</div>
+      <div class="me-list" id="me-grid"></div>
+    </div>
+
+    <!-- BULK PANEL MANUAL -->
+    <div class="bulk hidden" id="me-bulk">
+      <div class="bulk-hd">
+        <span class="bulk-badge">✦ Preenchimento em lote</span>
+        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade ≤ 22 dias de uma só vez</span>
+      </div>
+      <div class="bulk-grid">
+        <div class="f" style="margin:0">
+          <label>Direcionamento — todos</label>
+          <select id="me-bd" onchange="meOnBD()">
+            <option value="">— Selecione o destino —</option>
+            <option value="SAIRÁ EM ROTA">🚛 Sairá em Rota</option>
+            <option value="OUTRO">✏️ Outro destino...</option>
+          </select>
+          <div class="cw" id="me-bcw"><input type="text" id="me-bcd" placeholder="Digite o destino personalizado" style="margin-top:6px;background:var(--surv);border:1.5px solid var(--out);border-radius:var(--r12);color:var(--tx);font-family:'Google Sans',sans-serif;font-size:14px;padding:11px 14px;outline:none;width:100%;transition:border-color .15s" onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--out)'"></div>
+        </div>
+        <div class="f" style="margin:0">
+          <label>Motivo — todos</label>
+          <input type="text" id="me-bm" placeholder="Ex: Recebimento antigo, devolução...">
+        </div>
+        <div>
+          <button class="btn btn-f" onclick="meApplyBulk()" style="border-radius:12px;white-space:nowrap;height:46px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Aplicar a todos
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--txs)">💡 Após aplicar em lote, você ainda pode editar cada linha individualmente.</div>
+    </div>
+
+    <!-- WARN BANNER MANUAL -->
+    <div class="bn bn-w hidden" id="me-wb">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span>Há SKUs com validade ≤ 22 dias. Preencha <strong>Direcionamento</strong> e <strong>Motivo</strong> para todos eles antes de exportar.</span>
+    </div>
+
+    <!-- FILL PILL MANUAL -->
+    <div class="fpill hidden" id="me-fpill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Dir/Motivo preenchidos: <span class="fdn" id="me-fd">0</span>&nbsp;/&nbsp;<span id="me-ft">0</span> linhas em data curta
+    </div>
+
+    <!-- TABLE MANUAL REVIEW -->
+    <div class="card hidden" id="me-table-card" style="padding:0;overflow:hidden;box-shadow:var(--sh2)">
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>Cód</th><th>SKU / Produto</th><th>Validade</th><th>Prazo</th>
+            <th style="text-align:right">Qtd</th>
+            <th id="me-thd" class="hidden">Direcionamento</th>
+            <th id="me-thm" class="hidden">Motivo</th>
+          </tr></thead>
+          <tbody id="me-tb"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-f" id="me-process-btn" onclick="meProcess()" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Gerar Relatório
+      </button>
+      <button class="btn btn-o" onclick="meReset()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpar tudo
+      </button>
+    </div>
+  </div><!-- end tab-manual-content -->
+
+</main>
+
+<!-- DL BAR MANUAL -->
+<div id="me-dlbar" style="position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:1px solid var(--outv);padding:18px 24px;display:none;align-items:center;justify-content:center;gap:16px;box-shadow:0 -8px 24px rgba(0,0,0,.1);z-index:300">
+  <div style="font-size:14px;color:var(--txs)">Relatório manual pronto — <strong style="color:var(--p)" id="me-dlcd"></strong></div>
+  <button class="btn btn-g" onclick="meDlXlsx()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    BAIXAR PLANILHA
+  </button>
+</div>
+
+<div id="dlbar">
+  <div class="di2">Relatório pronto — <strong id="dlcd"></strong></div>
+  <button class="btn btn-g" onclick="dlXlsx()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    BAIXAR PLANILHA
+  </button>
+</div>
+
+<script>
+const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paezinhos Leite Panutrinha Panutrir 400g","7":"Panetone C/ Frutas Panutrir 400g","11":"Pao Integral Centeio Fitness Zero Panutrir 350g","16":"Pao Integ 7 Graos Damasco Hibisco Zero Panutrir 350g","655":"Pao Integral 12 Graos Panutrir 450g","669":"Bisnaguinha Bisnutrinhas Panutrir 300g","1224":"Pao Cast Para E Quinoa Integ Panutrir Broa 450g","2279":"Pao Pct Caseiro 500g","69251":"Pao Hot Dog Panutrir 400g","81571":"Pao Integral Surpreendente Panutrir 450g","81581":"Pao Integral 12 Graos Zero Panutrir 350g","81591":"Pao Integral Chia Macadamia Panutrir 400g","81661":"Pao Forma Plufi Nut 400g","82051":"Pao Hamburguer Gourmet Panutrir 500g","85181":"Muffato Pao Hot Dog 400g","85841":"Muffato Paezinhos De Leite 400g","86151":"Pao Integral Panutrir 450g","99161":"Pao Integral Plufi Nut 450g","121581":"Us Pao Hot Dog Unisabor 400g","121801":"Us Pao Hamburguer Gourmet Unisabor 500g","121811":"Us Paezinhos De Leite Unisabor 400g","121821":"Us Pao Integral 12 Graos Zero Unisabor 350g","121831":"Us Pao Integral 12 Graos Unisabor 450g","121841":"Us Pao Castanha Para E Quinoa Integ Unisabor 450g","121861":"Us Pao Forma Unisabor 400g","121871":"Us Pao Leite Unisabor 400g","135211":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 500g","135221":"Nossa Padaria Pao Hot Dog Emb Transp 400g","135231":"Nossa Padaria Paezinhos Leite Emb Transp 400g","135241":"Nossa Padaria Pao Forma Emb Transp 400g","141441":"Pao Sirio Tradic Panificadora Dubai 320g","141951":"Pao Sirio Tradic Panificadora Dubai 260g","145511":"Pao Nutri Del Grano Tradicional Panutrir 500g","145521":"Pao Nutri Del Grano Integral Panutrir 500g","152291":"Pao Sirio Integral Panificadora Dubai 300g","156021":"Panetone C/ Frutas Plufi Nut 300g","156051":"Panetone C/ Gotas Chocolate Plufi Nut 300g","162272":"Nossa Padaria Bisnaguinha Emb Transp 300g","162275":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 330g","162276":"Nossa Padaria Pao Integral Emb Transp 450g","162358":"Us Pao Integral Unisabor 450g","162396":"Pao Nutri Del Grano Tipo Caseiro Panutrir 500g","162767":"Muffato Pao Integral 450g","162775":"Muffato Bisnaguinhas 300g","162783":"Us Pao Artesanal Tradicional Unisabor 500g","162784":"Us Pao Artesanal Integral Unisabor 500g","162800":"Muffato Pao Forma 400g","162801":"Muffato Pao Leite 400g","162802":"Muffato Pao Hamburguer 500g","162920":"Pao Nutri Del Grano Hamburguer Artesanal Panutrir 320g","162921":"Pao Nutri Del Grano Hamburguer Brioche Panutrir 320g","162922":"Pao Nutri Del Grano Hamburguer Australiano Panutrir 320g","162923":"Pao Nutri Del Grano Hamburguer Gergelim Panutrir 320g"};
+
+let cd='',rows=[],hasW=false,wCnt=0;
+
+// MODAL
+document.getElementById('li').addEventListener('keydown',e=>{if(e.key==='Enter')okLocal()});
+function okLocal(){
+  const v=document.getElementById('li').value.trim().toUpperCase();
+  if(!v){document.getElementById('li').style.borderColor='#B3261E';return}
+  cd=v;
+  document.getElementById('mo').style.display='none';
+  const c=document.getElementById('chip');
+  document.getElementById('chip-txt').textContent=v;
+  c.style.display='flex';
+  document.getElementById('dlcd').textContent=v;
+  document.getElementById('me-dlcd').textContent=v;
+}
+
+// DRAG DROP
+const dz=document.getElementById('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('on')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('on'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('on');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+
+function handleFile(f){
+  if(!f)return;
+  document.getElementById('fn').textContent=f.name;
+  document.getElementById('fb').style.display='flex';
+  const pp=document.getElementById('pp');pp.classList.remove('hidden');
+  setP(15,'Lendo arquivo...');
+  const r=new FileReader();
+  r.onload=e=>{
+    setP(50,'Interpretando planilha...');
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+      setP(80,'Vinculando SKUs...');
+      const s=raw[0]||{},ks=Object.keys(s);
+      const ck=ks.find(k=>/^cod/i.test(k.trim()))||'COD';
+      const qk=ks.find(k=>/qtd/i.test(k.trim()))||'QTD_TOTAL';
+      const vk=ks.find(k=>/valid/i.test(k.trim()))||'VALIDADE';
+      const pk=ks.find(k=>/prazo/i.test(k.trim()))||'PRAZO';
+      rows=raw.filter(r=>r[ck]!==''&&r[ck]!==undefined).map(r=>{
+        const cod=String(r[ck]).trim().replace(/\.0$/,'');
+        let val=r[vk];
+        if(val instanceof Date)val=val.toLocaleDateString('pt-BR');
+        else val=String(val).trim();
+        const prazo=parseInt(r[pk])||0,qtd=parseInt(r[qk])||0;
+        return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:prazo<=22};
+      }).sort((a,b)=>a.prazo-b.prazo);
+      setP(100,'Pronto!');
+      setTimeout(()=>{pp.classList.add('hidden');render()},350);
+    }catch(err){setP(0,'❌ Erro: '+err.message)}
+  };
+  r.readAsArrayBuffer(f);
+}
+function setP(p,m){document.getElementById('pb').style.width=p+'%';document.getElementById('pl').textContent=m}
+
+function render(){
+  document.getElementById('s1').classList.add('hidden'); // Oculta o card de importação
+  document.getElementById('s2').classList.remove('hidden');
+  wCnt=rows.filter(r=>r.isWarn).length;hasW=wCnt>0;
+  const tot=rows.reduce((s,r)=>s+r.qtd,0);
+  document.getElementById('sg').innerHTML=`
+    <div class="sc b"><div class="sv">${rows.length}</div><div class="sl">Linhas importadas</div></div>
+    <div class="sc"><div class="sv">${tot.toLocaleString('pt-BR')}</div><div class="sl">Unidades totais</div></div>
+    <div class="sc w"><div class="sv">${wCnt}</div><div class="sl">Data curta ≤ 22d</div></div>
+    <div class="sc"><div class="sv">${rows.filter(r=>!r.sku).length}</div><div class="sl">SKUs não mapeados</div></div>`;
+  if(hasW){
+    document.getElementById('bulk').classList.remove('hidden');
+    document.getElementById('wb2').classList.remove('hidden');
+    document.getElementById('fpill').style.display='flex';
+    document.getElementById('thd').classList.remove('hidden');
+    document.getElementById('thm').classList.remove('hidden');
+    document.getElementById('ft').textContent=wCnt;
+    updFill();
+  }else showDL();
+
+  const tb=document.getElementById('tb');tb.innerHTML='';
+  rows.forEach((row,i)=>{
+    const tr=document.createElement('tr');
+    if(row.isWarn)tr.classList.add('wr');
+    const pc=row.prazo<=14?'pcr':row.prazo<=22?'pca':'pco';
+    const sh=row.sku?`<span class="skun">${row.sku}</span>`:`<span class="ukn">COD não mapeado</span>`;
+    let ex='';
+    if(hasW){
+      if(row.isWarn){
+        ex=`<td style="min-width:190px">
+          <select class="rf" id="rd${i}" onchange="onRD(${i},this)">
+            <option value="">— Selecione —</option>
+            <option value="SAIRÁ EM ROTA">🚛 Sairá em Rota</option>
+            <option value="OUTRO">✏️ Outro destino...</option>
+          </select>
+          <div class="rcd" id="rc${i}"><input type="text" class="rf" style="margin-top:5px" placeholder="Digite o destino" oninput="onRC(${i},this)"></div>
+        </td>
+        <td style="min-width:180px"><input type="text" class="rf" id="rm${i}" placeholder="Digite o motivo..." oninput="onRM(${i},this)"></td>`;
+      }else{
+        ex=`<td style="color:var(--txs);font-size:11px">—</td><td style="color:var(--txs);font-size:11px">—</td>`;
+      }
+    }
+    tr.innerHTML=`
+      <td><span class="codn">${row.cod}</span></td>
+      <td>${sh}</td>
+      <td style="font-family:'Roboto Mono',monospace;font-size:12px">${row.validade}</td>
+      <td><span class="pc ${pc}">${row.prazo}d</span></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${row.qtd.toLocaleString('pt-BR')}</td>
+      ${ex}`;
+    tb.appendChild(tr);
+  });
+}
+
+// BULK
+function onBD(){
+  const v=document.getElementById('bd').value;
+  document.getElementById('bcw').style.display=v==='OUTRO'?'block':'none';
+  if(v!=='OUTRO')document.getElementById('bcd').value='';
+}
+function applyBulk(){
+  const sel=document.getElementById('bd').value;
+  const custom=document.getElementById('bcd').value.trim();
+  const mot=document.getElementById('bm').value.trim();
+  const dv=sel==='OUTRO'?custom:sel;
+  rows.forEach((row,i)=>{
+    if(!row.isWarn)return;
+    if(dv){
+      row.dir=dv;
+      const rds=document.getElementById(`rd${i}`);
+      const rcd=document.getElementById(`rc${i}`);
+      if(sel==='OUTRO'){rds.value='OUTRO';rcd.style.display='block';rcd.querySelector('input').value=custom;}
+      else{rds.value=sel;rcd.style.display='none';}
+    }
+    if(mot){row.motivo=mot;const rm=document.getElementById(`rm${i}`);if(rm)rm.value=mot;}
+  });
+  updFill();chkDL();
+}
+
+// ROW
+function onRD(i,s){const rc=document.getElementById(`rc${i}`);if(s.value==='OUTRO'){rc.style.display='block';rows[i].dir='';}else{rc.style.display='none';rows[i].dir=s.value;}updFill();chkDL()}
+function onRC(i,inp){rows[i].dir=inp.value.trim();updFill();chkDL()}
+function onRM(i,inp){rows[i].motivo=inp.value.trim();updFill();chkDL()}
+
+function updFill(){
+  const w=rows.filter(r=>r.isWarn);
+  const d=w.filter(r=>r.dir.length>0&&r.motivo.length>0).length;
+  document.getElementById('fd').textContent=d;
+}
+function chkDL(){
+  if(!hasW){showDL();return}
+  rows.filter(r=>r.isWarn).every(r=>r.dir.length>0&&r.motivo.length>0)?showDL():hideDL();
+}
+function showDL(){document.getElementById('dlbar').style.display='flex'}
+function hideDL(){document.getElementById('dlbar').style.display='none'}
+
+// DOWNLOAD
+function dlXlsx(){
+  const wb=XLSX.utils.book_new();
+  const now=new Date().toLocaleString('pt-BR');
+  const hd=['COD','SKU','VALIDADE','PRAZO (DIAS)','QTD'];
+  if(hasW)hd.push('DIRECIONAMENTO','MOTIVO');
+  const data=[hd];
+  rows.forEach(r=>{
+    const row=[r.cod,r.sku||'NÃO MAPEADO',r.validade,r.prazo,r.qtd];
+    if(hasW){row.push(r.isWarn?r.dir:'—');row.push(r.isWarn?r.motivo:'—')}
+    data.push(row);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:12},{wch:46},{wch:14},{wch:14},{wch:12},{wch:30},{wch:36}];
+  const meta=[['RELATÓRIO DE ESTOQUE — DATA CURTA'],[''],['Local (CD)',cd],['Data/Hora',now],['Total linhas',rows.length],['Data curta ≤22d',wCnt],['',''],['Gerado por','Sistema Padronizado de CD']];
+  const wm=XLSX.utils.aoa_to_sheet(meta);wm['!cols']=[{wch:30},{wch:42}];
+  XLSX.utils.book_append_sheet(wb,ws,'Estoque');
+  XLSX.utils.book_append_sheet(wb,wm,'Info');
+  const now2=new Date();
+  const datePart=now2.toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const timePart=now2.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}).replace(/:/g,'h');
+  XLSX.writeFile(wb,`SHELFLIFE ${cd} (${datePart} ${timePart}).xlsx`);
+}
+
+// TAB SWITCHING
+function switchTab(t){
+  document.getElementById('tab-import-content').classList.toggle('hidden',t!=='import');
+  document.getElementById('tab-manual-content').classList.toggle('hidden',t!=='manual');
+  document.getElementById('tab-import').classList.toggle('active',t==='import');
+  document.getElementById('tab-manual').classList.toggle('active',t==='manual');
+  if(t==='manual'&&!meBuilt)meBuild();
+}
+
+// ========================
+// MANUAL ENTRY — multi-date per SKU
+// ========================
+let meBuilt=false,meProcessed=[],meHasW=false,meWCnt=0;
+// meData[cod] = [ {qtd:'', val:''}, ... ]
+const meData={};
+
+const SKU_KEYS=Object.keys(SKU);
+
+function meBuild(){
+  meBuilt=true;
+  document.getElementById('me-total-count').textContent=SKU_KEYS.length;
+  meRenderList(SKU_KEYS);
+}
+
+function mePrazo(valStr){
+  if(!valStr)return null;
+  const d=new Date(valStr);if(isNaN(d))return null;
+  const today=new Date();today.setHours(0,0,0,0);
+  return Math.round((d-today)/(1000*60*60*24));
+}
+
+function prazoTag(p){
+  if(p===null)return '';
+  const cls=p<=14?'pcr':p<=22?'pca':'pco';
+  return `<span class="me-prazo-tag pc ${cls}">${p}d</span>`;
+}
+
+function meRenderList(keys){
+  const g=document.getElementById('me-grid');
+  g.innerHTML='';
+  keys.forEach(cod=>{
+    if(!meData[cod])meData[cod]=[{qtd:'',val:''}];
+    g.insertAdjacentHTML('beforeend',`<div class="me-sku-row" id="meskurow-${cod}">
+      <div class="me-sku-hd">
+        <button class="me-add-btn" onclick="meAddDate('${cod}')" title="Adicionar outra data">+</button>
+        <div class="me-sku-info">
+          <div class="me-sku-cod">${cod}</div>
+          <div class="me-sku-name" title="${SKU[cod]}">${SKU[cod]}</div>
+        </div>
+      </div>
+      <div class="me-dates" id="medates-${cod}"></div>
+    </div>`);
+    meRenderDates(cod);
+  });
+}
+
+function meRenderDates(cod){
+  const cont=document.getElementById(`medates-${cod}`);
+  if(!cont)return;
+  cont.innerHTML='';
+  meData[cod].forEach((entry,idx)=>{
+    const p=entry.val?mePrazo(entry.val):null;
+    const isW=p!==null&&p<=22;
+    const qtdCls='me-inp qtd'+(entry.qtd?(isW?' wn':' ok'):'');
+    const datCls='me-inp dat'+(entry.val?(isW?' wn':' ok'):'');
+    const delBtn=meData[cod].length>1
+      ?`<button class="me-del-btn" onclick="meDelDate('${cod}',${idx})" title="Remover">✕</button>`:'';
+    cont.insertAdjacentHTML('beforeend',`
+      <div class="me-date-row" id="medr-${cod}-${idx}">
+        <input type="number" min="0" class="${qtdCls}" placeholder="Qtd"
+          value="${entry.qtd}" oninput="meUpdEntry('${cod}',${idx},'qtd',this.value)">
+        <input type="date" class="${datCls}"
+          value="${entry.val}" oninput="meUpdEntry('${cod}',${idx},'val',this.value)">
+        ${prazoTag(p)}
+        ${delBtn}
+      </div>`);
+  });
+}
+
+function meAddDate(cod){
+  if(!meData[cod])meData[cod]=[];
+  meData[cod].push({qtd:'',val:''});
+  meRenderDates(cod);
+}
+
+function meDelDate(cod,idx){
+  meData[cod].splice(idx,1);
+  meRenderDates(cod);
+  meRefreshRowStyle(cod);
+  meCountFilled();
+  meInvalidateReport();
+}
+
+function meUpdEntry(cod,idx,field,val){
+  if(!meData[cod]||!meData[cod][idx])return;
+  meData[cod][idx][field]=val;
+  // re-render just this row's inputs for color
+  const entry=meData[cod][idx];
+  const p=entry.val?mePrazo(entry.val):null;
+  const isW=p!==null&&p<=22;
+  const rowEl=document.getElementById(`medr-${cod}-${idx}`);
+  if(rowEl){
+    const qi=rowEl.querySelector('input[type=number]');
+    const di=rowEl.querySelector('input[type=date]');
+    const tagEl=rowEl.querySelector('.me-prazo-tag');
+    if(qi)qi.className='me-inp qtd'+(entry.qtd?(isW?' wn':' ok'):'');
+    if(di)di.className='me-inp dat'+(entry.val?(isW?' wn':' ok'):'');
+    if(tagEl){tagEl.outerHTML=prazoTag(p);} else {
+      // insert tag before del btn
+      const newTag=document.createElement('span');
+      newTag.innerHTML=prazoTag(p);
+      const delBtn=rowEl.querySelector('.me-del-btn');
+      if(delBtn)rowEl.insertBefore(newTag.firstChild,delBtn);
+      else rowEl.appendChild(newTag.firstChild);
+    }
+  }
+  meRefreshRowStyle(cod);
+  meCountFilled();
+  meInvalidateReport();
+}
+
+function meRefreshRowStyle(cod){
+  const rowEl=document.getElementById(`meskurow-${cod}`);
+  if(!rowEl)return;
+  const entries=meData[cod]||[];
+  const hasFilled=entries.some(e=>e.qtd&&e.val);
+  const hasWarn=entries.some(e=>{const p=e.val?mePrazo(e.val):null;return p!==null&&p<=22&&e.qtd;});
+  rowEl.className='me-sku-row'+(hasFilled?(hasWarn?' has-warn':' has-data'):'');
+}
+
+function meCountFilled(){
+  const filled=SKU_KEYS.filter(cod=>(meData[cod]||[]).some(e=>e.qtd&&e.val)).length;
+  document.getElementById('me-filled-count').textContent=filled;
+  document.getElementById('me-process-btn').disabled=filled===0;
+}
+
+function meInvalidateReport(){
+  document.getElementById('me-dlbar').style.display='none';
+  document.getElementById('me-table-card').classList.add('hidden');
+  document.getElementById('me-bulk').classList.add('hidden');
+  document.getElementById('me-wb').classList.add('hidden');
+  document.getElementById('me-fpill').classList.add('hidden');
+}
+
+function meFilter(){
+  const q=document.getElementById('me-filter').value.toLowerCase().trim();
+  if(!q){meRenderList(SKU_KEYS);return}
+  const filtered=SKU_KEYS.filter(cod=>cod.includes(q)||SKU[cod].toLowerCase().includes(q));
+  meRenderList(filtered);
+}
+
+function meProcess(){
+  // flatten all filled entries across all SKUs, sort by prazo
+  meProcessed=[];
+  SKU_KEYS.forEach(cod=>{
+    (meData[cod]||[]).forEach(entry=>{
+      if(!entry.qtd||!entry.val)return;
+      const p=mePrazo(entry.val);
+      const d=new Date(entry.val);
+      const valFormatted=isNaN(d)?entry.val:d.toLocaleDateString('pt-BR');
+      meProcessed.push({cod,sku:SKU[cod],validade:valFormatted,prazo:p,qtd:parseInt(entry.qtd)||0,dir:'',motivo:'',isWarn:p!==null&&p<=22});
+    });
+  });
+  meProcessed.sort((a,b)=>(a.prazo??999)-(b.prazo??999));
+
+  meWCnt=meProcessed.filter(r=>r.isWarn).length;
+  meHasW=meWCnt>0;
+
+  const tc=document.getElementById('me-table-card');tc.classList.remove('hidden');
+  if(meHasW){
+    document.getElementById('me-bulk').classList.remove('hidden');
+    document.getElementById('me-wb').classList.remove('hidden');
+    document.getElementById('me-fpill').classList.remove('hidden');
+    document.getElementById('me-thd').classList.remove('hidden');
+    document.getElementById('me-thm').classList.remove('hidden');
+    document.getElementById('me-ft').textContent=meWCnt;
+    meUpdFill();
+  }else{
+    document.getElementById('me-thd').classList.add('hidden');
+    document.getElementById('me-thm').classList.add('hidden');
+    meShowDL();
+  }
+
+  const tb=document.getElementById('me-tb');tb.innerHTML='';
+  meProcessed.forEach((row,i)=>{
+    const tr=document.createElement('tr');
+    if(row.isWarn)tr.classList.add('wr');
+    const pc=row.prazo<=14?'pcr':row.prazo<=22?'pca':'pco';
+    let ex='';
+    if(meHasW){
+      if(row.isWarn){
+        ex=`<td style="min-width:190px">
+          <select class="rf" id="me-rd${i}" onchange="meOnRD(${i},this)">
+            <option value="">— Selecione —</option>
+            <option value="SAIRÁ EM ROTA">🚛 Sairá em Rota</option>
+            <option value="OUTRO">✏️ Outro destino...</option>
+          </select>
+          <div class="rcd" id="me-rc${i}"><input type="text" class="rf" style="margin-top:5px" placeholder="Digite o destino" oninput="meOnRC(${i},this)"></div>
+        </td>
+        <td style="min-width:180px"><input type="text" class="rf" id="me-rm${i}" placeholder="Digite o motivo..." oninput="meOnRM(${i},this)"></td>`;
+      }else{
+        ex=`<td style="color:var(--txs);font-size:11px">—</td><td style="color:var(--txs);font-size:11px">—</td>`;
+      }
+    }
+    tr.innerHTML=`
+      <td><span class="codn">${row.cod}</span></td>
+      <td><span class="skun">${row.sku}</span></td>
+      <td style="font-family:'Roboto Mono',monospace;font-size:12px">${row.validade}</td>
+      <td><span class="pc ${pc}">${row.prazo}d</span></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${row.qtd.toLocaleString('pt-BR')}</td>
+      ${ex}`;
+    tb.appendChild(tr);
+  });
+  tc.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// BULK MANUAL
+function meOnBD(){
+  const v=document.getElementById('me-bd').value;
+  document.getElementById('me-bcw').style.display=v==='OUTRO'?'block':'none';
+  if(v!=='OUTRO')document.getElementById('me-bcd').value='';
+}
+function meApplyBulk(){
+  const sel=document.getElementById('me-bd').value;
+  const custom=document.getElementById('me-bcd').value.trim();
+  const mot=document.getElementById('me-bm').value.trim();
+  const dv=sel==='OUTRO'?custom:sel;
+  meProcessed.forEach((row,i)=>{
+    if(!row.isWarn)return;
+    if(dv){
+      row.dir=dv;
+      const rds=document.getElementById(`me-rd${i}`);
+      const rcd=document.getElementById(`me-rc${i}`);
+      if(sel==='OUTRO'){rds.value='OUTRO';rcd.style.display='block';rcd.querySelector('input').value=custom;}
+      else{rds.value=sel;rcd.style.display='none';}
+    }
+    if(mot){row.motivo=mot;const rm=document.getElementById(`me-rm${i}`);if(rm)rm.value=mot;}
+  });
+  meUpdFill();meChkDL();
+}
+function meOnRD(i,s){const rc=document.getElementById(`me-rc${i}`);if(s.value==='OUTRO'){rc.style.display='block';meProcessed[i].dir='';}else{rc.style.display='none';meProcessed[i].dir=s.value;}meUpdFill();meChkDL()}
+function meOnRC(i,inp){meProcessed[i].dir=inp.value.trim();meUpdFill();meChkDL()}
+function meOnRM(i,inp){meProcessed[i].motivo=inp.value.trim();meUpdFill();meChkDL()}
+function meUpdFill(){
+  const d=meProcessed.filter(r=>r.isWarn&&r.dir.length>0&&r.motivo.length>0).length;
+  document.getElementById('me-fd').textContent=d;
+}
+function meChkDL(){
+  if(!meHasW){meShowDL();return}
+  meProcessed.filter(r=>r.isWarn).every(r=>r.dir.length>0&&r.motivo.length>0)?meShowDL():meHideDL();
+}
+function meShowDL(){
+  document.getElementById('me-dlcd').textContent=cd;
+  document.getElementById('me-dlbar').style.display='flex';
+}
+function meHideDL(){document.getElementById('me-dlbar').style.display='none'}
+
+// DOWNLOAD MANUAL
+function meDlXlsx(){
+  const wb2=XLSX.utils.book_new();
+  const now=new Date().toLocaleString('pt-BR');
+  const hd=['COD','SKU','VALIDADE','PRAZO (DIAS)','QTD'];
+  if(meHasW)hd.push('DIRECIONAMENTO','MOTIVO');
+  const data=[hd];
+  meProcessed.forEach(r=>{
+    const row=[r.cod,r.sku,r.validade,r.prazo,r.qtd];
+    if(meHasW){row.push(r.isWarn?r.dir:'—');row.push(r.isWarn?r.motivo:'—')}
+    data.push(row);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:12},{wch:46},{wch:14},{wch:14},{wch:12},{wch:30},{wch:36}];
+  const meta=[['RELATÓRIO DE ESTOQUE — DATA CURTA'],[''],['Local (CD)',cd],['Data/Hora',now],['Total linhas',meProcessed.length],['Data curta ≤22d',meWCnt],['',''],['Gerado por','Sistema Padronizado de CD']];
+  const wm=XLSX.utils.aoa_to_sheet(meta);wm['!cols']=[{wch:30},{wch:42}];
+  XLSX.utils.book_append_sheet(wb2,ws,'Estoque');
+  XLSX.utils.book_append_sheet(wb2,wm,'Info');
+  const now2=new Date();
+  const datePart=now2.toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const timePart=now2.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}).replace(/:/g,'h');
+  XLSX.writeFile(wb2,`SHELFLIFE ${cd} (${datePart} ${timePart}).xlsx`);
+}
+
+// RESET MANUAL
+function meReset(){
+  SKU_KEYS.forEach(cod=>{meData[cod]=[{qtd:'',val:''}]});
+  meProcessed=[];meHasW=false;meWCnt=0;
+  document.getElementById('me-filter').value='';
+  document.getElementById('me-filled-count').textContent='0';
+  document.getElementById('me-process-btn').disabled=true;
+  document.getElementById('me-bulk').classList.add('hidden');
+  document.getElementById('me-wb').classList.add('hidden');
+  document.getElementById('me-fpill').classList.add('hidden');
+  document.getElementById('me-table-card').classList.add('hidden');
+  document.getElementById('me-thd').classList.add('hidden');
+  document.getElementById('me-thm').classList.add('hidden');
+  document.getElementById('me-tb').innerHTML='';
+  document.getElementById('me-bd').value='';
+  document.getElementById('me-bm').value='';
+  document.getElementById('me-bcw').style.display='none';
+  document.getElementById('me-dlbar').style.display='none';
+  meRenderList(SKU_KEYS);
+}
+
+
+// RESET IMPORT
+function reset(){
+  rows=[];hasW=false;wCnt=0;
+  document.getElementById('fi').value='';
+  document.getElementById('fb').style.display='none';
+  document.getElementById('pp').classList.add('hidden');
+  document.getElementById('s1').classList.remove('hidden');
+  document.getElementById('s2').classList.add('hidden');
+  document.getElementById('bulk').classList.add('hidden');
+  document.getElementById('wb2').classList.add('hidden');
+  document.getElementById('fpill').style.display='none';
+  document.getElementById('thd').classList.add('hidden');
+  document.getElementById('thm').classList.add('hidden');
+  document.getElementById('tb').innerHTML='';
+  document.getElementById('sg').innerHTML='';
+  document.getElementById('bd').value='';
+  document.getElementById('bm').value='';
+  document.getElementById('bcw').style.display='none';
+  hideDL();
+}
+</script>
+</body>
+</html>
