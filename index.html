@@ -221,6 +221,114 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     flex-shrink: 0;
 }
 
+
+/* Estilos para a Centralização de Dados */
+.cloud-section {
+    background: var(--sur1);
+    padding: 25px;
+    border-radius: 15px;
+    margin: 20px 0;
+    border: 2px dashed var(--p);
+    text-align: center;
+}
+
+.cd-select-container {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.cd-select-container label {
+    font-weight: bold;
+    color: var(--tx);
+}
+
+.modern-select {
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 2px solid var(--p);
+    background: white;
+    color: var(--tx);
+    cursor: pointer;
+    width: 300px;
+}
+
+.btn-group-cloud {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.btn-save-cloud {
+    width: 100%;
+    max-width: 450px;
+    padding: 22px;
+    background-color: var(--p);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(198, 124, 42, 0.3);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.btn-save-cloud:hover {
+    background-color: var(--ps);
+    transform: translateY(-2px);
+}
+
+.btn-export-small {
+    background: white;
+    color: var(--txs);
+    border: 1px solid var(--out);
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.btn-export-small:hover {
+    background: #fdfaf6;
+    border-color: var(--p);
+}
+
+/* Painel de Monitoramento */
+.monitor-panel {
+    margin-top: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--out);
+}
+
+.monitor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.cd-status-badge {
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.status-pending { background: #fdecea; color: #b3261e; border: 1px solid #f5ddd9; }
+.status-sent { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
+
+.loading-api { font-size: 12px; color: var(--txs); font-style: italic; }
+
 </style>
 </head>
 <body>
@@ -229,8 +337,17 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   <div class="modal">
     <div class="mico">📍</div>
     <h2>Identificação da Unidade (CD)</h2>
-    <p>Informe o nome do <strong>Centro de Distribuição</strong> antes de continuar.<br><span style="color:var(--txs);font-size:13px">Ex: CD MATRIZ · CD BAURU · CD BARUERI</span></p>
-    <div class="f"><input type="text" id="li" placeholder="NOME DO CD" maxlength="60" autocomplete="off"></div>
+    <p>Informe o nome do <strong>Centro de Distribuição</strong> antes de continuar.<br><span style="color:var(--txs);font-size:13px">Selecione na lista abaixo</span></p>
+    <div class="f"><select id="li" class="modern-select" style="width:100%; border:1px solid var(--out); margin-top:10px;">
+        <option value="" disabled selected>Escolha a sua Unidade...</option>
+        <option value="MATRIZ">MATRIZ</option>
+        <option value="BAURU">BAURU</option>
+        <option value="CURITIBA">CURITIBA</option>
+        <option value="LONDRINA">LONDRINA</option>
+        <option value="RANCHARIA">RANCHARIA</option>
+        <option value="SJRP">SJRP</option>
+        <option value="BARUERI">BARUERI</option>
+    </select></div>
     <button class="btn btn-f" onclick="okLocal()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
       Confirmar e continuar
@@ -427,22 +544,36 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
 </main>
 
-<!-- DL BAR MANUAL -->
-<div id="me-dlbar" style="position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:1px solid var(--outv);padding:18px 24px;display:none;align-items:center;justify-content:center;gap:16px;box-shadow:0 -8px 24px rgba(0,0,0,.1);z-index:300">
-  <div style="font-size:14px;color:var(--txs)">Relatório manual pronto — <strong style="color:var(--p)" id="me-dlcd"></strong></div>
-  <button class="btn btn-g" onclick="meDlXlsx()">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    BAIXAR PLANILHA
-  </button>
+<!-- ACTION SECTION — aparece apenas após dados prontos -->
+<div id="action-section" style="display:none; position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:2px solid var(--outv);padding:16px 24px;z-index:300;box-shadow:0 -8px 24px rgba(80,50,20,.13);">
+  <div style="max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div style="font-size:13px;color:var(--txs)">
+      Relatório pronto — <strong style="color:var(--p)" id="action-cd-label"></strong>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-export-small" onclick="exportarCopia()" title="Exportar cópia local em Excel">
+        📥 Exportar Cópia (.xlsx)
+      </button>
+      <button class="btn-save-cloud" onclick="processarEnvioNuvem()" style="padding:13px 28px;font-size:15px;border-radius:12px;">
+        ☁️ SALVAR E ENVIAR PARA UNIFICAÇÃO
+      </button>
+    </div>
+  </div>
 </div>
 
-<div id="dlbar">
-  <div class="di2">Relatório pronto — <strong id="dlcd"></strong></div>
-  <button class="btn btn-g" onclick="dlXlsx()">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    BAIXAR PLANILHA
-  </button>
+<!-- PAINEL DE MONITORAMENTO (fora do fixed bar) -->
+<div class="container" style="max-width:1160px;margin:0 auto;padding:0 16px 120px;">
+    <div class="monitor-panel">
+        <h3 style="margin:0; font-size:16px;">Monitoramento de Envios (Hoje)</h3>
+        <p style="font-size:12px; color:var(--txs); margin-top:4px;">Verifique abaixo quais unidades ainda estão pendentes.</p>
+        <div id="status-grid" class="monitor-grid">
+            <span class="loading-api">Carregando status das unidades...</span>
+        </div>
+    </div>
 </div>
+
+
+<!-- DL BAR removed — buttons are now in the action section below the table -->
 
 <script>
 const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paezinhos Leite Panutrinha Panutrir 400g","7":"Panetone C/ Frutas Panutrir 400g","11":"Pao Integral Centeio Fitness Zero Panutrir 350g","16":"Pao Integ 7 Graos Damasco Hibisco Zero Panutrir 350g","655":"Pao Integral 12 Graos Panutrir 450g","669":"Bisnaguinha Bisnutrinhas Panutrir 300g","1224":"Pao Cast Para E Quinoa Integ Panutrir Broa 450g","2279":"Pao Pct Caseiro 500g","69251":"Pao Hot Dog Panutrir 400g","81571":"Pao Integral Surpreendente Panutrir 450g","81581":"Pao Integral 12 Graos Zero Panutrir 350g","81591":"Pao Integral Chia Macadamia Panutrir 400g","81661":"Pao Forma Plufi Nut 400g","82051":"Pao Hamburguer Gourmet Panutrir 500g","85181":"Muffato Pao Hot Dog 400g","85841":"Muffato Paezinhos De Leite 400g","86151":"Pao Integral Panutrir 450g","99161":"Pao Integral Plufi Nut 450g","121581":"Us Pao Hot Dog Unisabor 400g","121801":"Us Pao Hamburguer Gourmet Unisabor 500g","121811":"Us Paezinhos De Leite Unisabor 400g","121821":"Us Pao Integral 12 Graos Zero Unisabor 350g","121831":"Us Pao Integral 12 Graos Unisabor 450g","121841":"Us Pao Castanha Para E Quinoa Integ Unisabor 450g","121861":"Us Pao Forma Unisabor 400g","121871":"Us Pao Leite Unisabor 400g","135211":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 500g","135221":"Nossa Padaria Pao Hot Dog Emb Transp 400g","135231":"Nossa Padaria Paezinhos Leite Emb Transp 400g","135241":"Nossa Padaria Pao Forma Emb Transp 400g","141441":"Pao Sirio Tradic Panificadora Dubai 320g","141951":"Pao Sirio Tradic Panificadora Dubai 260g","145511":"Pao Nutri Del Grano Tradicional Panutrir 500g","145521":"Pao Nutri Del Grano Integral Panutrir 500g","152291":"Pao Sirio Integral Panificadora Dubai 300g","156021":"Panetone C/ Frutas Plufi Nut 300g","156051":"Panetone C/ Gotas Chocolate Plufi Nut 300g","162272":"Nossa Padaria Bisnaguinha Emb Transp 300g","162275":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 330g","162276":"Nossa Padaria Pao Integral Emb Transp 450g","162358":"Us Pao Integral Unisabor 450g","162396":"Pao Nutri Del Grano Tipo Caseiro Panutrir 500g","162767":"Muffato Pao Integral 450g","162775":"Muffato Bisnaguinhas 300g","162783":"Us Pao Artesanal Tradicional Unisabor 500g","162784":"Us Pao Artesanal Integral Unisabor 500g","162800":"Muffato Pao Forma 400g","162801":"Muffato Pao Leite 400g","162802":"Muffato Pao Hamburguer 500g","162920":"Pao Nutri Del Grano Hamburguer Artesanal Panutrir 320g","162921":"Pao Nutri Del Grano Hamburguer Brioche Panutrir 320g","162922":"Pao Nutri Del Grano Hamburguer Australiano Panutrir 320g","162923":"Pao Nutri Del Grano Hamburguer Gergelim Panutrir 320g"};
@@ -459,8 +590,7 @@ function okLocal(){
   const c=document.getElementById('chip');
   document.getElementById('chip-txt').textContent=v;
   c.style.display='flex';
-  document.getElementById('dlcd').textContent=v;
-  document.getElementById('me-dlcd').textContent=v;
+  document.getElementById('action-cd-label').textContent=v;
 }
 
 // DRAG DROP
@@ -596,8 +726,12 @@ function chkDL(){
   if(!hasW){showDL();return}
   rows.filter(r=>r.isWarn).every(r=>r.dir.length>0&&r.motivo.length>0)?showDL():hideDL();
 }
-function showDL(){document.getElementById('dlbar').style.display='flex'}
-function hideDL(){document.getElementById('dlbar').style.display='none'}
+function showDL(){
+  document.getElementById('action-cd-label').textContent=cd;
+  document.getElementById('action-section').style.display='flex';
+  _activeTab='import';
+}
+function hideDL(){document.getElementById('action-section').style.display='none'}
 
 // DOWNLOAD
 function dlXlsx(){
@@ -625,6 +759,8 @@ function dlXlsx(){
 
 // TAB SWITCHING
 function switchTab(t){
+  _activeTab=t;
+  document.getElementById('action-section').style.display='none'; // hide on tab change
   document.getElementById('tab-import-content').classList.toggle('hidden',t!=='import');
   document.getElementById('tab-manual-content').classList.toggle('hidden',t!=='manual');
   document.getElementById('tab-import').classList.toggle('active',t==='import');
@@ -760,7 +896,7 @@ function meCountFilled(){
 }
 
 function meInvalidateReport(){
-  document.getElementById('me-dlbar').style.display='none';
+  document.getElementById('action-section').style.display='none';
   document.getElementById('me-table-card').classList.add('hidden');
   document.getElementById('me-bulk').classList.add('hidden');
   document.getElementById('me-wb').classList.add('hidden');
@@ -875,10 +1011,11 @@ function meChkDL(){
   meProcessed.filter(r=>r.isWarn).every(r=>r.dir.length>0&&r.motivo.length>0)?meShowDL():meHideDL();
 }
 function meShowDL(){
-  document.getElementById('me-dlcd').textContent=cd;
-  document.getElementById('me-dlbar').style.display='flex';
+  document.getElementById('action-cd-label').textContent=cd;
+  document.getElementById('action-section').style.display='flex';
+  _activeTab='manual';
 }
-function meHideDL(){document.getElementById('me-dlbar').style.display='none'}
+function meHideDL(){document.getElementById('action-section').style.display='none'}
 
 // DOWNLOAD MANUAL
 function meDlXlsx(){
@@ -921,7 +1058,7 @@ function meReset(){
   document.getElementById('me-bd').value='';
   document.getElementById('me-bm').value='';
   document.getElementById('me-bcw').style.display='none';
-  document.getElementById('me-dlbar').style.display='none';
+  document.getElementById('action-section').style.display='none';
   meRenderList(SKU_KEYS);
 }
 
@@ -946,6 +1083,127 @@ function reset(){
   document.getElementById('bcw').style.display='none';
   hideDL();
 }
+
+// Variável para saber qual aba está ativa no momento do envio
+let _activeTab = 'import';
+
+// Exportar cópia local — chama a função correta conforme aba ativa
+function exportarCopia(){
+  if(_activeTab==='manual') meDlXlsx();
+  else dlXlsx();
+}
+
+const API_URL = "https://script.google.com/macros/s/AKfycbwiNTuz-9feXhiCSq5l0qY9xvHBCnidxvhPFMWF8vJ3a8mbZLDcP20kOJzI9ChFPb2B/exec";
+
+// Envia os dados corretamente usando os arrays rows / meProcessed
+async function processarEnvioNuvem() {
+    const cdSelected = cd;
+
+    if (!cdSelected) {
+        alert("⚠️ Erro crítico: CD não identificado. Recarregue a página.");
+        return;
+    }
+
+    // Escolhe a fonte de dados conforme a aba ativa
+    const fonte = _activeTab === 'manual' ? meProcessed : rows;
+
+    if (!fonte || fonte.length === 0) {
+        alert("❌ Não há dados para enviar. Importe ou preencha os dados primeiro!");
+        return;
+    }
+
+    const confirmacao = confirm(`Deseja enviar os dados do CD ${cdSelected} para o Sistema Unificado?`);
+    if (!confirmacao) return;
+
+    const btn = document.querySelector('.btn-save-cloud');
+    const originalText = btn.innerText;
+    btn.innerText = "⏳ ENVIANDO, AGUARDE...";
+    btn.disabled = true;
+
+    const now = new Date();
+    const dataEnvio = now.toLocaleDateString('pt-BR');
+
+    const itens = fonte.map(r => ({
+        dataEnvio: dataEnvio,
+        cd: cdSelected,
+        codigo: r.cod,
+        produto: r.sku || 'NÃO MAPEADO',
+        validade: r.validade,
+        prazo: r.prazo,
+        quantidade: r.qtd,
+        destino: r.dir || '',
+        motivo: r.motivo || ''
+    }));
+
+    const payload = { nomeCD: cdSelected, itens: itens };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "sucesso") {
+            alert("✅ SUCESSO! Dados enviados e unificados com sucesso.");
+            setTimeout(()=>atualizarStatusMonitor(), 1000);
+        } else {
+            alert("❌ Erro no servidor: " + result.message);
+        }
+    } catch (error) {
+        console.error("Erro no envio:", error);
+        alert("❌ Falha na conexão. Verifique se a API está ativa.");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+// Status dos CDs — corrigido para interpretar resposta da API BASE_UNIFICADA
+async function atualizarStatusMonitor() {
+    const grid = document.getElementById('status-grid');
+    const unidades = ["MATRIZ", "BAURU", "CURITIBA", "LONDRINA", "RANCHARIA", "SJRP", "BARUERI"];
+
+    // Mostra estado de loading com badges
+    grid.innerHTML = unidades.map(un =>
+        `<div class="cd-status-badge status-pending" id="badge-${un}">
+            ${un}<br><small>⏳ Verificando...</small>
+        </div>`
+    ).join('');
+
+    try {
+        const today = new Date().toLocaleDateString('pt-BR'); // dd/mm/yyyy
+        const url = `${API_URL}?action=status&data=${encodeURIComponent(today)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Espera { enviados: ["MATRIZ","BAURU",...] }
+        const enviados = Array.isArray(data.enviados)
+            ? data.enviados.map(s => s.toUpperCase().trim())
+            : [];
+
+        unidades.forEach(un => {
+            const badge = document.getElementById(`badge-${un}`);
+            if (!badge) return;
+            const foiEnviado = enviados.includes(un);
+            badge.className = `cd-status-badge ${foiEnviado ? 'status-sent' : 'status-pending'}`;
+            badge.innerHTML = `${un}<br><small>${foiEnviado ? '✅ ENVIADO' : '❌ PENDENTE'}</small>`;
+        });
+    } catch (e) {
+        // Fallback — mostra todos como pendentes
+        unidades.forEach(un => {
+            const badge = document.getElementById(`badge-${un}`);
+            if (!badge) return;
+            badge.className = "cd-status-badge status-pending";
+            badge.innerHTML = `${un}<br><small>❌ PENDENTE</small>`;
+        });
+    }
+}
+
+// Rodar ao carregar
+window.addEventListener('load', atualizarStatusMonitor);
+
 </script>
 </body>
 </html>
