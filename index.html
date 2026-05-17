@@ -11,6 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema de Padronização de Relatórios - Panutrir</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -65,6 +66,7 @@ main{max-width:1160px;margin:0 auto;padding:24px 16px 100px}
 }
 .f input:focus,.f select:focus,.f textarea:focus{border-color:var(--p);background:var(--sur);box-shadow:0 0 0 3px rgba(198,124,42,.15)}
 .f select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B5744' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+.f input:read-only { background: var(--surv); color: var(--txs); cursor: not-allowed; opacity: 0.8; }
 
 /* BTN */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:none;border-radius:20px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}
@@ -74,20 +76,6 @@ main{max-width:1160px;margin:0 auto;padding:24px 16px 100px}
 .btn-t{background:var(--pc);color:var(--sec)}
 .btn-o{background:transparent;border:1.5px solid var(--out);color:var(--txs)}
 .btn:disabled{opacity:.38;cursor:not-allowed;transform:none!important}
-
-/* HIGHLIGHTED DOWNLOAD BTN */
-.btn-g{
-  background:#1E8E3E;color:#fff;
-  padding:14px 28px;font-size:16px;font-weight:700;
-  border-radius:28px;text-transform:uppercase;letter-spacing:.05em;
-  box-shadow:0 6px 16px rgba(30,142,62,.3);
-  animation:pulseBtn 2s infinite;
-}
-@keyframes pulseBtn{
-  0%{box-shadow:0 0 0 0 rgba(30,142,62,.5)}
-  70%{box-shadow:0 0 0 12px rgba(30,142,62,0)}
-  100%{box-shadow:0 0 0 0 rgba(30,142,62,0)}
-}
 
 /* DROP */
 .dz{border:2px dashed var(--out);border-radius:var(--r28);padding:40px;text-align:center;cursor:pointer;position:relative;background:var(--surv);transition:border-color .2s,background .2s}
@@ -117,11 +105,7 @@ main{max-width:1160px;margin:0 auto;padding:24px 16px 100px}
 .bn-i{background:var(--pc);border:1px solid rgba(26,115,232,.25);color:var(--sec)}
 
 /* BULK PANEL */
-.bulk{
-  background:linear-gradient(135deg,#EEE0CC,#F0E6D8);
-  border:1.5px solid rgba(198,124,42,.28);
-  border-radius:var(--r28);padding:22px 26px;margin-bottom:20px;
-}
+.bulk{background:linear-gradient(135deg,#EEE0CC,#F0E6D8);border:1.5px solid rgba(198,124,42,.28);border-radius:var(--r28);padding:22px 26px;margin-bottom:20px;}
 .bulk-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .bulk-badge{background:var(--p);color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:500}
 .bulk-title{font-size:15px;font-weight:500;color:var(--sec)}
@@ -152,10 +136,6 @@ td .rf:focus{border-color:var(--p)}
 td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B5744' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px}
 .rcd{display:none;margin-top:5px}
 
-/* DL BAR */
-#dlbar{position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:1px solid var(--outv);padding:18px 24px;display:none;align-items:center;justify-content:center;gap:16px;box-shadow:0 -8px 24px rgba(0,0,0,.1);z-index:300}
-#dlbar .di2{font-size:14px;color:var(--txs)} #dlbar .di2 strong{color:var(--p)}
-
 /* MODAL */
 #mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
 .modal{background:var(--sur);border-radius:28px;padding:36px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.18)}
@@ -166,7 +146,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .modal .btn{width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:14px;margin-top:6px}
 
 /* MANUAL ENTRY */
-.tab-bar{display:flex;gap:4px;background:var(--surv);border:1.5px solid var(--outv);border-radius:20px;padding:4px;margin-bottom:20px;width:fit-content}
+.tab-bar{display:flex;gap:4px;background:var(--surv);border:1.5px solid var(--outv);border-radius:20px;padding:4px;margin-bottom:20px;width:fit-content;flex-wrap:wrap;}
 .tab-btn{padding:8px 20px;border:none;border-radius:16px;font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--txs);transition:all .15s}
 .tab-btn.active{background:var(--p);color:#fff;box-shadow:var(--sh1)}
 .me-search{position:relative;margin-bottom:16px}
@@ -176,24 +156,20 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .me-counter{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--txs)}
 .me-counter strong{color:var(--p);font-size:15px}
 
-/* SKU LIST — vertical */
+/* SKU LIST */
 .me-list{display:flex;flex-direction:column;gap:0;max-height:65vh;overflow-y:auto;border:1px solid var(--outv);border-radius:var(--r16)}
 .me-sku-row{border-bottom:1px solid var(--outv);background:var(--sur)}
 .me-sku-row:last-child{border-bottom:none}
 .me-sku-row.has-data{background:var(--sur1)}
 .me-sku-row.has-warn{background:#F5EDD0}
-
-/* SKU header line */
 .me-sku-hd{display:flex;align-items:center;gap:10px;padding:10px 14px}
 .me-sku-info{flex:1;min-width:0}
 .me-sku-cod{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--txs);line-height:1}
 .me-sku-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* + button */
 .me-add-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--out);background:var(--sur);color:var(--txs);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-weight:600;padding:0}
 .me-add-btn:hover{border-color:var(--p);color:var(--p);background:var(--pc)}
 
-/* Date rows inside a SKU */
+/* Date rows */
 .me-dates{display:flex;flex-direction:column;gap:0;padding:0 14px 0 38px}
 .me-date-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed var(--outv)}
 .me-date-row:first-child{border-top:1px dashed var(--outv)}
@@ -208,132 +184,43 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .me-del-btn:hover{color:var(--err)}
 .hidden{display:none!important}
 
-/* Estilos para Destino e Motivo na Aba Manual */
-.me-extra-fields { display: flex; gap: 8px; flex: 1; margin-left: 10px; align-items: center; }
-.me-extra-fields.hidden { display: none !important; }
-.me-inp.dest { width: 140px; height: 32px; font-size: 11px; border-radius: 4px; border: 1px solid var(--out); background: var(--sur); }
-.me-inp.mot { flex: 1; min-width: 140px; height: 32px; font-size: 11px; border-radius: 4px; border: 1px solid var(--out); background: var(--sur); }
-.me-del-btn { background: none; border: none; color: #d93025; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; margin-left: 5px; }
-.me-del-btn:hover { background: #fce8e6; }
+.logo-round { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--p); box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #fff; flex-shrink: 0; }
 
-.logo-round {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--p);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    background-color: #fff;
-    flex-shrink: 0;
-}
-
-
-/* Estilos para a Centralização de Dados */
-.cloud-section {
-    background: var(--sur1);
-    padding: 25px;
-    border-radius: 15px;
-    margin: 20px 0;
-    border: 2px dashed var(--p);
-    text-align: center;
-}
-
-.cd-select-container {
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.cd-select-container label {
-    font-weight: bold;
-    color: var(--tx);
-}
-
-.modern-select {
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 2px solid var(--p);
-    background: white;
-    color: var(--tx);
-    cursor: pointer;
-    width: 300px;
-}
-
-.btn-group-cloud {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-}
-
-.btn-save-cloud {
-    width: 100%;
-    max-width: 450px;
-    padding: 22px;
-    background-color: var(--p);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(198, 124, 42, 0.3);
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-}
-
-.btn-save-cloud:hover {
-    background-color: var(--ps);
-    transform: translateY(-2px);
-}
-
-.btn-export-small {
-    background: white;
-    color: var(--txs);
-    border: 1px solid var(--out);
-    padding: 8px 18px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: 0.2s;
-}
-
-.btn-export-small:hover {
-    background: #fdfaf6;
-    border-color: var(--p);
-}
+.modern-select { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 2px solid var(--p); background: white; color: var(--tx); cursor: pointer; width: 300px; }
+.btn-save-cloud { width: 100%; max-width: 450px; padding: 22px; background-color: var(--p); color: white; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(198, 124, 42, 0.3); transition: all 0.3s ease; text-transform: uppercase; }
+.btn-save-cloud:hover { background-color: var(--ps); transform: translateY(-2px); }
+.btn-export-small { background: white; color: var(--txs); border: 1px solid var(--out); padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+.btn-export-small:hover { background: #fdfaf6; border-color: var(--p); }
 
 /* Painel de Monitoramento */
-.monitor-panel {
-    margin-top: 30px;
-    padding: 20px;
-    background: white;
-    border-radius: 12px;
-    border: 1px solid var(--out);
-}
-
-.monitor-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.cd-status-badge {
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: bold;
-    text-align: center;
-}
-
-.status-pending { background: #fdecea; color: #b3261e; border: 1px solid #f5ddd9; }
+.monitor-panel { margin-top: 30px; padding: 20px; background: white; border-radius: 12px; border: 1px solid var(--out); }
+.monitor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+.cd-status-badge { padding: 10px; border-radius: 8px; font-size: 13px; text-align: center; border: 1px solid transparent; }
+.status-pending { background: #fdfaf6; color: var(--txs); border: 1px solid #e0d0bc; }
 .status-sent { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
-
+.status-missing { background: var(--cs); color: var(--ct); border: 1px solid #f1a9a5; }
 .loading-api { font-size: 12px; color: var(--txs); font-style: italic; }
+
+/* Dashboard */
+.dash-kpi{background:var(--sur1);border:1px solid var(--outv);border-radius:var(--r16);padding:18px 20px;}
+.dash-kpi .dkv{font-family:'Google Sans Display',sans-serif;font-size:28px;font-weight:500;line-height:1;margin-bottom:4px;}
+.dash-kpi .dkl{font-size:11px;color:var(--txs);font-weight:500;text-transform:uppercase;letter-spacing:.05em;}
+.dash-kpi .dkd{font-size:11px;color:var(--txs);margin-top:4px;}
+.dash-kpi.accent .dkv{color:var(--p);}
+.dash-kpi.warn .dkv{color:var(--ct);}
+.dash-kpi.ok .dkv{color:var(--ot);}
+.dash-sku-bar{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;}
+.dash-sku-bar .dsn{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx);}
+.dash-sku-bar .dsbg{flex:2;background:var(--surv);border-radius:4px;height:8px;overflow:hidden;}
+.dash-sku-bar .dsfg{height:100%;border-radius:4px;background:var(--p);transition:width .4s;}
+.dash-sku-bar.crit .dsfg{background:var(--cb);}
+.dash-sku-bar .dsv{width:52px;text-align:right;font-family:'Roboto Mono',monospace;font-size:11px;color:var(--txs);}
+.heatmap-table{border-collapse:collapse;font-size:11px;white-space:nowrap;}
+.heatmap-table th,.heatmap-table td{padding:5px 10px;border:1px solid var(--outv);}
+.heatmap-table th{background:var(--sur1);font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--txs);}
+.hm-cell{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.hm-ok{background:#d4edda;} .hm-no{background:#f8d7da;} .hm-na{background:var(--surv); color:var(--out);}
+@media(max-width:700px){.dash-2col{grid-template-columns:1fr!important;}}
 
 </style>
 </head>
@@ -342,9 +229,10 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 <div id="mo">
   <div class="modal">
     <div class="mico">📍</div>
-    <h2>Identificação da Unidade (CD)</h2>
-    <p>Informe o nome do <strong>Centro de Distribuição</strong> antes de continuar.<br><span style="color:var(--txs);font-size:13px">Selecione na lista abaixo</span></p>
-    <div class="f"><select id="li" class="modern-select" style="width:100%; border:1px solid var(--out); margin-top:10px;">
+    <h2>Autenticação</h2>
+    <p>Informe o nome e a senha do <strong>Centro de Distribuição</strong> antes de continuar.</p>
+    <div class="f">
+      <select id="li" class="modern-select" style="width:100%; border:1px solid var(--out); margin-top:10px;" onchange="onSelectUnidade(this)">
         <option value="" disabled selected>Escolha a sua Unidade...</option>
         <option value="MATRIZ">MATRIZ</option>
         <option value="BAURU">BAURU</option>
@@ -353,16 +241,20 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         <option value="RANCHARIA">RANCHARIA</option>
         <option value="SJRP">SJRP</option>
         <option value="BARUERI">BARUERI</option>
-    </select></div>
-    <button class="btn btn-f" onclick="okLocal()">
+      </select>
+    </div>
+    <div class="f" id="senha-field" style="display:none;">
+      <input type="password" id="senha_cd" class="modern-select" style="width:100%; border:1px solid var(--out); margin-top:5px;" placeholder="Digite a senha...">
+    </div>
+    <button class="btn btn-f" id="btn-acessar" onclick="okLocal()" style="display:none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      Confirmar e continuar
+      Acessar Painel
     </button>
   </div>
 </div>
 
 <header class="bar">
-  <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4QAqRXhpZgAASUkqAAgAAAABADEBAgAHAAAAGgAAAAAAAABQaWNhc2EAAP/bAIQACQYHEA8QEBAPEA8QDxUQEBUQDxUVDxAQEBAVFRYWFRUVFRgdKCAYGiUbFRUiMSIlKSswLjAYHzM4Ni44KC0uLQEKCgoODQ4YEBAXLSUdHSstLS0tLS0tLS0rLS0tLi0rLS0tKy0tLS0tLS0tLS0tKy0tLS0rLS0tLS0tLS0tLS0t/8AAEQgA4QDhAwERAAIRAQMRAf/EABwAAAICAwEBAAAAAAAAAAAAAAECAAMEBQYHCP/EAEwQAAEDAgMEBwMIAw4GAwAAAAEAAgMEEQUSIQYxQVEHEyJhcYGRMqGxFCNCUmJygsGy0fAkJjQ1U2NzdIOSorPE8RUzRaPCwxYlQ//EABsBAQEBAQEBAQEAAAAAAAAAAAABAgMEBQYH/8QAOxEAAgEDAgMEBwcDAwUAAAAAAAECAwQRITEFEkETUWFxIjKBkbHR8AYUMzRCocEjUnIkJUQVNaLh8f/aAAwDAQACEQMRAD8A9FsvlH0QgKgYBAMAqAgIQYBCBATAGAVIMGqgICAYNQEyoA2VwQNlASyAlkBLK4ACFMFFIQAIQClqAUhTBRSFAKQhRSEKIQoAEKACACELbKlGAQBAVIMAhBgFQMAgGAVIEBAMGoMhAQgbIA2VIGyAlkAbKDJLKjILIAZVAAhUuRSRzHuTAAWqFFIQCkKAQhQopCFQhCFFIUwBSFACyAvAWiBAQDAJgmRgFSDAKgYBAMAgGAVIQ2AJJAABJJ0AA3m6EycVi23rcxZRhjwNDUPv1Z+40EFw7yR5q4Kkc5V7X1l/4W4dzGQtHl2b+9C4Rtdl9vbPEVbJnY49mezQWH7YaBdvfa4+FwZaPSAoQgI4WQoskjWi7nBo5kgD1KArgq4pNI5I3nk1zXH3FAXIDldttr2Ye3q4w2SqcLtYfZjb9d9vcOKqQR5HiWNVNU4unnkkv9Ekhg8GDsjyC1g0YkbQeA9FGU3+DVNRD2oJpY7b2Nccp/CdD4ELLYwd3gO2bZHthqsrHusI5hpG8ncHD6JPoe7RQh1xCgEIUApCFEIUKIQgFKgBZQF4C0QYBUDAKkGAQDgIBgFSBAUIY2KYhFSxOmncGxt3neSeDWjiTyVSB5bjG1c1e4sJMNMd0IOrx/OEe0e7d471TSRq66QsbZgdbyHxN0RWaemizvu+4HEcytPRaHe2pRnLM9kZFcIRYMFiN5G7wWY83U63MqDXLSW3UsqNo6p7GsdPKY2Na1rc1mhoFhoNDpxNytniwjCifIXBwLs1/aBII8CFBg2VVF14D6iSaQgaOdJJIRbS1nk+5OYYBTRMj7bHXI1HNQYOi2a24rIs4ltUQtBtnJEjXW0AfqXDxv4jco2kdqNtKrlrRI5HEKl9RK+aV2Z8ji48b35DkBYAcgFo4lccF93pqCpkpkR0h9FMg3tJDlChUafEnAlw4XI8jr+aqIel9HmOmqpzFKS6aEAFx3vj3NceZFrHyPFGiHVELIEIQCELJRSEKIQgBZAXgKmRwFQMAgGAQgwCoGAQgwCYB4nt/tGa2qLGH9zwuc2IcHuGj5D4nQdwHMroloEaahkym/Hmss0bCWYSCw38+HeoCuGmFjlPaJtfj3+4FXJUSHBjJIyJumZzW+AJt+3gmSpG+2pwFkVRkjaGxtiha3v0dcnmSQUloNzVxwxx3GmliPA/7LIMKuqBfs7jv8ef7dyqRDW9aWm4P+61gGXSVgZmB9l3oDx8lmUcnts7hUsxlszP2ZpqSaqbBUFwZKHMje12UxzG3Vk89xbbm4LWDz11BP0SVdC6kqJKeSxdG8DN9Zrtx8CLH0UZxRdNI0DxIHv1911DRXUVulgoMmpkfe55k/qWiHUdGcpbWtA3ObK0+GUu+LQjIz1shYIIQhSshAIQslFKhQIUyAFswFAOAhBgqBgEINZAa7aWqMFFVSt0c2nlLTydlOU+tlVuQ+eYxZdSlofZZwaMpk1mHvIaO4cfyUAWVRBHj+RUwU3+x1V1mIU4P1h7g8/mmDSO328wp8kfXxauZG4PA3kA52kejh+PuWprqZh3HlM1S4nW+48+5ZwDHe+/qFcAR4VDBwQnQDSQbgkEEWI0IPAhUydBj2LfK5mTn23Q04k4XlY2zz6hZZUYUsuo7gT+X5lZKUSSqpFKRuVB6B0XYaTK6YjRjDY/adp8MyjMs9KcFkCOChRCEAhChRCoAWQuTIC0ZGAQDKkHAUIMFSBVKYeNUPymmngvYyQyMB5FzSAfWyIjPneaF8b3RyNLJGuIe072uGhBXYopUA7DfI29szwL8BcgXUwaTPSsF2EgyZpCZX20B7LM3eBwWFqdpRUTeU2y1NC5ro3yslaQc7HBl7fYAy28lrCM6m8ldmBbci4IuLXF+IvxVyFE0Q2coWixha9315HOklJ55nG91hs0kKdm6Qiz4WPF9CR2wORdvPidVDeEanEthKZ7XdSXRPscupcy/AEHW3gmTLgjzWohMbnMcCHAkEciDYj1W1qcGULRky26W8v0Vhm0BztT4D81ECt50VBm4ZRumkYxouXOAA5knRCM91wTC2UkLIm7xq931n8T+3JZepkzCoBChRCFClbgoBXKFFQGQFSDhUgwQDBUgyoCgCEIcpttsXHXtMsdo6sDsv3NltubJ+Tt47xotRlgHi08D43vjkaWSMcWvYdC0jeCt5KV23+vgoD2Bzp5KD9zv6qZ8UZbJ9Uuy3PjYlc4+semfq5NBtBiGHQPZDAJHTh0odXCR5q2TRvymSQEWc0uBOUOIyjcAQF6Xy7Hii5t5ydlTVzpKZk2UZ3QNky8MzmB1vC5Xne+D2rbJxm1mIUETuoEQnqBJIyWpzSNrGyM0dIw5bAZs1mtdbs7l39FLB4k5SeWzf7GvqXU2eqkEpc8mF9mgmGwyk2HGxPPVcJJdD2U8tam8WTZ47tYQauoI/lX+oNj77rpE889zUQszOFv2KphG+2iwd1KKVxGksDX/iu4Ef3Sw+ayVM0z9/khorKpDrOjst+WwZre0633srsvvsoGezrJkUqAQoURyhRHBRgrKjKKoDJatkGCpBghBwgCqBggChCFAeWdMGHxtkp6hthJIJGSD64ZlLXeIva/hyWkVHJ7J4W2qqAH/wDKYAXj62ujfP8AIqt4R0gss9ugw9jo7XG61u5FESqNPGDk63o+ikqHTOl7DnOc5gaM5zG7gH37IJvw46WVaMrB04kpsgYHsGlsu4AbrBZ0N4nnbQ5zEdiIZqgzukc0Odme0BoJJ9ohx9m/HxO5aayZSSOupqOFrGtbYNAAaBuAGgARRRlzmU1cTRuWZROlOTe551R7JRF0s1eXG8kgjgDi3MMx7Ti3XXeAOG/uzzYL2bZdhuxcclWx0QLaUdp7SSctvognU37+9VSyZqR5dEdjtjs82upurbYSs1hO4XtYs7gRb0CZOS0PEaqmfE90UrXMkabFpFiCFTaKB70KX0k7onBzCQQQQRvBBuCEJg9PwjpJgcxraiKbr9BaNokErvsi4IJ5WUaM4OyoZ3yRtfJE6EuuRG4gva3hmtoHW1tw3LLBa5AI5RmhCgKyoUCgLwtEGCpB2oQYIBlQEIAoQpq6dsrHRuzBrha7SWuHItcNQ4GxB4EIDzrHej6tqZM761tRYZWukzMe1nAWaC0eW9bUgZGH7JOwyPrC8PLnNEmUHK0a5Tc79TbdxCxLU7UXq0dHSV2g1RSOkoGDjeNPo+rny9ZTl4ZUe1mha7RsjQN4B0ItfUW3WO4vJiSaWiNlTVtI8CRktEeOcSQixPO+oPiLrpyHJ1HtqajaLHr5YKWSN8r3ta6RozsjDjYkOIs52u4DzWZNI7U6NSSbxheJu2ObGLBYUsFayYdXiICy5GowwadsgqngR5nPY5zH6EWN+/fuWF6TOk/QWWdhhVF1LMv0jq5dHpoeKUuZ5MxQyabaDZmlrh88yzwLNlb2ZG91+I7jdMjY4qp6K3X+bqmlvDMwggeRKuS5DH0VOuM1YLcbRkn9JMjJ12z2ylLQ9qNpfLbWZ9i/8PBo8EyMm7KyyCOQohUKhChRCoAKFLwtGRgqBgoQcLQCEAQhAoCICIBJYw9pa4AtIIIO4goDla/CZYCTHeSLhxe0ciOI71lo9MKqejML5U17XMeAWuBa5p3EHeCh10ZyjNlyKi7Cx8QuWFzmNc08jmI1HNdObKNwcU8yN/FhvVFjnOjBDmnKHNe7Q3+jcDzKw1g7u4jJYimZdTiJIPAczoFEm9jyNxjuY+E4nCJx1zXuZ9f6DXc3DeWr0KhJLJ5Klym8I9Ajia32WtHgAFxM7joCICICICFAKhQFQgjkKVlQohRFEKgAgLwqQYKgYKEHCoCqAhCBQEQEQAJQBQGqx6CPqnP6lkkm5u8XceJLbGw3rdOHO8ElUcFoedYXNPO+XLkLGEAGx1JJtx7iulOlGbfcei4nKlCPey7F+vihe/MGkWtYNvqQNL+K3OlCMW0crepOpUSexkbLYNJVxse4ueSXXc4k27RH5LpRS5Ezld6VWjqpdnI4229p3uXVM8hsMKns0RO0c0WaT9Jo3DxA+C8lenh8yPRSnnRmyXnOxEBEBEAEAEKAoBHKAQoUrKiKIVABAXhUgwVAwUIOFoBQBQgUBEArydw38+AVjHJG8GDNh9znzF7h9ftAfdA0Hotqks5J2rxhEp6wA5b5hxdfctOOTKZiYqyaSzmaxAXaG3Du8kcV5a0Kn6dj10J0v1bnD4xhkYa50PzbhqWtJaxwH2QdCuNOtJPDZ9Sm4tpSRzgjF7nUrvzZPowoRidp0e4z1bnUzjYHtR95+k38/Veq2llcrPh8Yt8SVWPkzvK+ugiAM0gDj7MYu6R3g0do/Bd5TUdz40KbnsjV0GImWezoRE0t+ZBsZLjfmtoCRwG6x11XlnXctFsen7vyLme5ulzBEBEBEAEAEKKVAKVAIVSiFQpWVABAXhUgwVAwUIOFoBQBQgUBEAj3AEEkDh+3otweGZksoN12OYj4WO3tafJAMTZAecbZXjqiGAkPDXNaL6k3aQBzuPevDVppT06n0KFR8i8DVY7gklIGPdrG4CzrWLXWvlcOB/Urho+3RvI1VjqYGH0FTO4Gnjlcb6Pbdob+PQD1W45RzrVaaXptHo2AYbLTxDrjAJfpOAL3O5ZnaXKuHufJnOEn6C0MbFq3I5r2m7mODh32O7zXNvU3y5jhnYNdcAjcRddDwhQFUk1jay+Xe8SVtNQUcs1GOR2OuLr3UK0a1NTjsyNYGXYgqFAUAhWQIVSiFQpWVABAXBUDhUgwUIOFQFUBQgUBEBr8QlynV+S40uMzT+oq5OsFnoV4Y+7pgCLCSwA1aOyNx4rpA41ljHkbG66HI11XI/MbMc8WboHBupzXvqOFveuc28nalFPcxswacxgyPAsHus51uQNyQuTfej0RprozHfiQ3PAcORAKzznXs0tgvxc2s0HuACc7J2S6swKuqltmdaNv1nkMb6u0WdWaXKtjDwmWhnk+erYND7GYgOP3iA0jwK6Qp97JUVXHowb9h38OV4vG5kjebHBw9y6Ok+h4HLl9ZY8yEEbxZYaa3KmmYtQNfJfleNQxXUu9HaGxZS7j4r38Eb7GWe8zPcuK+0YFQouYc1yhWpzbUZJtDArlsCFClZQojlCgQFzVSDhUgwUIOFQEKgIQgUAJHNY10kjmxxtF3SOIa1o5klbjBsieXyxWW+hxWObc0ZuymM0rmntStsxuXcQ3N7WtuHmsylDaLPrUOFXKXPUWE+nX/wBGx2RxWOrEz4yQ7OC6J2USN7IBdYaZSQbW5c10pnz7ujOnJcyOiXQ8hgYnR57ODQXNBtq5uhtfVuqxKOTpTnys0VbVsiY57w2Jo9pznyv9zhdcJJnthJdHk4LFsadOfmnPihabmW5ZJIfLcOQ3njyEeIo+taWcqmskao4hznqj+N/5uWe0PqLhce4ofPETmLHvdzcdfXVR1GdYcOjESStcRZtmDu3+qw22euFvCBVTVD4nZonvjd9ZjnMd6jVE8bG6lKnUWJxT80dThPSLiNPYPkbUx6diUAm3c8Wdfxuusa81vqfJuOA2tTWKcX4fI73Z7bCHErtbE+GZrcz2EhzCLgXa7jqeIG9fE45yzjCaW2jPgXXDKtm8yacXszp4YyGg89V7uF0HTtotr1tT5spJyaGK+gQonk4DzXweLXuF2MHr1+R0ihIRqvHwenJ1+ZbJFlsWOX6k5iFQohQohUKC6AuCpBghBwhBwqAhUgQgNVtNtFBhsQfN25XX6mnBAc88z9Vo4n4nRbfLBc0vceizs6t5U5Key3fceVTVeI49UGMEOytdI2DMI4Y2AhugO89oam515LjmdZ4P1caNpwqkpyWr0zjLfyNZi+z9bQEGohfECbNkBDmE8s7SRfu3rEqco7o9ltf211pTlnw6mRszT1FZO2GEkTZXObKHmJzGjfdzdbbvVapczliJ5uJqhSpc9Rad25uBiuJRVPyMV0nXiURZXhkgLyQB2ntNxrvXXtJKXL1Pl/8AT7edD7wl6OMmVi2MYvTTimmq42ynJlsyA5s5s0g5OfwVlNxlys89vYW9ek6sM8qzn2GHjOD1r62KjrJzPUvaHRNLz1IBza6CzfYduCkubmUerO1srZUJXEU+WO+mv1qaqtwCqNa3DyI+vuMrA75vVme+Yj6t+C4uEufl6n2KF7bxtXcrPKvDXuGpdi62WpnpWMYZIcvXOzgRtzC7dTvuO7giozcnHuFTjFtCjGtJvEs4WNdNzOqejXE2C4ijk7mSMv8A4rLbtqhwh9oLOTw215r5GPhGwOIVTC9kcbGB723e9ou5jix4sLnRzSPJSNCctkdLjjlpRfK229Hou/XqavaDAKnD5BHUsDS4EseDmY8DflPdfcdd3MLFSEoPU9dnf0buLlTe266osxXZqqpTTtlY3NUAGEBzTmJLRY8j22+qlSLprMjNvxGhXU3B+pvodRszsziFDKagRQyHqnt6nrQ1xvYgXsRvA4r4tzd29ePZuXXfB8q+v7a5h2eWtd8GuwHavEMPe572ySUxleJonh3ViQuOcMdbsPvfTv1C+zRrqCUU8ru8PA7XXDLS6iowaU0lhrqumV1PVcMxqnrIGz077tOjmGwkjfxa8cD8dLXWOIXUKFHni9Xol4n5arbVaFR0qq1XuZayMn9a/M29hWuZcz0T6sN4Lw2y/UW9tC3hyQ/+nNvIpXoIIVDQhQCFQCIC8KgcIQYKkHCAZUFGIV8dLBLUy/8ALiYXEcXO3NaO8kgeYW4YWZPZFhTlVqRpQ3kzwHGsVlrJ5KiY3e87vosb9FjeQA/bVeWUnJ5Z/QbS1hbUlTh0/d951vQ3/GL/AOqS/wCZEu1r6/sPkfaT8rH/ACXwZ1OzNe/En4th9WesjbLKIiQMzGGR7QAbfRLWkHeF3pydRzhI+LeUI2kbe4paNpZ89PiaXocpAySsqJBbI2OEHhme/tD1az1XO1jq33aHv+0VfnhSpx/V6Xy/kwsegybSM5Oq6Nw8xHf33WZrFf2ne1nzcHl4Rkjc9KdBauw2oA9p7InHvZI1zf03ei3cR9KL8TxcDrf6evSfc3+2PkZW0rbbRYcecI9xnWqn40TlZv8A2quvH5GvrzbaiM98Y9aYj81mX5hfXQ9FFZ4LLz/k0W3+I1FLitaaeaWHP1BcY3uZmAhZa9t/H1XKtKUajwz38Jt6NxY0+0injO/mdP0q4vUU8dB1E8sRe2UvLHuYXWEVr2Ou8+q7XE5RUcM+XwK1o1qlVVIppYxnzZhCpeNmM4e8P643eHEOuaok679blZy+wz9bnV0oPjPI0sd3T1QdILzLgmFzSEulJhBedXHNA8uJPeWAqV3mlFv60LwhKnxGtCO3pfEyekjSXAz3n3Opli/X9P2M58F9S68vmLi9XIzHKRjXvDHQAOZc5Tczbxu4D0C/MUIRlYzbWqfyOlClCXD6kmtU9/cbPBwPluJxEAsLqZ5aQCCZIrOuON8oXnrNqhSkt9V+55a34FGXXVe5mtxRhweaOqp2/uJ8oFVTAAtBIsHs5aX03XAHHT6HDriFeSjXim47Z7j0Uv8AX03SqP8AqJei/wCGd/ma4NcwhzHNDmOG4tIuCF+jnFRemx8GOdnuhSsGityAQqGhCgEKhRVMgvWiDBCDhUDhCBVBxnS7UObQQsBsJKkZ+9rGuIB88p8laulJeLPr8AgpXbk/0x0PIV5T9odz0Ofxi/8Aqsv6cS9Ft6/sPz/2k/Kx/wAl8GdJsHTOp6rGauZro4GyzWe4FrXBskj3EX3gADXvXainGU5M+TxOrGrQtqMHmWFovFJGuwWX5NgfXnsuqMQif5NnZceFoneqxB8tLm73/J2uodrxBUt1CGP/ABf8sfbWHLtBQOto80hvzImc0+4BWqv60TXDZZ4XXj3Z+COv25oxUQNLdZKeqppbcQA9od/ge4+S71Y8y8mfF4dW7Ko87SjJft8zR7UD98GF/wBEfjMuVT8aB9Cyf+2XHmv4NPi5ttPF/SU/vhCxP8wvroey3/7LP2/E0PSqP/tKj7kP+W1crn8R+R9LgH5JebN90yHs4aP5qf4QrrdbRPn/AGc9es/L+TM2fwv5Zs82DrY4c0zj1j9GNyz5vVahHmo4z9ZPPeXH3firq8ucLZf4mt6VS6np8PoA1xhjiDhMbWlexvV6AHSwJJ++FzufRjGB6eApVq1a4b9J9O7Opsek3fgp+0fjTqX34a8n8DzcF/5Pl8zPrMDEmJw1ZlYOrhAEOnWOI6zXfo3t+5fj6dzyWrp8u736HOnduFrKjy+s9ybIkyurKl4yySVJa6Le6IQgMax32ra6aahL3EVTprZLOe/IvfRVOmtlHOe/OpkbYxB9BVBwuBEXDxZZw94C5WMmq8Md5iwk43NNrvLdhqsnDaQP1c1jgCCCMgcQwHvAsLdy/S1+LUqKUGm5I58RpJXlTl2b/fqbkzdy+bPjkv0w97PJyCGQrzPjFw309xeVBJX6K1rOtSjNrcjFK9BBCoyiLILwtkHagGCEHCEGWgcv0n4eZ8OL2i7oJWykcersWu9M1/wrU1ml5H0uDV1RvFnaax7eh4svIfuTuehz+MXf1WX9ONei29f2H5/7SflY/wCS+DMbbfbGsqJKmkc9jKdk8zMjG5TI1khDc7iSTuG6w7lK1aTzHob4Vwq3pwhXxmTSevTyOvxnBYH4Vh1LUVsNCQ2OQF+U53iM5gAXN3GX3hd5QXZxi3g+Jb3dSN7WrU6bnnK06a+T7ibeRg4hgczSHNdMxucatcBJE5pHjmJSsvTgy8Ll/prqD/tzj3m5irgMZqKV+rJaKFwB3FzHPBFu9rz/AHV05v6rj4HhlQzYRrLpNr3pGo2od++DC/6L4mVc6n40D22S/wBsuPNfwarFYydp4h9uA+TYQT8CsT/MI9dB44LP2/FHN9KEmbFKruEI/wCyw/muVz+Iz6vAo4sY+OfidD0zf9OH81P/AOpdbr9J877N+tW9n8iW/ev/AG/+pU/4/wBd4f8A3v6/tDtazrsAw6be6MxsJ45Mr4z72s9Eq60IvuJw99lxWtT6PPzM3pKOuCfeP+nWb78NeT+B5+Cr8z5fMwto5smO0Tv5uFvk98rP/Jfm7WPNYzXmeu0hzcOqrx+GDoMI7FfiEf0XfJ5mjvcwsf72BeKv6VvSl3ZR86t6VvSl3ZX8/wAmH0jYm2CjdHcdZMQxo45AQXm3K2n4gt8Moudbm6RO/CaDqXCl0jr8jodlMMNLh9LC8WkDC94O9r5CXlp8M1vJfratCnKEYzimfNva/bXVSots6ezQ2DogvmVOEW8tsryOPMxcgWafB6EHl5fmXmYCvqJJLCIVuVAjlGUVZBcFsg7UAwQjHCEHC0Bm21DgHNcCHNOoc06EELUJcrMyXdujxXbrZF+Hy54wXUbz81JvyE//AJvPMcCd477rjVp8rytmfteE8TjdQ5Jv+ot/HxM/oeeBiDySB+5Zd5A1zxrdt6/sOH2jTdrHH9y+DOdxuESYjUsuLPrpmh1xazpnC9/Ncpr02vE+haz5bGEsbQ+COt6ZqhpnpYmkERwvNgQcudwAB8mBd7rdI+R9moPkqza3aNpWVLJKHZ+TOzO2romkZm5rDsuNu4tC3nMIPxR4acJQubuONHGXzMXabEhBtFTy37I6hjzfQNkDmOv4B91mpLFdM72NB1eE1I41y37sMnSFiTYMaoZiezHHA55GtmdbJm3fZuleWKsX3DhFCVXh9aCWrbx54OqnwinFd/xl1RH1DafTcW5spb1geDYjISLc12cI8/aZ6HyY3NX7t9yUHly+ljzPFtoMRNXU1FQdOskc4A7wzc0HvDQF4Jy5pN95+4s6H3e2jT7l+/U7rpnka51Dlc11o5txB0Jjt8F6Lr9J8L7NJrtsru/kAe3/AOLkZm5ut9m4v/Chw8NU/wCP9d5Gn/1vOPrlLKp7TsswFzcwc3KLi9/lJ0A52JKS/L/XeYimuNPC+uUt6R3DPgeo3E+V6ZYvvw15MxwZPF15fM1u2rh/xehcCD/Bbm40tO79a+BYJq0mmu/4Hs4bn7lWWO/4GftJtA2gr3yBvWl9GxoYHAAPEjyC48BZcbW1de3UXpiR57OyldW6jnGJfwhNlMIlxCZuJ14eWNkHUxZQ2N4bqMtz7Ad6kHU6r6MpxsIwl2eYd/iW+uYWsHaW+7XpPr9fA9HMuY3XvpXdO49KDPzqjy6CFdSiFCiOQojlAIVCioC1pVIOFQOEIxgVSDhCDKlBLGyRjo5WNkicLPY4AtcPBajLGj2JrGSlF4a6nme1HRk9uaXDz1se80ziOtZ9xx9odx18VidDOsPcfpbHj69S6WH/AHdPajz2eB8biyRjmPHtMcCxzfFp1C87WNGfpYVI1I80HleBWAholkwCAIEsEAQYRLITCznAUKABASyAlkGAk/C3khFFLZHUdHeDx1VS4ysa+KOO5adWl7jZoI46Zj5L5/Ebh0aXovVs+Txi5lRpJQeHJ/sdbs30axRv66tc2VuYmKmbfKW37JkPHS3Z3c77l9W3jGVONSTzlZwfGu+O1Jx7Oisd7+XzO9k1FrANAsGjQNA3WVuYKvBwlsz4cVjXqYhBBX4urTqWtVrOGtmdt0WNfdfpOHX33iLjL1l+5hrBCvpEKyoUQqAQqFAgLAqQcKgZpQDhUg4KEGVAUAQUTxsRrJi4phlNVtyVUEcwto4iz2/deNR5FdOdS0ksm6NWrQfNSm0cZinRZA+5pKl8R/k5QJG+AcLEed1zdGEvVePM+1Q+0NeGlWCl4rRnL1/RviUWrYmTt5xPafc7KfcsO3mttT6tLj9nP1m4vxXyNBV4JVw362mqGW3l0cgHray5uElumfQp3ttU9WpF+1GvPLisnpTT2ZLqZRSXTKAWC5sNTyGpVWpHKKWWzZUmz1bMfm6Spd39W8N/vEWW1Tm9keSpxC1p+tUXvOhw/ozxGWxkbFTt49Y8F1u4Mv7yF0VvProfOrfaC1hpDMvJfM6rCujCkisamaSpd9RvzMfnYlx9QtqlTju8nyq/2guamlOKive/r2HTso4YAI4Io4WAeywAXPMnie8r8zxyqpVYwSwkvifL7SpUblUk2/Ey4T2QvqcLnzW0fDQ5yWoy+iQrlbfxXzuIWf3iGnrLb5GovBUxpXzOGWlenX5pRwkabWBnL9EZEKgKyhRCoAXQuCwJkgwKpBwVQOEIMCqBwUIFUBQEQBQgQbKptEaTHEzuZWlUkupnkiJJZ3tMjd4tBV7V9SqONmyh1DTnfTUx/so/1J2ngjanUW0372RtFAN1NTDwiYPyTtPBByqPeb97MhjsvstY3waAnayMOOd2MZXcz8FHUk+o5I9whWMmksEQGLUDW6/L8apNVlPo0dYbD0+7zXv4I32Ml0yZnuWFfYMiEoBChUK5QpW4oBCslFKFQEKMChkYKgcFUg7SgGCpBgUA4KECCqCIAoCIA3QEugJdCEugDdAC6Al0KBABwvvXKrRhVjyzWUM4ABbcrTpQpR5YLCDYCVsCEoUVxUCEKFEcVAIVCilCgQoQUIOChBgVUQcFUDAoBgVSDAoAgoQIKZAboA3VBEAUBEBEBEBEAEBEALqABKAUlCikqAQlCiuKArKjKKVCiFCkugCChAgoBwUIMCqQYFAMCqBroA3VIG6AIKEDdQBuqCXQBumQS6ZALpkgbpkoLoCXUACUwBSVSgJUKISgFJQCEqFFJUAhQ0KSoAKAN1SBBVKMCoQYFUgwKoGBVIMCgCCgCHIA3QgbqgN0BLoCXUIG6Al1SkugBdAC6Al0yAEqFFJQCkoBCVAKSoUUlQopKpRSVGAKAgVRBgqUZQgwVAQgGVMhCAdUECgCEAQqQYICICICICKgiAiACgIUKKoBSqBSgFKhRVCilQClGUUqACA//9k=" class="logo-round" alt="Logo Panutrir">
+  <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4QAqRXhpZgAASUkqAAgAAAABADEBAgAHAAAAGgAAAAAAAABQaWNhc2EAAP/bAIQACQYHEA8QEBAPEA8QDxUQEBUQDxUVDxAQEBAVFRYWFRUVFRgdKCAYGiUbFRUiMSIlKSswLjAYHzM4Ni44KC0uLQEKCgoODQ4YEBAXLSUdHSstLS0tLS0tLS0rLS0tLi0rLS0tKy0tLS0tLS0tLS0tKy0tLS0rLS0tLS0tLS0tLS0t/8AAEQgA4QDhAwERAAIRAQMRAf/EABwAAAICAwEBAAAAAAAAAAAAAAECAAMEBQYHCP/EAEwQAAEDAgMEBwMIAw4GAwAAAAEAAgMEEQUSIQYxQVEHEyJhcYGRMqGxFCNCUmJygsGy0fAkJjQ1U2NzdIOSorPE8RUzRaPCwxYlQ//EABsBAQEBAQEBAQEAAAAAAAAAAAABAgMEBQYH/8QAOxEAAgEDAgMEBwcDAwUAAAAAAAECAwQRITEFEkETUWFxIjKBkbHR8AYUMzRCocEjUnIkJUQVNaLh8f/aAAwDAQACEQMRAD8A9FsvlH0QgKgYBAMAqAgIQYBCBATAGAVIMGqgICAYNQEyoA2VwQNlASyAlkBLK4ACFMFFIQAIQClqAUhTBRSFAKQhRSEKIQoAEKACACELbKlGAQBAVIMAhBgFQMAgGAVIEBAMGoMhAQgbIA2VIGyAlkAbKDJLKjILIAZVAAhUuRSRzHuTAAWqFFIQCkKAQhQopCFQhCFFIUwBSFACyAvAWiBAQDAJgmRgFSDAKgYBAMAgGAVIQ2AJJAABJJ0AA3m6EycVi23rcxZRhjwNDUPv1Z+40EFw7yR5q4Kkc5V7X1l/4W4dzGQtHl2b+9C4Rtdl9vbPEVbJnY49mezQWH7YaBdvfa4+FwZaPSAoQgI4WQoskjWi7nBo5kgD1KArgq4pNI5I3nk1zXH3FAXIDldttr2Ye3q4w2SqcLtYfZjb9d9vcOKqQR5HiWNVNU4unnkkv9Ekhg8GDsjyC1g0YkbQeA9FGU3+DVNRD2oJpY7b2Nccp/CdD4ELLYwd3gO2bZHthqsrHusI5hpG8ncHD6JPoe7RQh1xCgEIUApCFEIUKIQgFKgBZQF4C0QYBUDAKkGAQDgIBgFSBAUIY2KYhFSxOmncGxt3neSeDWjiTyVSB5bjG1c1e4sJMNMd0IOrx/OEe0e7d471TSRq66QsbZgdbyHxN0RWaemizvu+4HEcytPRaHe2pRnLM9kZFcIRYMFiN5G7wWY83U63MqDXLSW3UsqNo6p7GsdPKY2Na1rc1mhoFhoNDpxNytniwjCifIXBwLs1/aBII8CFBg2VVF14D6iSaQgaOdJJIRbS1nk+5OYYBTRMj7bHXI1HNQYOi2a24rIs4ltUQtBtnJEjXW0AfqXDxv4jco2kdqNtKrlrRI5HEKl9RK+aV2Z8ji48b35DkBYAcgFo4lccF93pqCpkpkpkpkpkp" class="logo-round" alt="Logo Panutrir">
   <div><div class="bar-title">Sistema de Padronização de Relatórios</div><div class="bar-sub">Painel Corporativo de Gestão — Panutrir</div></div>
   <div class="bar-r">
     <div class="chip" id="chip">
@@ -378,6 +270,11 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   <div class="tab-bar">
     <button class="tab-btn active" id="tab-import" onclick="switchTab('import')">Importação de Base de Dados</button>
     <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">Inserção Manual de Registros</button>
+    <button class="tab-btn" id="tab-grades" onclick="switchTab('grades')">Gestão de Grades</button>
+    
+    <!-- NOVO BOTÃO DE RELATÓRIOS (OCULTO POR PADRÃO, APARECE SÓ PARA MATRIZ) -->
+    <button class="tab-btn" id="tab-relatorios" onclick="switchTab('relatorios')" style="display: none;">Relatórios Matriz</button>
+    <button class="tab-btn" id="tab-dashboard" onclick="switchTab('dashboard')" style="display: none;">📊 Dashboard</button>
   </div>
 
   <!-- ===== IMPORT TAB ===== -->
@@ -395,7 +292,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <div class="fbadge" id="fb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="fn"></span></div>
     </div>
     <div id="pp" class="hidden" style="margin-top:14px"><div class="pw"><div class="pb" id="pb"></div></div><div class="pl" id="pl">Processando...</div></div>
-  </div><!-- end s1 card -->
+  </div>
 
   <div id="s2" class="hidden">
     <div class="sg" id="sg"></div>
@@ -426,12 +323,11 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           </button>
         </div>
       </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--txs)">💡 Após aplicar em lote, você ainda pode editar cada linha individualmente na tabela abaixo.</div>
     </div>
 
     <div class="bn bn-w hidden" id="wb2">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span>Há pães com validade ≤ 22 dias. Preencha <strong>Direcionamento</strong> e <strong>Motivo</strong> para todos eles — use o painel acima para agilizar.</span>
+      <span>Há pães com validade ≤ 22 dias. Preencha <strong>Direcionamento</strong> e <strong>Motivo</strong> para todos eles.</span>
     </div>
 
     <div class="fpill" id="fpill">
@@ -460,17 +356,12 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       </button>
     </div>
   </div>
-
   </div><!-- end tab-import-content -->
 
   <!-- ===== MANUAL TAB ===== -->
   <div id="tab-manual-content" class="hidden">
     <div class="card">
       <div class="ch"><div class="ci am">✏️</div><div><div class="ct">Lançamento Manual de Estoque</div><div class="cs">Digite a quantidade e a menor data de validade para cada SKU que desejar. Preencha ao menos 1.</div></div></div>
-      <div class="bn bn-i">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-        <span>Itens com validade ≤ 22 dias exigirão <strong>Direcionamento</strong> e <strong>Motivo</strong> antes de exportar — igual ao fluxo de importação.</span>
-      </div>
       <div class="me-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" id="me-filter" placeholder="Buscar SKU ou nome do produto..." oninput="meFilter()">
@@ -479,11 +370,10 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <div class="me-list" id="me-grid"></div>
     </div>
 
-    <!-- BULK PANEL MANUAL -->
     <div class="bulk hidden" id="me-bulk">
       <div class="bulk-hd">
         <span class="bulk-badge">✦ Preenchimento em lote</span>
-        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade ≤ 22 dias de uma só vez</span>
+        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade ≤ 22 dias</span>
       </div>
       <div class="bulk-grid">
         <div class="f" style="margin:0">
@@ -506,22 +396,18 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           </button>
         </div>
       </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--txs)">💡 Após aplicar em lote, você ainda pode editar cada linha individualmente.</div>
     </div>
 
-    <!-- WARN BANNER MANUAL -->
     <div class="bn bn-w hidden" id="me-wb">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       <span>Há SKUs com validade ≤ 22 dias. Preencha <strong>Direcionamento</strong> e <strong>Motivo</strong> para todos eles antes de exportar.</span>
     </div>
 
-    <!-- FILL PILL MANUAL -->
     <div class="fpill hidden" id="me-fpill">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       Dir/Motivo preenchidos: <span class="fdn" id="me-fd">0</span>&nbsp;/&nbsp;<span id="me-ft">0</span> linhas em data curta
     </div>
 
-    <!-- TABLE MANUAL REVIEW -->
     <div class="card hidden" id="me-table-card" style="padding:0;overflow:hidden;box-shadow:var(--sh2)">
       <div class="tw">
         <table>
@@ -548,9 +434,326 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     </div>
   </div><!-- end tab-manual-content -->
 
+  <!-- ===== GRADES TAB ===== -->
+  <div id="tab-grades-content" class="hidden">
+    <div class="card">
+      <div class="ch">
+        <div class="ci gn">📦</div>
+        <div>
+          <div class="ct">Gestão de Grades</div>
+          <div class="cs">Lançamento de caixas retornando da unidade para a Matriz</div>
+        </div>
+      </div>
+
+      <form id="form-gestao-grades" onsubmit="lancarGestaoGrades(event)">
+        <div class="f">
+          <label for="cd_nome">Local / CD (Bloqueado):</label>
+          <input type="text" id="cd_nome" placeholder="Ex: CD Bauru" required readonly>
+        </div>
+
+        <div class="f">
+          <label for="caixas_vazias">Caixas Vazias:</label>
+          <input type="number" id="caixas_vazias" placeholder="Ex: 1200" required min="0">
+        </div>
+
+        <div class="f">
+          <label for="caixas_trocas">Caixas com trocas:</label>
+          <input type="number" id="caixas_trocas" placeholder="Ex: 400" required min="0">
+        </div>
+
+        <div class="f" id="campo-horario-saida">
+          <label for="horario_saida">Horário de Saída do Caminhão:</label>
+          <input type="time" id="horario_saida">
+        </div>
+
+        <button type="submit" id="btn-envia-grades" class="btn btn-f" style="margin-top: 10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Gerar Relatório e Lançar
+        </button>
+      </form>
+
+      <div id="resultado_gestao" class="hidden" style="margin-top: 20px;">
+        <div class="bn bn-i">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <span>Confirmação de envio — registro salvo com sucesso:</span>
+        </div>
+        <p id="texto_gerado" style="font-weight: 500; background: var(--surv); padding: 15px; border-radius: var(--r12); font-size: 15px; border-left: 5px solid var(--p); margin-top: 10px; color: var(--tx);"></p>
+      </div>
+    </div>
+  </div><!-- end tab-grades-content -->
+
+  <!-- ===== RELATORIOS TAB (SÓ MATRIZ) ===== -->
+  <div id="tab-relatorios-content" class="hidden">
+
+    <!-- CARD 1: RESUMO DE GRADES -->
+    <div class="card">
+      <div class="ch">
+        <div class="ci gn">🚚</div>
+        <div>
+          <div class="ct">Resumo de Grades — Chegadas na Matriz</div>
+          <div class="cs">Texto automático gerado com base nos lançamentos de grades de cada CD no dia de hoje</div>
+        </div>
+      </div>
+
+      <div class="bn bn-i">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <span>O sistema busca automaticamente os dados que cada CD lançou na aba <strong>Gestão de Grades</strong> e monta o texto de chegada prevista.</span>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center; margin-top:16px; flex-wrap:wrap;">
+        <button class="btn btn-f" id="btn-atualizar-grades" onclick="carregarResumoGrades()" style="padding:11px 22px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Atualizar Resumo
+        </button>
+        <button class="btn btn-t" id="btn-copiar-resumo" onclick="copiarResumoGrades()" style="padding:11px 22px; display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copiar Texto
+        </button>
+      </div>
+
+      <!-- Área de loading -->
+      <div id="grades-loading" class="hidden" style="margin-top:18px; font-size:13px; color:var(--txs); font-style:italic;">⏳ Buscando dados na nuvem...</div>
+
+      <!-- Área de resultado -->
+      <div id="grades-resumo-area" class="hidden" style="margin-top:18px;">
+        <div style="font-size:12px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--txs); margin-bottom:10px;">Texto gerado para o grupo:</div>
+        <div id="grades-resumo-texto" style="
+          background: var(--surv);
+          border: 1.5px solid var(--out);
+          border-left: 5px solid var(--p);
+          border-radius: var(--r12);
+          padding: 16px 18px;
+          font-size: 14px;
+          line-height: 2;
+          color: var(--tx);
+          white-space: pre-line;
+          font-weight: 500;
+        "></div>
+
+        <!-- Cards individuais por CD -->
+        <div style="font-size:12px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--txs); margin: 20px 0 10px;">Detalhamento por unidade:</div>
+        <div id="grades-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:12px;"></div>
+      </div>
+
+      <!-- Nenhum dado -->
+      <div id="grades-vazio" class="hidden" style="margin-top:18px;">
+        <div class="bn" style="background:var(--surv); border:1px solid var(--out);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <span style="color:var(--txs);">Nenhum lançamento de grades encontrado para hoje. Os CDs precisam preencher a aba <strong>Gestão de Grades</strong> primeiro.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 2: RELATÓRIO CONSOLIDADO DE ESTOQUE -->
+    <div class="card">
+      <div class="ch">
+        <div class="ci bl" style="background:var(--p); color:white;">📊</div>
+        <div>
+          <div class="ct">Relatórios Consolidados de Estoque</div>
+          <div class="cs">Baixe a compilação de todos os CDs que enviaram dados na data selecionada</div>
+        </div>
+      </div>
+      
+      <div class="bn bn-i">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <span>Painel exclusivo da Matriz. Selecione um dia e o sistema fará o download de tudo consolidado.</span>
+      </div>
+
+      <div class="f" style="max-width: 300px; margin-top: 20px;">
+        <label for="data_relatorio">Selecione a Data do Relatório:</label>
+        <input type="date" id="data_relatorio" required>
+      </div>
+      
+      <button id="btn-baixar-rel" class="btn btn-f" onclick="baixarRelatorioConsolidado()" style="margin-top: 10px; padding: 12px 24px; font-size: 15px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+        Baixar Consolidado em Excel
+      </button>
+    </div>
+
+  </div><!-- end tab-relatorios-content -->
+
+  <!-- ===== DASHBOARD TAB (SÓ MATRIZ) ===== -->
+  <div id="tab-dashboard-content" class="hidden">
+
+    <!-- FILTROS DO DASHBOARD -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="ch" style="margin-bottom:14px;">
+        <div class="ci" style="background:linear-gradient(135deg,var(--p),var(--sec)); color:#fff; font-size:20px;">📊</div>
+        <div>
+          <div class="ct">Dashboard Analítico</div>
+          <div class="cs">Análise consolidada de estoque e logística por CD e período</div>
+        </div>
+        <div style="margin-left:auto;">
+          <button class="btn btn-f" onclick="carregarDashboard()" id="btn-dash-refresh" style="padding:9px 18px; font-size:13px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Atualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; align-items:end;">
+        <div class="f" style="margin:0;">
+          <label for="dash-data-ini">Data Inicial</label>
+          <input type="date" id="dash-data-ini">
+        </div>
+        <div class="f" style="margin:0;">
+          <label for="dash-data-fim">Data Final</label>
+          <input type="date" id="dash-data-fim">
+        </div>
+        <div class="f" style="margin:0;">
+          <label for="dash-cd-filtro">Filtrar por CD</label>
+          <select id="dash-cd-filtro">
+            <option value="TODOS">Todos os CDs</option>
+            <option value="BAURU">Bauru</option>
+            <option value="CURITIBA">Curitiba</option>
+            <option value="LONDRINA">Londrina</option>
+            <option value="RANCHARIA">Rancharia</option>
+            <option value="SJRP">SJRP</option>
+            <option value="BARUERI">Barueri</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-t" onclick="dashSetPeriodo(7)" id="dash-p7" style="font-size:12px; padding:8px 14px; border-radius:14px;">7 dias</button>
+          <button class="btn btn-t" onclick="dashSetPeriodo(15)" id="dash-p15" style="font-size:12px; padding:8px 14px; border-radius:14px;">15 dias</button>
+          <button class="btn btn-t" onclick="dashSetPeriodo(30)" id="dash-p30" style="font-size:12px; padding:8px 14px; border-radius:14px;">30 dias</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="dash-loading" class="hidden" style="text-align:center; padding:48px; color:var(--txs); font-size:14px; font-style:italic;">
+      <div style="font-size:36px; margin-bottom:12px;">⏳</div>
+      Buscando dados na nuvem, aguarde...
+    </div>
+
+    <!-- ESTADO VAZIO -->
+    <div id="dash-vazio" class="hidden">
+      <div class="bn" style="background:var(--surv); border:1px solid var(--out);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <span style="color:var(--txs);">Nenhum dado encontrado para o período selecionado. Tente ampliar o intervalo de datas.</span>
+      </div>
+    </div>
+
+    <!-- CONTEÚDO DO DASHBOARD -->
+    <div id="dash-content" class="hidden">
+
+      <!-- KPI CARDS — LINHA 1 -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:16px;" id="dash-kpis"></div>
+
+      <!-- GRÁFICO: VOLUME DE ESTOQUE POR DATA -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:16px;">
+          <div class="ci am" style="font-size:18px;">📈</div>
+          <div><div class="ct" style="font-size:15px;">Volume de Estoque por Data</div><div class="cs">Quantidade total de unidades enviadas por dia no período</div></div>
+        </div>
+        <div style="position:relative; height:220px;">
+          <canvas id="chart-volume"></canvas>
+        </div>
+      </div>
+
+      <!-- GRÁFICO: DISTRIBUIÇÃO POR CD -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;" class="dash-2col">
+        <div class="card" style="margin-bottom:0;">
+          <div class="ch" style="margin-bottom:16px;">
+            <div class="ci gn" style="font-size:18px;">🏭</div>
+            <div><div class="ct" style="font-size:15px;">Estoque por CD</div><div class="cs">Participação de cada unidade no total</div></div>
+          </div>
+          <div style="position:relative; height:220px;">
+            <canvas id="chart-por-cd"></canvas>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="ch" style="margin-bottom:16px;">
+            <div class="ci" style="background:#FFF0F0; font-size:18px;">⚠️</div>
+            <div><div class="ct" style="font-size:15px;">SKUs em Data Curta (≤22d)</div><div class="cs">Proporção crítica vs. normal por CD</div></div>
+          </div>
+          <div style="position:relative; height:220px;">
+            <canvas id="chart-data-curta"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABELA: COMPARATIVO DE CDs -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:16px;">
+          <div class="ci bl" style="font-size:18px;">🔀</div>
+          <div><div class="ct" style="font-size:15px;">Comparativo entre CDs</div><div class="cs">Visão consolidada de desempenho por unidade no período</div></div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>CD</th>
+                <th style="text-align:right">Envios</th>
+                <th style="text-align:right">Total Unidades</th>
+                <th style="text-align:right">SKUs Únicos</th>
+                <th style="text-align:right">Data Curta ≤22d</th>
+                <th style="text-align:right">% Crítico</th>
+                <th style="text-align:right">Prazo Médio</th>
+                <th>Último Envio</th>
+              </tr>
+            </thead>
+            <tbody id="dash-tabela-cds"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GRÁFICO: PRAZO MÉDIO POR CD -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:16px;">
+          <div class="ci am" style="font-size:18px;">🗓️</div>
+          <div><div class="ct" style="font-size:15px;">Prazo Médio de Validade por CD</div><div class="cs">Quanto tempo médio de prateleira o estoque de cada CD possui</div></div>
+        </div>
+        <div style="position:relative; height:200px;">
+          <canvas id="chart-prazo-medio"></canvas>
+        </div>
+      </div>
+
+      <!-- TOP SKUs -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;" class="dash-2col">
+        <div class="card" style="margin-bottom:0;">
+          <div class="ch" style="margin-bottom:14px;">
+            <div class="ci gn" style="font-size:18px;">🏆</div>
+            <div><div class="ct" style="font-size:15px;">Top 10 SKUs — Maior Volume</div><div class="cs">Produtos com maior quantidade no período</div></div>
+          </div>
+          <div id="dash-top-skus"></div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="ch" style="margin-bottom:14px;">
+            <div class="ci" style="background:#FFF0F0; font-size:18px;">🚨</div>
+            <div><div class="ct" style="font-size:15px;">Top 10 SKUs — Data Curta</div><div class="cs">Produtos com maior volume crítico (≤22d)</div></div>
+          </div>
+          <div id="dash-top-criticos"></div>
+        </div>
+      </div>
+
+      <!-- EVOLUÇÃO DO ENVIO DE GRADES -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:16px;">
+          <div class="ci" style="background:var(--os); font-size:18px;">🚚</div>
+          <div><div class="ct" style="font-size:15px;">Grades Retornadas por CD</div><div class="cs">Caixas vazias e com trocas retornadas no período</div></div>
+        </div>
+        <div style="position:relative; height:200px;">
+          <canvas id="chart-grades"></canvas>
+        </div>
+      </div>
+
+      <!-- HEATMAP DE ENVIOS -->
+      <div class="card">
+        <div class="ch" style="margin-bottom:16px;">
+          <div class="ci bl" style="font-size:18px;">🗺️</div>
+          <div><div class="ct" style="font-size:15px;">Mapa de Envios</div><div class="cs">Quais CDs enviaram em cada data do período</div></div>
+        </div>
+        <div id="dash-heatmap" style="overflow-x:auto;"></div>
+      </div>
+
+    </div><!-- end dash-content -->
+  </div><!-- end tab-dashboard-content -->
+
 </main>
 
-<!-- ACTION SECTION — aparece apenas após dados prontos -->
+<!-- ACTION SECTION — aparece apenas após dados de ESTOQUE prontos -->
 <div id="action-section" style="display:none; position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:2px solid var(--outv);padding:16px 24px;z-index:300;box-shadow:0 -8px 24px rgba(80,50,20,.13);">
   <div style="max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
     <div style="font-size:13px;color:var(--txs)">
@@ -561,42 +764,123 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         📥 Exportar Cópia (.xlsx)
       </button>
       <button class="btn-save-cloud" onclick="processarEnvioNuvem()" style="padding:13px 28px;font-size:15px;border-radius:12px;">
-        ☁️ SALVAR E ENVIAR PARA UNIFICAÇÃO
+        ☁️ ENVIAR ESTOQUE PARA MATRIZ
       </button>
     </div>
   </div>
 </div>
 
-<!-- PAINEL DE MONITORAMENTO (fora do fixed bar) -->
-<div class="container" style="max-width:1160px;margin:0 auto;padding:0 16px 120px;">
+<!-- PAINEL DE MONITORAMENTO -->
+<div id="painel-monitoramento" class="container" style="max-width:1160px;margin:0 auto;padding:0 16px 120px;display:none;">
     <div class="monitor-panel">
-        <h3 style="margin:0; font-size:16px;">Monitoramento de Envios (Hoje)</h3>
-        <p style="font-size:12px; color:var(--txs); margin-top:4px;">Verifique abaixo quais unidades ainda estão pendentes.</p>
-        <div id="status-grid" class="monitor-grid">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h3 style="margin:0; font-size:16px;">Monitoramento de Envios</h3>
+                <p style="font-size:12px; color:var(--txs); margin-top:4px;">Verifique o status de cada unidade por data.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button onclick="monitorSetData('hoje')" id="mon-btn-hoje"
+                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--p); background:var(--p); color:#fff; font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s;">
+                    Hoje
+                </button>
+                <button onclick="monitorSetData('ontem')" id="mon-btn-ontem"
+                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--out); background:transparent; color:var(--txs); font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s;">
+                    Ontem
+                </button>
+                <input type="date" id="mon-data-custom"
+                    style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:6px 12px; outline:none; cursor:pointer;"
+                    onchange="monitorSetData('custom')"
+                    title="Selecionar outra data">
+                <button onclick="atualizarStatusMonitor()" id="mon-btn-refresh"
+                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--out); background:var(--surv); color:var(--txs); font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .15s;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Atualizar
+                </button>
+            </div>
+        </div>
+        <div id="mon-data-label" style="font-size:12px; color:var(--txs); margin-top:10px; font-style:italic;"></div>
+        <div id="status-grid" class="monitor-grid" style="margin-top:12px;">
             <span class="loading-api">Carregando status das unidades...</span>
         </div>
     </div>
 </div>
 
-
-<!-- DL BAR removed — buttons are now in the action section below the table -->
-
 <script>
 const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paezinhos Leite Panutrinha Panutrir 400g","7":"Panetone C/ Frutas Panutrir 400g","11":"Pao Integral Centeio Fitness Zero Panutrir 350g","16":"Pao Integ 7 Graos Damasco Hibisco Zero Panutrir 350g","655":"Pao Integral 12 Graos Panutrir 450g","669":"Bisnaguinha Bisnutrinhas Panutrir 300g","1224":"Pao Cast Para E Quinoa Integ Panutrir Broa 450g","2279":"Pao Pct Caseiro 500g","69251":"Pao Hot Dog Panutrir 400g","81571":"Pao Integral Surpreendente Panutrir 450g","81581":"Pao Integral 12 Graos Zero Panutrir 350g","81591":"Pao Integral Chia Macadamia Panutrir 400g","81661":"Pao Forma Plufi Nut 400g","82051":"Pao Hamburguer Gourmet Panutrir 500g","85181":"Muffato Pao Hot Dog 400g","85841":"Muffato Paezinhos De Leite 400g","86151":"Pao Integral Panutrir 450g","99161":"Pao Integral Plufi Nut 450g","121581":"Us Pao Hot Dog Unisabor 400g","121801":"Us Pao Hamburguer Gourmet Unisabor 500g","121811":"Us Paezinhos De Leite Unisabor 400g","121821":"Us Pao Integral 12 Graos Zero Unisabor 350g","121831":"Us Pao Integral 12 Graos Unisabor 450g","121841":"Us Pao Castanha Para E Quinoa Integ Unisabor 450g","121861":"Us Pao Forma Unisabor 400g","121871":"Us Pao Leite Unisabor 400g","135211":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 500g","135221":"Nossa Padaria Pao Hot Dog Emb Transp 400g","135231":"Nossa Padaria Paezinhos Leite Emb Transp 400g","135241":"Nossa Padaria Pao Forma Emb Transp 400g","141441":"Pao Sirio Tradic Panificadora Dubai 320g","141951":"Pao Sirio Tradic Panificadora Dubai 260g","145511":"Pao Nutri Del Grano Tradicional Panutrir 500g","145521":"Pao Nutri Del Grano Integral Panutrir 500g","152291":"Pao Sirio Integral Panificadora Dubai 300g","156021":"Panetone C/ Frutas Plufi Nut 300g","156051":"Panetone C/ Gotas Chocolate Plufi Nut 300g","162272":"Nossa Padaria Bisnaguinha Emb Transp 300g","162275":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 330g","162276":"Nossa Padaria Pao Integral Emb Transp 450g","162358":"Us Pao Integral Unisabor 450g","162396":"Pao Nutri Del Grano Tipo Caseiro Panutrir 500g","162767":"Muffato Pao Integral 450g","162775":"Muffato Bisnaguinhas 300g","162783":"Us Pao Artesanal Tradicional Unisabor 500g","162784":"Us Pao Artesanal Integral Unisabor 500g","162800":"Muffato Pao Forma 400g","162801":"Muffato Pao Leite 400g","162802":"Muffato Pao Hamburguer 500g","162920":"Pao Nutri Del Grano Hamburguer Artesanal Panutrir 320g","162921":"Pao Nutri Del Grano Hamburguer Brioche Panutrir 320g","162922":"Pao Nutri Del Grano Hamburguer Australiano Panutrir 320g","162923":"Pao Nutri Del Grano Hamburguer Gergelim Panutrir 320g"};
 
-let cd='',rows=[],hasW=false,wCnt=0;
+const API_URL = "https://script.google.com/macros/s/AKfycbw4TGZkMoaJUdb4UaR5iUEAiqeQihWQ648WqFZ0P5WJTcc1zlPgvSOmwiiSSxO4Xj8s/exec";
 
-// MODAL
-document.getElementById('li').addEventListener('keydown',e=>{if(e.key==='Enter')okLocal()});
+let cd='',rows=[],hasW=false,wCnt=0;
+let _activeTab = 'import';
+
+// MODAL E SENHAS
+document.getElementById('senha_cd').addEventListener('keydown',e=>{if(e.key==='Enter')okLocal()});
+
 function okLocal(){
-  const v=document.getElementById('li').value.trim().toUpperCase();
-  if(!v){document.getElementById('li').style.borderColor='#B3261E';return}
-  cd=v;
+  const senhas = {
+    "MATRIZ": "445566@Edu",
+    "BAURU": "bru1234",
+    "CURITIBA": "cwb1234",
+    "LONDRINA": "lon1234",
+    "RANCHARIA": "ran1234",
+    "SJRP": "sjp1234",
+    "BARUERI": "bar1234"
+  };
+
+  const v = document.getElementById('li').value.trim().toUpperCase();
+  const s = document.getElementById('senha_cd').value.trim();
+
+  if(!v){document.getElementById('li').style.borderColor='#B3261E';return;}
+  
+  if(!s || senhas[v] !== s) {
+    alert("Senha incorreta para a unidade " + v + "!");
+    return;
+  }
+
+  cd = v;
   document.getElementById('mo').style.display='none';
-  const c=document.getElementById('chip');
-  document.getElementById('chip-txt').textContent=v;
+  const c = document.getElementById('chip');
+  document.getElementById('chip-txt').textContent = v;
   c.style.display='flex';
-  document.getElementById('action-cd-label').textContent=v;
+  document.getElementById('action-cd-label').textContent = v;
+  
+  document.getElementById('cd_nome').value = "CD " + v;
+  
+  // SE FOR A MATRIZ, MOSTRA A ABA DE RELATÓRIOS E MONITORAMENTO
+  if (cd === "MATRIZ") {
+      document.getElementById('tab-relatorios').style.display = 'inline-block';
+      document.getElementById('painel-monitoramento').style.display = 'block';
+      document.getElementById('tab-dashboard').style.display = 'inline-block';
+      // Matriz nao tem caminhao chegando - oculta horario de saida
+      document.getElementById('campo-horario-saida').style.display = 'none';
+      document.getElementById('horario_saida').removeAttribute('required');
+      document.querySelector('#tab-grades-content .cs').textContent = 'Lançamento de grades disponíveis na Matriz';
+      document.getElementById('btn-envia-grades').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Lançar Grades da Matriz';
+      // Adapta labels dos campos para a realidade da Matriz
+      document.querySelector('label[for="caixas_vazias"]').textContent = 'Grades com Produtos:';
+      document.getElementById('caixas_vazias').placeholder = 'Ex: 800';
+      document.querySelector('label[for="caixas_trocas"]').textContent = 'Grades Vazias:';
+      document.getElementById('caixas_trocas').placeholder = 'Ex: 400';
+      document.querySelector('#resultado_gestao .bn span').textContent = 'Confirmação de lançamento (Grades da Matriz):';
+  } else {
+      document.getElementById('tab-relatorios').style.display = 'none';
+      document.getElementById('painel-monitoramento').style.display = 'none';
+  }
+}
+
+function onSelectUnidade(sel) {
+  const senhaField = document.getElementById('senha-field');
+  const btnAcessar = document.getElementById('btn-acessar');
+  const senhaInput = document.getElementById('senha_cd');
+  if (sel.value) {
+    senhaField.style.display = 'block';
+    btnAcessar.style.display = 'inline-flex';
+    senhaInput.value = '';
+    setTimeout(() => senhaInput.focus(), 50);
+  } else {
+    senhaField.style.display = 'none';
+    btnAcessar.style.display = 'none';
+  }
 }
 
 // DRAG DROP
@@ -641,7 +925,7 @@ function handleFile(f){
 function setP(p,m){document.getElementById('pb').style.width=p+'%';document.getElementById('pl').textContent=m}
 
 function render(){
-  document.getElementById('s1').classList.add('hidden'); // Oculta o card de importação
+  document.getElementById('s1').classList.add('hidden'); 
   document.getElementById('s2').classList.remove('hidden');
   wCnt=rows.filter(r=>r.isWarn).length;hasW=wCnt>0;
   const tot=rows.reduce((s,r)=>s+r.qtd,0);
@@ -693,7 +977,6 @@ function render(){
   });
 }
 
-// BULK
 function onBD(){
   const v=document.getElementById('bd').value;
   document.getElementById('bcw').style.display=v==='OUTRO'?'block':'none';
@@ -718,7 +1001,6 @@ function applyBulk(){
   updFill();chkDL();
 }
 
-// ROW
 function onRD(i,s){const rc=document.getElementById(`rc${i}`);if(s.value==='OUTRO'){rc.style.display='block';rows[i].dir='';}else{rc.style.display='none';rows[i].dir=s.value;}updFill();chkDL()}
 function onRC(i,inp){rows[i].dir=inp.value.trim();updFill();chkDL()}
 function onRM(i,inp){rows[i].motivo=inp.value.trim();updFill();chkDL()}
@@ -739,7 +1021,6 @@ function showDL(){
 }
 function hideDL(){document.getElementById('action-section').style.display='none'}
 
-// DOWNLOAD
 function dlXlsx(){
   const wb=XLSX.utils.book_new();
   const now=new Date().toLocaleString('pt-BR');
@@ -763,24 +1044,28 @@ function dlXlsx(){
   XLSX.writeFile(wb,`SHELFLIFE ${cd} (${datePart} ${timePart}).xlsx`);
 }
 
-// TAB SWITCHING
 function switchTab(t){
   _activeTab=t;
-  document.getElementById('action-section').style.display='none'; // hide on tab change
+  document.getElementById('action-section').style.display='none'; 
+  
   document.getElementById('tab-import-content').classList.toggle('hidden',t!=='import');
   document.getElementById('tab-manual-content').classList.toggle('hidden',t!=='manual');
+  document.getElementById('tab-grades-content').classList.toggle('hidden',t!=='grades'); 
+  document.getElementById('tab-relatorios-content').classList.toggle('hidden',t!=='relatorios');
+  document.getElementById('tab-dashboard-content').classList.toggle('hidden',t!=='dashboard');
+  
   document.getElementById('tab-import').classList.toggle('active',t==='import');
   document.getElementById('tab-manual').classList.toggle('active',t==='manual');
+  document.getElementById('tab-grades').classList.toggle('active',t==='grades'); 
+  document.getElementById('tab-relatorios').classList.toggle('active',t==='relatorios'); 
+  document.getElementById('tab-dashboard').classList.toggle('active',t==='dashboard');
+  
   if(t==='manual'&&!meBuilt)meBuild();
+  if(t==='dashboard'&&!dashBuilt)iniciarDashboard();
 }
 
-// ========================
-// MANUAL ENTRY — multi-date per SKU
-// ========================
 let meBuilt=false,meProcessed=[],meHasW=false,meWCnt=0;
-// meData[cod] = [ {qtd:'', val:''}, ... ]
 const meData={};
-
 const SKU_KEYS=Object.keys(SKU);
 
 function meBuild(){
@@ -861,7 +1146,6 @@ function meDelDate(cod,idx){
 function meUpdEntry(cod,idx,field,val){
   if(!meData[cod]||!meData[cod][idx])return;
   meData[cod][idx][field]=val;
-  // re-render just this row's inputs for color
   const entry=meData[cod][idx];
   const p=entry.val?mePrazo(entry.val):null;
   const isW=p!==null&&p<=22;
@@ -873,7 +1157,6 @@ function meUpdEntry(cod,idx,field,val){
     if(qi)qi.className='me-inp qtd'+(entry.qtd?(isW?' wn':' ok'):'');
     if(di)di.className='me-inp dat'+(entry.val?(isW?' wn':' ok'):'');
     if(tagEl){tagEl.outerHTML=prazoTag(p);} else {
-      // insert tag before del btn
       const newTag=document.createElement('span');
       newTag.innerHTML=prazoTag(p);
       const delBtn=rowEl.querySelector('.me-del-btn');
@@ -917,7 +1200,6 @@ function meFilter(){
 }
 
 function meProcess(){
-  // flatten all filled entries across all SKUs, sort by prazo
   meProcessed=[];
   SKU_KEYS.forEach(cod=>{
     (meData[cod]||[]).forEach(entry=>{
@@ -981,7 +1263,6 @@ function meProcess(){
   tc.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// BULK MANUAL
 function meOnBD(){
   const v=document.getElementById('me-bd').value;
   document.getElementById('me-bcw').style.display=v==='OUTRO'?'block':'none';
@@ -1023,7 +1304,6 @@ function meShowDL(){
 }
 function meHideDL(){document.getElementById('action-section').style.display='none'}
 
-// DOWNLOAD MANUAL
 function meDlXlsx(){
   const wb2=XLSX.utils.book_new();
   const now=new Date().toLocaleString('pt-BR');
@@ -1047,7 +1327,6 @@ function meDlXlsx(){
   XLSX.writeFile(wb2,`SHELFLIFE ${cd} (${datePart} ${timePart}).xlsx`);
 }
 
-// RESET MANUAL
 function meReset(){
   SKU_KEYS.forEach(cod=>{meData[cod]=[{qtd:'',val:''}]});
   meProcessed=[];meHasW=false;meWCnt=0;
@@ -1068,8 +1347,6 @@ function meReset(){
   meRenderList(SKU_KEYS);
 }
 
-
-// RESET IMPORT
 function reset(){
   rows=[];hasW=false;wCnt=0;
   document.getElementById('fi').value='';
@@ -1090,18 +1367,189 @@ function reset(){
   hideDL();
 }
 
-// Variável para saber qual aba está ativa no momento do envio
-let _activeTab = 'import';
+// ========================
+// GESTÃO DE GRADES LÓGICA
+// ========================
+async function lancarGestaoGrades(event) {
+    event.preventDefault(); 
 
-// Exportar cópia local — chama a função correta conforme aba ativa
+    let cdNome = document.getElementById('cd_nome').value;
+    if (!cdNome && cd) cdNome = "CD " + cd; 
+    
+    const caixasVazias = document.getElementById('caixas_vazias').value;
+    const caixasTrocas = document.getElementById('caixas_trocas').value;
+    const horarioSaida = document.getElementById('horario_saida').value;
+
+    let horarioChegada = '';
+    let textoFinal = '';
+
+    if (cd === 'MATRIZ') {
+        // Grades ja estao na Matriz, sem horario de viagem
+        textoFinal = `CD MATRIZ - ${caixasVazias} grades com produtos e ${caixasTrocas} grades vazias disponiveis na Matriz`;
+    } else {
+        const TEMPO_VIAGEM_HORAS = 5;
+        let [horas, minutos] = horarioSaida.split(':').map(Number);
+        horas += TEMPO_VIAGEM_HORAS;
+        if (horas >= 24) horas -= 24;
+        const horasStr = horas.toString().padStart(2, '0');
+        const minutosStr = minutos.toString().padStart(2, '0');
+        horarioChegada = `${horasStr}:${minutosStr}`;
+        textoFinal = `${cdNome} - ${caixasVazias} Caixas vazias e ${caixasTrocas} caixas com trocas, horario de chegada: ${horarioChegada}`;
+    }
+
+    const payloadDaAPI = {
+        tipo: "grades",
+        cd_origem: cdNome,
+        caixas_vazias: parseInt(caixasVazias),
+        caixas_trocas: parseInt(caixasTrocas),
+        horario_saida: cd === 'MATRIZ' ? '' : horarioSaida,
+        horario_chegada: horarioChegada,
+        texto_matriz: textoFinal,
+        data_registro: new Date().toLocaleDateString('pt-BR')
+    };
+
+    const btn = document.getElementById('btn-envia-grades');
+    btn.innerText = "Enviando..."; 
+    btn.disabled = true;
+
+    const confirmouEnvio = await new Promise(resolve => {
+        // Verifica se já existe lançamento do dia para este CD
+        const today = new Date().toLocaleDateString('pt-BR');
+        fetch(`${API_URL}?action=status&data=${encodeURIComponent(today)}`)
+            .then(r => r.json())
+            .then(statusData => {
+                const gradesEnviadas = Array.isArray(statusData.enviadosGrades) 
+                    ? statusData.enviadosGrades.map(s => s.toUpperCase().trim()) : [];
+                const cdSigla = cdNome.replace(/^CD\s*/i,'').toUpperCase();
+                if (gradesEnviadas.includes(cdSigla)) {
+                    const ok = confirm(
+                        `⚠️ Retorno de grades já registrado para ${cdNome} hoje.\n\n` +
+                        `Deseja registrar um novo retorno de caminhão?\n\n` +
+                        `(Múltiplos retornos no mesmo dia são permitidos.)`
+                    );
+                    resolve(ok);
+                } else {
+                    resolve(true);
+                }
+            })
+            .catch(() => resolve(true));
+    });
+
+    if (!confirmouEnvio) {
+        btn.innerText = "Gerar Relatório e Lançar";
+        btn.disabled = false;
+        return;
+    }
+
+    fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payloadDaAPI)
+    })
+    .then(response => response.json())
+    .then(data => {
+        const msg = cd === 'MATRIZ'
+            ? '✅ Grades da Matriz lançadas com sucesso na base!'
+            : '✅ Retorno de grades registrado com sucesso na base!';
+        alert(msg);
+
+        // Exibe o texto gerado para todos os CDs
+        document.getElementById('texto_gerado').innerText = textoFinal;
+        document.getElementById('resultado_gestao').classList.remove('hidden');
+
+        atualizarStatusMonitor();
+    })
+    .catch(error => {
+        console.error("Erro:", error);
+        alert("Ocorreu um erro ao enviar para a nuvem. Tente novamente.");
+    })
+    .finally(() => {
+        const btnLabel = cd === 'MATRIZ' ? 'Lançar Grades da Matriz' : 'Gerar Relatório e Lançar';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ' + btnLabel;
+        btn.disabled = false;
+        document.getElementById('caixas_vazias').value = '';
+        document.getElementById('caixas_trocas').value = '';
+        if(cd !== 'MATRIZ') document.getElementById('horario_saida').value = '';
+    });
+}
+
+// -------------------------------------------------
+// FUNÇÃO DE BAIXAR O RELATÓRIO CONSOLIDADO (MATRIZ)
+// -------------------------------------------------
+function baixarRelatorioConsolidado() {
+    const dataInput = document.getElementById('data_relatorio').value;
+    if(!dataInput) {
+        alert("Por favor, selecione uma data no calendário.");
+        return;
+    }
+    
+    // Converte de YYYY-MM-DD para DD/MM/YYYY (Padrão do Banco de Dados)
+    const partes = dataInput.split('-');
+    const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+    
+    const btn = document.getElementById('btn-baixar-rel');
+    const textoBotaoOriginal = btn.innerHTML;
+    btn.innerHTML = "⏳ Buscando dados na Nuvem...";
+    btn.disabled = true;
+    
+    // Solicita os dados daquela data para a API
+    fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(dataFormatada)}`)
+      .then(res => res.json())
+      .then(res => {
+          if(res.status === "sucesso" && res.dados.length > 0) {
+              gerarExcelMatriz(res.dados, dataFormatada);
+          } else {
+              alert(`Atenção: Nenhum lançamento de estoque encontrado na base para o dia ${dataFormatada}.`);
+          }
+      })
+      .catch(err => {
+          console.error(err);
+          alert("Erro ao buscar relatório. Verifique sua conexão com a internet.");
+      })
+      .finally(() => {
+          btn.innerHTML = textoBotaoOriginal;
+          btn.disabled = false;
+      });
+}
+
+function gerarExcelMatriz(dados, dataStr) {
+    const wb = XLSX.utils.book_new();
+    
+    // Cabeçalho da planilha
+    const header = ['CD ORIGEM', 'CÓDIGO', 'SKU / PRODUTO', 'VALIDADE', 'PRAZO (DIAS)', 'QTD', 'DIRECIONAMENTO', 'MOTIVO'];
+    const wsData = [header];
+    
+    // Inserindo os dados
+    dados.forEach(r => {
+        wsData.push([
+            r.cd, 
+            r.codigo, 
+            r.produto, 
+            r.validade, 
+            r.prazo, 
+            r.quantidade, 
+            r.destino, 
+            r.motivo
+        ]);
+    });
+    
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Ajustar largura das colunas do Excel
+    ws['!cols'] = [{wch:15}, {wch:12}, {wch:46}, {wch:14}, {wch:14}, {wch:12}, {wch:30}, {wch:36}];
+    
+    XLSX.utils.book_append_sheet(wb, ws, "Consolidado");
+    
+    // Fazer o download do arquivo automaticamente
+    XLSX.writeFile(wb, `Consolidado_Estoque_Geral_${dataStr.replace(/\//g,'-')}.xlsx`);
+}
+
+// -------------------------------------------------
+// FUNÇÕES DE ENVIO E MONITORAMENTO
+// -------------------------------------------------
 function exportarCopia(){
   if(_activeTab==='manual') meDlXlsx();
   else dlXlsx();
 }
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwiNTuz-9feXhiCSq5l0qY9xvHBCnidxvhPFMWF8vJ3a8mbZLDcP20kOJzI9ChFPb2B/exec";
-
-// Envia os dados corretamente usando os arrays rows / meProcessed
 async function processarEnvioNuvem() {
     const cdSelected = cd;
 
@@ -1110,7 +1558,6 @@ async function processarEnvioNuvem() {
         return;
     }
 
-    // Escolhe a fonte de dados conforme a aba ativa
     const fonte = _activeTab === 'manual' ? meProcessed : rows;
 
     if (!fonte || fonte.length === 0) {
@@ -1141,7 +1588,7 @@ async function processarEnvioNuvem() {
         motivo: r.motivo || ''
     }));
 
-    const payload = { nomeCD: cdSelected, itens: itens };
+    const payload = { tipo: "estoque", nomeCD: cdSelected, itens: itens };
 
     try {
         const response = await fetch(API_URL, {
@@ -1166,49 +1613,724 @@ async function processarEnvioNuvem() {
     }
 }
 
-// Status dos CDs — corrigido para interpretar resposta da API BASE_UNIFICADA
+// Data selecionada no monitor (padrão: hoje)
+let _monitorData = new Date().toLocaleDateString('pt-BR');
+
+function monitorSetData(tipo) {
+    const hoje = new Date();
+    const ontem = new Date(hoje); ontem.setDate(hoje.getDate() - 1);
+
+    if (tipo === 'hoje') {
+        _monitorData = hoje.toLocaleDateString('pt-BR');
+        // Limpa o input de data custom
+        document.getElementById('mon-data-custom').value = '';
+    } else if (tipo === 'ontem') {
+        _monitorData = ontem.toLocaleDateString('pt-BR');
+        document.getElementById('mon-data-custom').value = '';
+    } else if (tipo === 'custom') {
+        const val = document.getElementById('mon-data-custom').value;
+        if (!val) return;
+        const [y, m, d] = val.split('-');
+        _monitorData = `${d}/${m}/${y}`;
+    }
+
+    // Atualiza visual dos botões
+    const isHoje = _monitorData === hoje.toLocaleDateString('pt-BR');
+    const isOntem = _monitorData === ontem.toLocaleDateString('pt-BR');
+    const btnHoje  = document.getElementById('mon-btn-hoje');
+    const btnOntem = document.getElementById('mon-btn-ontem');
+    btnHoje.style.background  = isHoje  ? 'var(--p)' : 'transparent';
+    btnHoje.style.color       = isHoje  ? '#fff'     : 'var(--txs)';
+    btnHoje.style.borderColor = isHoje  ? 'var(--p)' : 'var(--out)';
+    btnOntem.style.background  = isOntem ? 'var(--p)' : 'transparent';
+    btnOntem.style.color       = isOntem ? '#fff'     : 'var(--txs)';
+    btnOntem.style.borderColor = isOntem ? 'var(--p)' : 'var(--out)';
+
+    atualizarStatusMonitor();
+}
+
 async function atualizarStatusMonitor() {
     const grid = document.getElementById('status-grid');
     const unidades = ["MATRIZ", "BAURU", "CURITIBA", "LONDRINA", "RANCHARIA", "SJRP", "BARUERI"];
 
-    // Mostra estado de loading com badges
+    // Atualiza o label da data consultada
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const ontem = new Date(Date.now() - 86400000).toLocaleDateString('pt-BR');
+    let labelData = _monitorData;
+    if (_monitorData === hoje)  labelData = `Hoje (${_monitorData})`;
+    if (_monitorData === ontem) labelData = `Ontem (${_monitorData})`;
+    document.getElementById('mon-data-label').textContent = `Exibindo: ${labelData}`;
+
     grid.innerHTML = unidades.map(un =>
         `<div class="cd-status-badge status-pending" id="badge-${un}">
-            ${un}<br><small>⏳ Verificando...</small>
+            <strong>${un}</strong><br>
+            <small>⏳ Consultando...</small>
         </div>`
     ).join('');
 
     try {
-        const today = new Date().toLocaleDateString('pt-BR'); // dd/mm/yyyy
-        const url = `${API_URL}?action=status&data=${encodeURIComponent(today)}`;
+        const url = `${API_URL}?action=status&data=${encodeURIComponent(_monitorData)}`;
         const response = await fetch(url);
         const data = await response.json();
 
-        // Espera { enviados: ["MATRIZ","BAURU",...] }
-        const enviados = Array.isArray(data.enviados)
-            ? data.enviados.map(s => s.toUpperCase().trim())
-            : [];
+        const enviadosEstoque = Array.isArray(data.enviadosEstoque) ? data.enviadosEstoque.map(s => s.toUpperCase().trim()) : [];
+        const enviadosGrades = Array.isArray(data.enviadosGrades) ? data.enviadosGrades.map(s => s.toUpperCase().trim()) : [];
 
         unidades.forEach(un => {
             const badge = document.getElementById(`badge-${un}`);
             if (!badge) return;
-            const foiEnviado = enviados.includes(un);
-            badge.className = `cd-status-badge ${foiEnviado ? 'status-sent' : 'status-pending'}`;
-            badge.innerHTML = `${un}<br><small>${foiEnviado ? '✅ ENVIADO' : '❌ PENDENTE'}</small>`;
+            
+            const enviouEstoque = enviadosEstoque.includes(un);
+            const enviouGrades = enviadosGrades.includes(un);
+            const concluiuTudo = enviouEstoque && enviouGrades;
+            const nenhumEnvio = !enviouEstoque && !enviouGrades;
+
+            badge.className = `cd-status-badge ${concluiuTudo ? 'status-sent' : nenhumEnvio ? 'status-missing' : 'status-pending'}`;
+            
+            badge.innerHTML = `
+                <strong>${un}</strong>
+                <div style="display:flex; flex-direction:column; gap:3px; margin-top:6px; font-size:11px;">
+                  <span>Estoque: ${enviouEstoque ? '✅ Enviado' : '❌ Pendente'}</span>
+                  <span>Grades: ${enviouGrades ? '✅ Enviado' : '❌ Pendente'}</span>
+                </div>
+            `;
         });
+
+        // Resumo dos pendentes
+        const pendentes = unidades.filter(un => {
+            const e = enviadosEstoque.includes(un);
+            const g = enviadosGrades.includes(un);
+            return !e || !g;
+        });
+        const resumoEl = document.getElementById('mon-data-label');
+        if (pendentes.length === 0) {
+            resumoEl.innerHTML = `Exibindo: ${labelData} &nbsp;·&nbsp; <span style="color:var(--ot); font-weight:500;">✅ Todos os CDs enviaram</span>`;
+        } else {
+            resumoEl.innerHTML = `Exibindo: ${labelData} &nbsp;·&nbsp; <span style="color:var(--ct); font-weight:500;">⚠️ Pendentes: ${pendentes.join(', ')}</span>`;
+        }
+
     } catch (e) {
-        // Fallback — mostra todos como pendentes
         unidades.forEach(un => {
             const badge = document.getElementById(`badge-${un}`);
             if (!badge) return;
             badge.className = "cd-status-badge status-pending";
-            badge.innerHTML = `${un}<br><small>❌ PENDENTE</small>`;
+            badge.innerHTML = `<strong>${un}</strong><br><small>❌ Erro de Conexão</small>`;
         });
     }
 }
 
-// Rodar ao carregar
 window.addEventListener('load', atualizarStatusMonitor);
+
+// ========================
+// RESUMO DE GRADES — MATRIZ
+// ========================
+
+// Mapeamento de nome do CD para nome amigável e tempo de viagem em horas
+const CD_CONFIG = {
+  "CD BAURU":     { label: "Bauru",    horas: 3 },
+  "CD CURITIBA":  { label: "Curitiba", horas: 5 },
+  "CD LONDRINA":  { label: "Londrina", horas: 4 },
+  "CD RANCHARIA": { label: "Rancharia",horas: 4 },
+  "CD SJRP":      { label: "SJRP",     horas: 4 },
+  "CD BARUERI":   { label: "Barueri",  horas: 5 },
+  "CD MATRIZ":    { label: "Matriz",   horas: 0 },
+};
+
+function calcularChegada(horarioSaida, horasViagem) {
+  if (!horarioSaida) return null;
+  const limpo = limparHorario(horarioSaida);
+  if (!limpo) return null;
+  let [h, m] = limpo.split(':').map(Number);
+  h += horasViagem;
+  if (h >= 24) h -= 24;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+// Converte qualquer formato de horário para HH:MM
+// Aceita: "14:00", "Sat Dec 30 1899 14:00:00 GMT...", objetos Date, decimais
+function limparHorario(valor) {
+  if (!valor) return '';
+  const str = String(valor);
+  // Já está no formato HH:MM
+  const simples = str.match(/^(\d{1,2}):(\d{2})$/);
+  if (simples) return `${simples[1].padStart(2,'0')}:${simples[2]}`;
+  // Formato "Sat Dec 30 1899 14:00:00 GMT..." — extrai HH:MM
+  const dateStr = str.match(/(\d{1,2}):(\d{2}):\d{2}/);
+  if (dateStr) return `${dateStr[1].padStart(2,'0')}:${dateStr[2]}`;
+  // Decimal (0.583... = 14:00)
+  const num = parseFloat(str);
+  if (!isNaN(num) && num > 0 && num < 1) {
+    const totalMin = Math.round(num * 24 * 60);
+    const h = Math.floor(totalMin / 60) % 24;
+    const m = totalMin % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  return '';
+}
+
+async function carregarResumoGrades() {
+  const btn = document.getElementById('btn-atualizar-grades');
+  const loading = document.getElementById('grades-loading');
+  const resumoArea = document.getElementById('grades-resumo-area');
+  const vazio = document.getElementById('grades-vazio');
+  const copiarBtn = document.getElementById('btn-copiar-resumo');
+
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Buscando...`;
+  loading.classList.remove('hidden');
+  resumoArea.classList.add('hidden');
+  vazio.classList.add('hidden');
+  copiarBtn.style.display = 'none';
+
+  try {
+    const today = new Date().toLocaleDateString('pt-BR');
+    const url = `${API_URL}?action=grades&data=${encodeURIComponent(today)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // Aceita tanto { grades: [...] } quanto array direto
+    const registros = Array.isArray(data) ? data : (data.grades || data.dados || []);
+
+    if (!registros || registros.length === 0) {
+      vazio.classList.remove('hidden');
+    } else {
+      // Monta o texto consolidado e os cards
+      let linhasTexto = [];
+      let cardsHtml = '';
+
+      registros.forEach(reg => {
+        // Campos esperados da API: cd_origem, caixas_vazias, caixas_trocas, horario_saida, horario_chegada
+        const cdOrigem = (reg.cd_origem || '').trim();
+        const vazias = parseInt(reg.caixas_vazias) || 0;
+        const trocas = parseInt(reg.caixas_trocas) || 0;
+        const horarioSaidaRaw = reg.horario_saida || '';
+        const horarioSaida = limparHorario(horarioSaidaRaw);
+
+        // Tenta usar horario_chegada já salvo, senão recalcula usando o mapeamento
+        let chegada = limparHorario(reg.horario_chegada || '');
+        if (!chegada && horarioSaida) {
+          const cfg = CD_CONFIG[cdOrigem.toUpperCase()] || CD_CONFIG[Object.keys(CD_CONFIG).find(k => cdOrigem.toUpperCase().includes(k.replace('CD ','')))] || null;
+          const horas = cfg ? cfg.horas : 5;
+          chegada = calcularChegada(horarioSaida, horas);
+        }
+
+        // Nome amigável
+        const cfgKey = Object.keys(CD_CONFIG).find(k => cdOrigem.toUpperCase() === k.toUpperCase() || cdOrigem.toUpperCase().includes(k.replace('CD ','')));
+        const label = cfgKey ? CD_CONFIG[cfgKey].label : cdOrigem.replace(/^CD\s*/i,'');
+
+        const isMatriz = cdOrigem.toUpperCase() === 'CD MATRIZ' || cdOrigem.toUpperCase() === 'MATRIZ';
+        const chegadaStr = chegada ? chegada : '—';
+        const saidaStr = horarioSaida || '—';
+
+        // Linha de texto: Matriz nao tem horario de chegada
+        if (isMatriz) {
+          linhasTexto.push(`Matriz: ${vazias.toLocaleString('pt-BR')} grades com produtos e ${trocas.toLocaleString('pt-BR')} grades vazias disponíveis na Matriz`);
+        } else {
+          linhasTexto.push(`${label}: ${vazias.toLocaleString('pt-BR')} caixas vazias e ${trocas.toLocaleString('pt-BR')} com trocas — chegada às ${chegadaStr}`);
+        }
+
+        const iconeCD = isMatriz ? '🏭' : '🚚';
+        const subtituloCard = isMatriz ? 'Grades na Matriz' : 'Retorno ao CD';
+        const labelVazias = isMatriz ? 'Grades c/ Produtos' : 'Caixas Vazias';
+        const labelTrocas = isMatriz ? 'Grades Vazias' : 'Com Trocas';
+        const rodapeCard = isMatriz
+          ? `<div style="font-size:12px; color:var(--ot); border-top:1px solid var(--outv); padding-top:10px; text-align:center;">📍 Grades já disponíveis na Matriz</div>`
+          : `<div style="display:flex; justify-content:space-between; font-size:12px; color:var(--txs); border-top:1px solid var(--outv); padding-top:10px;">
+               <span>🕐 Saída: <strong style="color:var(--tx);">${saidaStr}</strong></span>
+               <span>🏁 Chegada: <strong style="color:var(--p);">${chegadaStr}</strong></span>
+             </div>`;
+
+        cardsHtml += `
+          <div style="background:var(--sur1); border:1px solid var(--outv); border-radius:var(--r16); padding:16px 18px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+              <div style="width:36px;height:36px;border-radius:10px;background:var(--pc);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${iconeCD}</div>
+              <div>
+                <div style="font-weight:600; font-size:14px;">${label}</div>
+                <div style="font-size:11px; color:var(--txs); text-transform:uppercase; letter-spacing:.05em;">${subtituloCard}</div>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+              <div style="background:var(--sur); border-radius:var(--r8); padding:10px 12px; text-align:center;">
+                <div style="font-size:22px; font-weight:600; color:var(--p);">${vazias.toLocaleString('pt-BR')}</div>
+                <div style="font-size:10px; color:var(--txs); text-transform:uppercase; letter-spacing:.05em; margin-top:2px;">${labelVazias}</div>
+              </div>
+              <div style="background:var(--sur); border-radius:var(--r8); padding:10px 12px; text-align:center;">
+                <div style="font-size:22px; font-weight:600; color:var(--sec);">${trocas.toLocaleString('pt-BR')}</div>
+                <div style="font-size:10px; color:var(--txs); text-transform:uppercase; letter-spacing:.05em; margin-top:2px;">${labelTrocas}</div>
+              </div>
+            </div>
+            ${rodapeCard}
+          </div>`;
+      });
+
+      document.getElementById('grades-resumo-texto').textContent = linhasTexto.join('\n');
+      document.getElementById('grades-cards-grid').innerHTML = cardsHtml;
+      resumoArea.classList.remove('hidden');
+      copiarBtn.style.display = 'inline-flex';
+    }
+  } catch(e) {
+    console.error('Erro ao buscar grades:', e);
+    vazio.classList.remove('hidden');
+    document.querySelector('#grades-vazio .bn span').innerHTML = '❌ Erro ao conectar com a API. Verifique sua conexão e tente novamente.';
+  } finally {
+    loading.classList.add('hidden');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Atualizar Resumo`;
+  }
+}
+
+function copiarResumoGrades() {
+  const texto = document.getElementById('grades-resumo-texto').textContent;
+  if (!texto) return;
+  navigator.clipboard.writeText(texto).then(() => {
+    const btn = document.getElementById('btn-copiar-resumo');
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copiado!`;
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+
+// ============================================================
+// DASHBOARD ANALÍTICO — LÓGICA COMPLETA
+// ============================================================
+
+let dashBuilt = false;
+let _dashCharts = {};  // guarda instâncias Chart.js para destruir ao recriar
+
+const DASH_CORES_CD = {
+  'BAURU':    '#C67C2A',
+  'CURITIBA': '#2E8B50',
+  'LONDRINA': '#1A73E8',
+  'RANCHARIA':'#8B5020',
+  'SJRP':     '#D93025',
+  'BARUERI':  '#9C27B0',
+  'MATRIZ':   '#607D8B',
+};
+
+function iniciarDashboard() {
+  dashBuilt = true;
+  // Define período padrão: últimos 15 dias
+  dashSetPeriodo(15, false);
+  carregarDashboard();
+}
+
+function dashSetPeriodo(dias, carregar = true) {
+  const fim = new Date();
+  const ini = new Date();
+  ini.setDate(ini.getDate() - (dias - 1));
+  document.getElementById('dash-data-ini').value = ini.toISOString().split('T')[0];
+  document.getElementById('dash-data-fim').value = fim.toISOString().split('T')[0];
+  // Highlight botão ativo
+  [7,15,30].forEach(d => {
+    const b = document.getElementById(`dash-p${d}`);
+    if(b) {
+      b.style.background = d===dias ? 'var(--p)' : 'var(--pc)';
+      b.style.color = d===dias ? '#fff' : 'var(--sec)';
+    }
+  });
+  if (carregar) carregarDashboard();
+}
+
+async function carregarDashboard() {
+  const iniVal = document.getElementById('dash-data-ini').value;
+  const fimVal = document.getElementById('dash-data-fim').value;
+  if (!iniVal || !fimVal) { alert('Selecione o período para análise.'); return; }
+
+  const loading  = document.getElementById('dash-loading');
+  const content  = document.getElementById('dash-content');
+  const vazioEl  = document.getElementById('dash-vazio');
+  const btnRef   = document.getElementById('btn-dash-refresh');
+
+  loading.classList.remove('hidden');
+  content.classList.add('hidden');
+  vazioEl.classList.add('hidden');
+  btnRef.disabled = true;
+
+  // Gera lista de datas no intervalo
+  const datas = gerarListaDatas(iniVal, fimVal);
+  const cdFiltro = document.getElementById('dash-cd-filtro').value;
+
+  try {
+    // Busca estoque e grades para cada data (paralelamente)
+    const [dadosEstoque, dadosGrades] = await Promise.all([
+      buscarEstoquePorPeriodo(datas),
+      buscarGradesPorPeriodo(datas)
+    ]);
+
+    if (dadosEstoque.length === 0 && dadosGrades.length === 0) {
+      vazioEl.classList.remove('hidden');
+      return;
+    }
+
+    // Aplica filtro de CD se necessário
+    const estoque = cdFiltro === 'TODOS' ? dadosEstoque
+      : dadosEstoque.filter(r => (r.cd||'').toUpperCase().includes(cdFiltro));
+    const grades  = cdFiltro === 'TODOS' ? dadosGrades
+      : dadosGrades.filter(r => (r.cd_origem||'').toUpperCase().includes(cdFiltro));
+
+    renderDashboard(estoque, grades, datas);
+    content.classList.remove('hidden');
+
+  } catch(e) {
+    console.error('Dashboard error:', e);
+    alert('Erro ao carregar dashboard: ' + e.message);
+  } finally {
+    loading.classList.add('hidden');
+    btnRef.disabled = false;
+  }
+}
+
+// Gera array de datas "DD/MM/YYYY" entre dois valores ISO
+function gerarListaDatas(iniISO, fimISO) {
+  const lista = [];
+  const cur = new Date(iniISO + 'T00:00:00');
+  const end = new Date(fimISO + 'T00:00:00');
+  while (cur <= end) {
+    lista.push(cur.toLocaleDateString('pt-BR'));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return lista;
+}
+
+// Busca estoque consolidado para um período (chama API uma vez por data)
+async function buscarEstoquePorPeriodo(datas) {
+  const todos = [];
+  // Busca em paralelo, máx 10 de cada vez para não sobrecarregar
+  const chunks = [];
+  for (let i = 0; i < datas.length; i += 8) chunks.push(datas.slice(i, i+8));
+  for (const chunk of chunks) {
+    const resultados = await Promise.all(chunk.map(async data => {
+      try {
+        const res = await fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(data)}`);
+        const json = await res.json();
+        if (json.status === 'sucesso' && Array.isArray(json.dados)) {
+          return json.dados.map(r => ({...r, _data: data}));
+        }
+      } catch(e) {}
+      return [];
+    }));
+    resultados.forEach(arr => todos.push(...arr));
+  }
+  return todos;
+}
+
+// Busca grades para um período
+async function buscarGradesPorPeriodo(datas) {
+  const todos = [];
+  const chunks = [];
+  for (let i = 0; i < datas.length; i += 8) chunks.push(datas.slice(i, i+8));
+  for (const chunk of chunks) {
+    const resultados = await Promise.all(chunk.map(async data => {
+      try {
+        const res = await fetch(`${API_URL}?action=grades&data=${encodeURIComponent(data)}`);
+        const json = await res.json();
+        if (Array.isArray(json.grades)) {
+          return json.grades.map(r => ({...r, _data: data}));
+        }
+      } catch(e) {}
+      return [];
+    }));
+    resultados.forEach(arr => todos.push(...arr));
+  }
+  return todos;
+}
+
+function renderDashboard(estoque, grades, datas) {
+  destruirCharts();
+
+  const CDs = ['BAURU','CURITIBA','LONDRINA','RANCHARIA','SJRP','BARUERI'];
+
+  // Normaliza prazo: recalcula a partir da validade quando prazo = 0 ou nulo
+  // Isso corrige dados enviados pela inserção manual onde prazo pode vir como null/0
+  const hoje0 = new Date(); hoje0.setHours(0,0,0,0);
+  function prazoReal(r) {
+    const p = Number(r.prazo);
+    if (p > 0) return p; // prazo confiável, usa direto
+    // tenta recalcular pela validade
+    const valStr = String(r.validade || '').trim();
+    if (!valStr) return null;
+    // aceita DD/MM/YYYY e YYYY-MM-DD
+    let d;
+    const ptBR = valStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    const iso  = valStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ptBR) d = new Date(`${ptBR[3]}-${ptBR[2]}-${ptBR[1]}T00:00:00`);
+    else if (iso) d = new Date(valStr + 'T00:00:00');
+    if (!d || isNaN(d)) return null;
+    return Math.round((d - hoje0) / 86400000);
+  }
+
+  // ---- Métricas globais ----
+  const totalUnidades   = estoque.reduce((s,r) => s + (Number(r.quantidade)||0), 0);
+  const totalSKUs       = new Set(estoque.map(r => r.codigo)).size;
+  const totalCriticos   = estoque.filter(r => (prazoReal(r)??99) <= 22).reduce((s,r) => s + (Number(r.quantidade)||0), 0);
+  const pctCritico      = totalUnidades > 0 ? ((totalCriticos/totalUnidades)*100).toFixed(1) : 0;
+  const prazoMedioGeral = (()=>{ const validos=estoque.filter(r=>prazoReal(r)!==null); return validos.length>0?(validos.reduce((s,r)=>s+(prazoReal(r)||0),0)/validos.length).toFixed(1):0; })();
+  const totalVazias     = grades.reduce((s,r) => s + (Number(r.caixas_vazias)||0), 0);
+  const totalTrocas     = grades.reduce((s,r) => s + (Number(r.caixas_trocas)||0), 0);
+
+  // Dias únicos com envio de estoque
+  const diasComEnvio = new Set(estoque.map(r => r._data)).size;
+
+  // ---- KPIs ----
+  document.getElementById('dash-kpis').innerHTML = `
+    <div class="dash-kpi accent">
+      <div class="dkv">${totalUnidades.toLocaleString('pt-BR')}</div>
+      <div class="dkl">Total de Unidades</div>
+      <div class="dkd">${diasComEnvio} dias com dados</div>
+    </div>
+    <div class="dash-kpi">
+      <div class="dkv">${totalSKUs.toLocaleString('pt-BR')}</div>
+      <div class="dkl">SKUs Únicos</div>
+      <div class="dkd">no período</div>
+    </div>
+    <div class="dash-kpi warn">
+      <div class="dkv">${totalCriticos.toLocaleString('pt-BR')}</div>
+      <div class="dkl">Unidades em Data Curta</div>
+      <div class="dkd">${pctCritico}% do total</div>
+    </div>
+    <div class="dash-kpi ok">
+      <div class="dkv">${prazoMedioGeral}d</div>
+      <div class="dkl">Prazo Médio Geral</div>
+      <div class="dkd">validade média</div>
+    </div>
+    <div class="dash-kpi">
+      <div class="dkv">${totalVazias.toLocaleString('pt-BR')}</div>
+      <div class="dkl">Grades Retornadas</div>
+      <div class="dkd">${totalTrocas.toLocaleString('pt-BR')} com trocas</div>
+    </div>
+  `;
+
+  // ---- Gráfico: volume por data ----
+  const volPorData = {};
+  datas.forEach(d => volPorData[d] = 0);
+  estoque.forEach(r => { volPorData[r._data] = (volPorData[r._data]||0) + (Number(r.quantidade)||0); });
+  const labelsData = datas.map(d => {
+    const parts = d.split('/');
+    return `${parts[0]}/${parts[1]}`;
+  });
+  criarChart('chart-volume', 'bar', {
+    labels: labelsData,
+    datasets: [{
+      label: 'Unidades',
+      data: datas.map(d => volPorData[d]),
+      backgroundColor: 'rgba(198,124,42,0.7)',
+      borderColor: '#C67C2A',
+      borderWidth: 1.5,
+      borderRadius: 4,
+    }]
+  }, {
+    plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ctx.parsed.y.toLocaleString('pt-BR') + ' unid.' }}},
+    scales:{ y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.06)' }}, x:{ grid:{ display:false }}}
+  });
+
+  // ---- Gráfico: estoque por CD (donut) ----
+  const porCD = {};
+  estoque.forEach(r => {
+    const c = (r.cd||'').toUpperCase().trim();
+    porCD[c] = (porCD[c]||0) + (Number(r.quantidade)||0);
+  });
+  const cdKeys = Object.keys(porCD).sort((a,b) => porCD[b]-porCD[a]);
+  criarChart('chart-por-cd', 'doughnut', {
+    labels: cdKeys,
+    datasets: [{
+      data: cdKeys.map(c => porCD[c]),
+      backgroundColor: cdKeys.map(c => DASH_CORES_CD[c] || '#999'),
+      borderWidth: 2,
+      borderColor: '#F5EFE6',
+    }]
+  }, {
+    plugins:{ legend:{ position:'right', labels:{ font:{size:11}, boxWidth:12 }},
+      tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${ctx.parsed.toLocaleString('pt-BR')} unid.` }}}
+  });
+
+  // ---- Gráfico: data curta por CD (bar empilhada) ----
+  const normalPorCD={}, criticoPorCD={};
+  estoque.forEach(r => {
+    const c = (r.cd||'').toUpperCase().trim();
+    const qtd = Number(r.quantidade)||0;
+    const prazo = prazoReal(r);
+    if (prazo!==null && prazo<=22) criticoPorCD[c] = (criticoPorCD[c]||0) + qtd;
+    else normalPorCD[c] = (normalPorCD[c]||0) + qtd;
+  });
+  criarChart('chart-data-curta', 'bar', {
+    labels: cdKeys,
+    datasets: [
+      { label:'Normal (>22d)', data: cdKeys.map(c=>normalPorCD[c]||0), backgroundColor:'rgba(46,139,80,.7)', borderRadius:3 },
+      { label:'Crítico (≤22d)', data: cdKeys.map(c=>criticoPorCD[c]||0), backgroundColor:'rgba(192,57,43,.75)', borderRadius:3 }
+    ]
+  }, {
+    plugins:{ legend:{ labels:{ font:{size:11}, boxWidth:12 }}},
+    scales:{ x:{ stacked:true, grid:{display:false} }, y:{ stacked:true, beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'} }}
+  });
+
+  // ---- Gráfico: prazo médio por CD (bar horizontal) ----
+  const prazoSoma={}, prazoCnt={};
+  estoque.forEach(r => {
+    const c = (r.cd||'').toUpperCase().trim();
+    const pr = prazoReal(r);
+    if (pr !== null) { prazoSoma[c] = (prazoSoma[c]||0) + pr; prazoCnt[c] = (prazoCnt[c]||0) + 1; }
+  });
+  const prazoMedio = cdKeys.map(c => prazoCnt[c] ? +(prazoSoma[c]/prazoCnt[c]).toFixed(1) : 0);
+  criarChart('chart-prazo-medio', 'bar', {
+    labels: cdKeys,
+    datasets: [{
+      label: 'Prazo médio (dias)',
+      data: prazoMedio,
+      backgroundColor: cdKeys.map(c => DASH_CORES_CD[c]||'#999'),
+      borderRadius: 4,
+    }]
+  }, {
+    indexAxis: 'y',
+    plugins:{ legend:{ display:false },
+      tooltip:{ callbacks:{ label: ctx => ctx.parsed.x + ' dias' }}},
+    scales:{
+      x:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'},
+        plugins:{ annotation:{ annotations:[{ type:'line', xMin:22, xMax:22, borderColor:'red', borderWidth:1.5, label:{content:'≤22d',enabled:true}}]}}},
+      y:{ grid:{display:false} }
+    }
+  });
+
+  // ---- Gráfico: grades por CD ----
+  const gradesCDs = [...new Set(grades.map(r => (r.cd_origem||'').replace(/^CD\s*/i,'').toUpperCase().trim()))].sort();
+  const gradesVazias = gradesCDs.map(c => grades.filter(r=>(r.cd_origem||'').toUpperCase().includes(c)).reduce((s,r)=>s+(Number(r.caixas_vazias)||0),0));
+  const gradesTrocas = gradesCDs.map(c => grades.filter(r=>(r.cd_origem||'').toUpperCase().includes(c)).reduce((s,r)=>s+(Number(r.caixas_trocas)||0),0));
+  if (gradesCDs.length > 0) {
+    criarChart('chart-grades', 'bar', {
+      labels: gradesCDs,
+      datasets: [
+        { label: 'Grades Vazias', data: gradesVazias, backgroundColor: 'rgba(198,124,42,.7)', borderRadius:4 },
+        { label: 'Com Trocas',    data: gradesTrocas, backgroundColor: 'rgba(139,80,32,.5)',  borderRadius:4 }
+      ]
+    }, {
+      plugins:{ legend:{ labels:{ font:{size:11}, boxWidth:12 }}},
+      scales:{ x:{ grid:{display:false} }, y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'} }}
+    });
+  }
+
+  // ---- Tabela comparativa ----
+  const tbody = document.getElementById('dash-tabela-cds');
+  tbody.innerHTML = '';
+  // Todos CDs que aparecem nos dados
+  const allCDs = [...new Set(estoque.map(r=>(r.cd||'').toUpperCase().trim()))].sort();
+  allCDs.forEach(c => {
+    const rows = estoque.filter(r=>(r.cd||'').toUpperCase().trim()===c);
+    const unidades = rows.reduce((s,r)=>s+(Number(r.quantidade)||0),0);
+    const skus     = new Set(rows.map(r=>r.codigo)).size;
+    const criticos = rows.filter(r=>(prazoReal(r)??99)<=22).reduce((s,r)=>s+(Number(r.quantidade)||0),0);
+    const pct      = unidades>0?((criticos/unidades)*100).toFixed(1):0;
+    const validosR = rows.filter(r=>prazoReal(r)!==null);
+    const prazoM   = validosR.length>0?(validosR.reduce((s,r)=>s+(prazoReal(r)||0),0)/validosR.length).toFixed(1):0;
+    const envios   = new Set(rows.map(r=>r._data)).size;
+    const datas    = rows.map(r=>r._data).sort();
+    const ultimo   = datas.length>0?datas[datas.length-1]:'—';
+    const cor      = DASH_CORES_CD[c]||'#999';
+    const pctNum   = parseFloat(pct);
+    const pctCls   = pctNum>20?'color:var(--ct);font-weight:600':pctNum>10?'color:var(--wt);font-weight:600':'color:var(--ot)';
+    tbody.innerHTML += `
+      <tr>
+        <td><span style="display:inline-flex;align-items:center;gap:6px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:${cor};flex-shrink:0;display:inline-block;"></span>
+          <strong>${c}</strong></span></td>
+        <td style="text-align:right">${envios}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums">${unidades.toLocaleString('pt-BR')}</td>
+        <td style="text-align:right">${skus}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums">${criticos.toLocaleString('pt-BR')}</td>
+        <td style="text-align:right;${pctCls}">${pct}%</td>
+        <td style="text-align:right">${prazoM}d</td>
+        <td style="font-size:12px">${ultimo}</td>
+      </tr>`;
+  });
+
+  // ---- Top SKUs — volume ----
+  const skuVol = {};
+  estoque.forEach(r => { const k=`${r.codigo}|${r.produto}`; skuVol[k]=(skuVol[k]||0)+(Number(r.quantidade)||0); });
+  const topVol = Object.entries(skuVol).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxVol = topVol[0]?.[1]||1;
+  document.getElementById('dash-top-skus').innerHTML = topVol.map(([k,v])=>{
+    const [cod,nome] = k.split('|');
+    const pct = ((v/maxVol)*100).toFixed(0);
+    return `<div class="dash-sku-bar">
+      <div class="dsn" title="${nome||cod}">${nome||cod}</div>
+      <div class="dsbg"><div class="dsfg" style="width:${pct}%"></div></div>
+      <div class="dsv">${v.toLocaleString('pt-BR')}</div>
+    </div>`;
+  }).join('');
+
+  // ---- Top SKUs — críticos ----
+  const skuCrit = {};
+  estoque.filter(r=>(prazoReal(r)??99)<=22).forEach(r => {
+    const k=`${r.codigo}|${r.produto}`; skuCrit[k]=(skuCrit[k]||0)+(Number(r.quantidade)||0);
+  });
+  const topCrit = Object.entries(skuCrit).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxCrit = topCrit[0]?.[1]||1;
+  document.getElementById('dash-top-criticos').innerHTML = topCrit.length > 0
+    ? topCrit.map(([k,v])=>{
+        const [cod,nome] = k.split('|');
+        const pct = ((v/maxCrit)*100).toFixed(0);
+        return `<div class="dash-sku-bar crit">
+          <div class="dsn" title="${nome||cod}">${nome||cod}</div>
+          <div class="dsbg"><div class="dsfg" style="width:${pct}%"></div></div>
+          <div class="dsv">${v.toLocaleString('pt-BR')}</div>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:13px;color:var(--ot);padding:12px 0;">✅ Nenhum SKU em data crítica no período.</div>';
+
+  // ---- Heatmap de envios ----
+  // Quais CDs enviaram em quais datas
+  const enviadosPorData = {};
+  datas.forEach(d => {
+    const cdsNaData = new Set(estoque.filter(r=>r._data===d).map(r=>(r.cd||'').toUpperCase().trim()));
+    enviadosPorData[d] = cdsNaData;
+  });
+  const heatCDs = CDs;
+  let hmHtml = `<table class="heatmap-table"><thead><tr><th>CD</th>`;
+  datas.forEach(d => {
+    const parts = d.split('/');
+    hmHtml += `<th style="text-align:center">${parts[0]}/${parts[1]}</th>`;
+  });
+  hmHtml += '</tr></thead><tbody>';
+  heatCDs.forEach(c => {
+    hmHtml += `<tr><td><strong>${c}</strong></td>`;
+    datas.forEach(d => {
+      const enviou = enviadosPorData[d]?.has(c);
+      hmHtml += `<td style="text-align:center;padding:4px;">
+        <div class="hm-cell ${enviou?'hm-ok':'hm-no'}" title="${c} em ${d}">${enviou?'✅':'❌'}</div>
+      </td>`;
+    });
+    hmHtml += '</tr>';
+  });
+  hmHtml += '</tbody></table>';
+  document.getElementById('dash-heatmap').innerHTML = hmHtml;
+}
+
+function criarChart(id, type, data, options) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  if (_dashCharts[id]) { _dashCharts[id].destroy(); }
+  _dashCharts[id] = new Chart(canvas, {
+    type,
+    data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      ...options,
+      plugins: {
+        ...(options.plugins||{}),
+        tooltip: {
+          backgroundColor: 'rgba(44,32,22,.9)',
+          titleFont: { family: "'Google Sans', sans-serif", size: 12 },
+          bodyFont:  { family: "'Google Sans', sans-serif", size: 12 },
+          ...(options.plugins?.tooltip||{})
+        }
+      }
+    }
+  });
+}
+
+function destruirCharts() {
+  Object.values(_dashCharts).forEach(c => { try { c.destroy(); } catch(e){} });
+  _dashCharts = {};
+}
 
 </script>
 
