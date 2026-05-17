@@ -1,0 +1,24 @@
+{
+  "name": "Gestão de Logística - Panutrir",
+  "short_name": "Gestão Log.",
+  "description": "Sistema de Padronização de Relatórios Panutrir",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#DDD0BF",
+  "theme_color": "#C67C2A",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
