@@ -2200,15 +2200,12 @@ function renderDashboard(estoque, grades, datas) {
   const CDs = ['BAURU','CURITIBA','LONDRINA','RANCHARIA','SJRP','BARUERI'];
 
   // Normaliza prazo: recalcula a partir da validade quando prazo = 0 ou nulo
-  // Isso corrige dados enviados pela inserção manual onde prazo pode vir como null/0
   const hoje0 = new Date(); hoje0.setHours(0,0,0,0);
   function prazoReal(r) {
     const p = Number(r.prazo);
-    if (p > 0) return p; // prazo confiável, usa direto
-    // tenta recalcular pela validade
+    if (p > 0) return p;
     const valStr = String(r.validade || '').trim();
     if (!valStr) return null;
-    // aceita DD/MM/YYYY e YYYY-MM-DD
     let d;
     const ptBR = valStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     const iso  = valStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -2218,29 +2215,95 @@ function renderDashboard(estoque, grades, datas) {
     return Math.round((d - hoje0) / 86400000);
   }
 
-  // ---- Métricas globais ----
-  const totalUnidades   = estoque.reduce((s,r) => s + (Number(r.quantidade)||0), 0);
-  const totalSKUs       = new Set(estoque.map(r => r.codigo)).size;
-  const totalCriticos   = estoque.filter(r => (prazoReal(r)??99) <= 22).reduce((s,r) => s + (Number(r.quantidade)||0), 0);
+  // ================================================================
+  // CONCEITO CENTRAL: cada envio diário é um SNAPSHOT do estoque.
+  // Somar estoques de dias diferentes do mesmo CD seria contar duas
+  // vezes o que já estava lá. A lógica correta é:
+  //
+  //  • KPIs / gráficos de "situação atual" → usar apenas o ÚLTIMO
+  //    snapshot de cada CD dentro do período.
+  //
+  //  • Gráfico de evolução temporal → para cada data, somar os últimos
+  //    snapshots de cada CD até aquela data (forward-fill por CD).
+  //
+  //  • Tabela comparativa → último snapshot por CD.
+  //
+  //  • "Envios" na tabela → número de dias em que o CD enviou (para
+  //    saber frequência), mas as quantidades vêm do último snapshot.
+  // ================================================================
+
+  // Converte data "DD/MM/YYYY" para número comparável YYYYMMDD
+  function dataParaNum(d) {
+    const p = d.split('/');
+    return parseInt(p[2]+p[1]+p[0], 10);
+  }
+
+  // Para cada CD, descobre a data mais recente no conjunto de dados
+  const ultimaDataPorCD = {};
+  estoque.forEach(r => {
+    const c = (r.cd||'').toUpperCase().trim();
+    const dn = dataParaNum(r._data);
+    if (!ultimaDataPorCD[c] || dn > ultimaDataPorCD[c]) ultimaDataPorCD[c] = dn;
+  });
+
+  // Snapshot atual = linhas do último envio de cada CD
+  const estoqueAtual = estoque.filter(r => {
+    const c = (r.cd||'').toUpperCase().trim();
+    return dataParaNum(r._data) === ultimaDataPorCD[c];
+  });
+
+  // Para o gráfico de evolução: para cada data, soma os últimos
+  // snapshots disponíveis de cada CD (forward-fill)
+  // Ordena datas crescente para poder fazer o fill
+  const datasOrdenadas = [...datas].sort((a,b) => dataParaNum(a)-dataParaNum(b));
+  // Agrupa estoque por CD → por data
+  const estoquePorCDData = {};
+  estoque.forEach(r => {
+    const c = (r.cd||'').toUpperCase().trim();
+    if (!estoquePorCDData[c]) estoquePorCDData[c] = {};
+    if (!estoquePorCDData[c][r._data]) estoquePorCDData[c][r._data] = [];
+    estoquePorCDData[c][r._data].push(r);
+  });
+  const allCDsNoEstoque = Object.keys(estoquePorCDData);
+  // Para cada data, calcula o total usando o último snapshot disponível de cada CD
+  const volPorDataCorreto = {};
+  datasOrdenadas.forEach(data => {
+    let total = 0;
+    const dn = dataParaNum(data);
+    allCDsNoEstoque.forEach(c => {
+      // Encontra a data mais recente deste CD que seja ≤ data atual
+      const datasDoCD = Object.keys(estoquePorCDData[c]).filter(d => dataParaNum(d) <= dn);
+      if (datasDoCD.length === 0) return;
+      const ultimaData = datasDoCD.reduce((acc, d) => dataParaNum(d) > dataParaNum(acc) ? d : acc);
+      const linhas = estoquePorCDData[c][ultimaData];
+      total += linhas.reduce((s,r) => s + (Number(r.quantidade)||0), 0);
+    });
+    volPorDataCorreto[data] = total;
+  });
+
+  // ---- Métricas globais (baseadas no snapshot atual de cada CD) ----
+  const totalUnidades   = estoqueAtual.reduce((s,r) => s + (Number(r.quantidade)||0), 0);
+  const totalSKUs       = new Set(estoqueAtual.map(r => r.codigo)).size;
+  const totalCriticos   = estoqueAtual.filter(r => (prazoReal(r)??99) <= 22).reduce((s,r) => s + (Number(r.quantidade)||0), 0);
   const pctCritico      = totalUnidades > 0 ? ((totalCriticos/totalUnidades)*100).toFixed(1) : 0;
-  const prazoMedioGeral = (()=>{ const validos=estoque.filter(r=>prazoReal(r)!==null); return validos.length>0?(validos.reduce((s,r)=>s+(prazoReal(r)||0),0)/validos.length).toFixed(1):0; })();
+  const prazoMedioGeral = (()=>{ const validos=estoqueAtual.filter(r=>prazoReal(r)!==null); return validos.length>0?(validos.reduce((s,r)=>s+(prazoReal(r)||0),0)/validos.length).toFixed(1):0; })();
   const totalVazias     = grades.reduce((s,r) => s + (Number(r.caixas_vazias)||0), 0);
   const totalTrocas     = grades.reduce((s,r) => s + (Number(r.caixas_trocas)||0), 0);
 
-  // Dias únicos com envio de estoque
   const diasComEnvio = new Set(estoque.map(r => r._data)).size;
+  const ultimoEnvioStr = datasOrdenadas.filter(d => allCDsNoEstoque.some(c => estoquePorCDData[c][d])).slice(-1)[0] || '—';
 
   // ---- KPIs ----
   document.getElementById('dash-kpis').innerHTML = `
     <div class="dash-kpi accent">
       <div class="dkv">${totalUnidades.toLocaleString('pt-BR')}</div>
       <div class="dkl">Total de Unidades</div>
-      <div class="dkd">${diasComEnvio} dias com dados</div>
+      <div class="dkd">snapshot mais recente por CD</div>
     </div>
     <div class="dash-kpi">
       <div class="dkv">${totalSKUs.toLocaleString('pt-BR')}</div>
       <div class="dkl">SKUs Únicos</div>
-      <div class="dkd">no período</div>
+      <div class="dkd">no estoque atual</div>
     </div>
     <div class="dash-kpi warn">
       <div class="dkv">${totalCriticos.toLocaleString('pt-BR')}</div>
@@ -2250,28 +2313,22 @@ function renderDashboard(estoque, grades, datas) {
     <div class="dash-kpi ok">
       <div class="dkv">${prazoMedioGeral}d</div>
       <div class="dkl">Prazo Médio Geral</div>
-      <div class="dkd">validade média</div>
+      <div class="dkd">validade média atual</div>
     </div>
     <div class="dash-kpi">
       <div class="dkv">${totalVazias.toLocaleString('pt-BR')}</div>
-      <div class="dkl">Grades Retornadas</div>
+      <div class="dkl">Grades no Período</div>
       <div class="dkd">${totalTrocas.toLocaleString('pt-BR')} com trocas</div>
     </div>
   `;
 
-  // ---- Gráfico: volume por data ----
-  const volPorData = {};
-  datas.forEach(d => volPorData[d] = 0);
-  estoque.forEach(r => { volPorData[r._data] = (volPorData[r._data]||0) + (Number(r.quantidade)||0); });
-  const labelsData = datas.map(d => {
-    const parts = d.split('/');
-    return `${parts[0]}/${parts[1]}`;
-  });
+  // ---- Gráfico: evolução do estoque consolidado por data (forward-fill) ----
+  const labelsData = datasOrdenadas.map(d => { const p=d.split('/'); return `${p[0]}/${p[1]}`; });
   criarChart('chart-volume', 'bar', {
     labels: labelsData,
     datasets: [{
-      label: 'Unidades',
-      data: datas.map(d => volPorData[d]),
+      label: 'Unidades (estoque acumulado)',
+      data: datasOrdenadas.map(d => volPorDataCorreto[d] || 0),
       backgroundColor: 'rgba(198,124,42,0.7)',
       borderColor: '#C67C2A',
       borderWidth: 1.5,
@@ -2282,9 +2339,9 @@ function renderDashboard(estoque, grades, datas) {
     scales:{ y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.06)' }}, x:{ grid:{ display:false }}}
   });
 
-  // ---- Gráfico: estoque por CD (donut) ----
+  // ---- Gráfico: estoque por CD — snapshot atual (donut) ----
   const porCD = {};
-  estoque.forEach(r => {
+  estoqueAtual.forEach(r => {
     const c = (r.cd||'').toUpperCase().trim();
     porCD[c] = (porCD[c]||0) + (Number(r.quantidade)||0);
   });
@@ -2302,9 +2359,9 @@ function renderDashboard(estoque, grades, datas) {
       tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${ctx.parsed.toLocaleString('pt-BR')} unid.` }}}
   });
 
-  // ---- Gráfico: data curta por CD (bar empilhada) ----
+  // ---- Gráfico: data curta por CD — snapshot atual (bar empilhada) ----
   const normalPorCD={}, criticoPorCD={};
-  estoque.forEach(r => {
+  estoqueAtual.forEach(r => {
     const c = (r.cd||'').toUpperCase().trim();
     const qtd = Number(r.quantidade)||0;
     const prazo = prazoReal(r);
@@ -2322,9 +2379,9 @@ function renderDashboard(estoque, grades, datas) {
     scales:{ x:{ stacked:true, grid:{display:false} }, y:{ stacked:true, beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'} }}
   });
 
-  // ---- Gráfico: prazo médio por CD (bar horizontal) ----
+  // ---- Gráfico: prazo médio por CD — snapshot atual (bar horizontal) ----
   const prazoSoma={}, prazoCnt={};
-  estoque.forEach(r => {
+  estoqueAtual.forEach(r => {
     const c = (r.cd||'').toUpperCase().trim();
     const pr = prazoReal(r);
     if (pr !== null) { prazoSoma[c] = (prazoSoma[c]||0) + pr; prazoCnt[c] = (prazoCnt[c]||0) + 1; }
@@ -2343,13 +2400,12 @@ function renderDashboard(estoque, grades, datas) {
     plugins:{ legend:{ display:false },
       tooltip:{ callbacks:{ label: ctx => ctx.parsed.x + ' dias' }}},
     scales:{
-      x:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'},
-        plugins:{ annotation:{ annotations:[{ type:'line', xMin:22, xMax:22, borderColor:'red', borderWidth:1.5, label:{content:'≤22d',enabled:true}}]}}},
+      x:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.06)'} },
       y:{ grid:{display:false} }
     }
   });
 
-  // ---- Gráfico: grades por CD ----
+  // ---- Gráfico: grades por CD (soma do período — grades são eventos, não snapshots) ----
   const gradesCDs = [...new Set(grades.map(r => (r.cd_origem||'').replace(/^CD\s*/i,'').toUpperCase().trim()))].sort();
   const gradesVazias = gradesCDs.map(c => grades.filter(r=>(r.cd_origem||'').toUpperCase().includes(c)).reduce((s,r)=>s+(Number(r.caixas_vazias)||0),0));
   const gradesTrocas = gradesCDs.map(c => grades.filter(r=>(r.cd_origem||'').toUpperCase().includes(c)).reduce((s,r)=>s+(Number(r.caixas_trocas)||0),0));
@@ -2366,22 +2422,23 @@ function renderDashboard(estoque, grades, datas) {
     });
   }
 
-  // ---- Tabela comparativa ----
+  // ---- Tabela comparativa — snapshot atual por CD ----
   const tbody = document.getElementById('dash-tabela-cds');
   tbody.innerHTML = '';
-  // Todos CDs que aparecem nos dados
   const allCDs = [...new Set(estoque.map(r=>(r.cd||'').toUpperCase().trim()))].sort();
   allCDs.forEach(c => {
-    const rows = estoque.filter(r=>(r.cd||'').toUpperCase().trim()===c);
-    const unidades = rows.reduce((s,r)=>s+(Number(r.quantidade)||0),0);
-    const skus     = new Set(rows.map(r=>r.codigo)).size;
-    const criticos = rows.filter(r=>(prazoReal(r)??99)<=22).reduce((s,r)=>s+(Number(r.quantidade)||0),0);
+    // Frequência de envios no período
+    const envios = new Set(estoque.filter(r=>(r.cd||'').toUpperCase().trim()===c).map(r=>r._data)).size;
+    // Métricas do último snapshot
+    const snap = estoqueAtual.filter(r=>(r.cd||'').toUpperCase().trim()===c);
+    const unidades = snap.reduce((s,r)=>s+(Number(r.quantidade)||0),0);
+    const skus     = new Set(snap.map(r=>r.codigo)).size;
+    const criticos = snap.filter(r=>(prazoReal(r)??99)<=22).reduce((s,r)=>s+(Number(r.quantidade)||0),0);
     const pct      = unidades>0?((criticos/unidades)*100).toFixed(1):0;
-    const validosR = rows.filter(r=>prazoReal(r)!==null);
+    const validosR = snap.filter(r=>prazoReal(r)!==null);
     const prazoM   = validosR.length>0?(validosR.reduce((s,r)=>s+(prazoReal(r)||0),0)/validosR.length).toFixed(1):0;
-    const envios   = new Set(rows.map(r=>r._data)).size;
-    const datas    = rows.map(r=>r._data).sort();
-    const ultimo   = datas.length>0?datas[datas.length-1]:'—';
+    // Data do último snapshot
+    const ultimo   = datasOrdenadas.filter(d => estoquePorCDData[c]?.[d]).slice(-1)[0] || '—';
     const cor      = DASH_CORES_CD[c]||'#999';
     const pctNum   = parseFloat(pct);
     const pctCls   = pctNum>20?'color:var(--ct);font-weight:600':pctNum>10?'color:var(--wt);font-weight:600':'color:var(--ot)';
@@ -2400,9 +2457,9 @@ function renderDashboard(estoque, grades, datas) {
       </tr>`;
   });
 
-  // ---- Top SKUs — volume ----
+  // ---- Top SKUs — volume (snapshot atual) ----
   const skuVol = {};
-  estoque.forEach(r => { const k=`${r.codigo}|${r.produto}`; skuVol[k]=(skuVol[k]||0)+(Number(r.quantidade)||0); });
+  estoqueAtual.forEach(r => { const k=`${r.codigo}|${r.produto}`; skuVol[k]=(skuVol[k]||0)+(Number(r.quantidade)||0); });
   const topVol = Object.entries(skuVol).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const maxVol = topVol[0]?.[1]||1;
   document.getElementById('dash-top-skus').innerHTML = topVol.map(([k,v])=>{
@@ -2415,9 +2472,9 @@ function renderDashboard(estoque, grades, datas) {
     </div>`;
   }).join('');
 
-  // ---- Top SKUs — críticos ----
+  // ---- Top SKUs — críticos (snapshot atual) ----
   const skuCrit = {};
-  estoque.filter(r=>(prazoReal(r)??99)<=22).forEach(r => {
+  estoqueAtual.filter(r=>(prazoReal(r)??99)<=22).forEach(r => {
     const k=`${r.codigo}|${r.produto}`; skuCrit[k]=(skuCrit[k]||0)+(Number(r.quantidade)||0);
   });
   const topCrit = Object.entries(skuCrit).sort((a,b)=>b[1]-a[1]).slice(0,10);
@@ -2434,23 +2491,22 @@ function renderDashboard(estoque, grades, datas) {
       }).join('')
     : '<div style="font-size:13px;color:var(--ot);padding:12px 0;">✅ Nenhum SKU em data crítica no período.</div>';
 
-  // ---- Heatmap de envios ----
-  // Quais CDs enviaram em quais datas
+  // ---- Heatmap de envios — quais CDs enviaram em quais datas ----
   const enviadosPorData = {};
-  datas.forEach(d => {
+  datasOrdenadas.forEach(d => {
     const cdsNaData = new Set(estoque.filter(r=>r._data===d).map(r=>(r.cd||'').toUpperCase().trim()));
     enviadosPorData[d] = cdsNaData;
   });
   const heatCDs = CDs;
   let hmHtml = `<table class="heatmap-table"><thead><tr><th>CD</th>`;
-  datas.forEach(d => {
+  datasOrdenadas.forEach(d => {
     const parts = d.split('/');
     hmHtml += `<th style="text-align:center">${parts[0]}/${parts[1]}</th>`;
   });
   hmHtml += '</tr></thead><tbody>';
   heatCDs.forEach(c => {
     hmHtml += `<tr><td><strong>${c}</strong></td>`;
-    datas.forEach(d => {
+    datasOrdenadas.forEach(d => {
       const enviou = enviadosPorData[d]?.has(c);
       hmHtml += `<td style="text-align:center;padding:4px;">
         <div class="hm-cell ${enviou?'hm-ok':'hm-no'}" title="${c} em ${d}">${enviou?'✅':'❌'}</div>
