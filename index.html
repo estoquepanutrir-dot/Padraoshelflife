@@ -171,7 +171,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
 /* Date rows */
 .me-dates{display:flex;flex-direction:column;gap:0;padding:0 14px 0 38px}
-.me-date-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed var(--outv)}
+.me-date-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed var(--outv);flex-wrap:wrap}
 .me-date-row:first-child{border-top:1px dashed var(--outv)}
 .me-inp{background:var(--sur);border:1.5px solid var(--out);border-radius:var(--r8);color:var(--tx);font-family:'Google Sans',sans-serif;font-size:12px;padding:6px 9px;outline:none;transition:border-color .15s}
 .me-inp:focus{border-color:var(--p)}
@@ -186,7 +186,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
 .logo-round { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--p); box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #fff; flex-shrink: 0; }
 
-.modern-select { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 2px solid var(--p); background: white; color: var(--tx); cursor: pointer; width: 300px; }
+.modern-select { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 2px solid var(--p); background: white; color: var(--tx); cursor: pointer; width: 100%; max-width: 300px; }
 .btn-save-cloud { width: 100%; max-width: 450px; padding: 22px; background-color: var(--p); color: white; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(198, 124, 42, 0.3); transition: all 0.3s ease; text-transform: uppercase; }
 .btn-save-cloud:hover { background-color: var(--ps); transform: translateY(-2px); }
 .btn-export-small { background: white; color: var(--txs); border: 1px solid var(--out); padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: 0.2s; }
@@ -222,6 +222,166 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .hm-ok{background:#d4edda;} .hm-no{background:#f8d7da;} .hm-na{background:var(--surv); color:var(--out);}
 @media(max-width:700px){.dash-2col{grid-template-columns:1fr!important;}}
 
+/* =============================================
+   MOBILE / PORTRAIT — responsividade completa
+   ============================================= */
+@media(max-width:600px){
+
+  /* --- HEADER --- */
+  .bar{padding:0 12px;height:56px;gap:8px;}
+  .bar-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+  .bar-sub{display:none;}
+  .logo-round{width:34px!important;height:34px!important;flex-shrink:0;}
+  .chip{font-size:11px;padding:4px 10px 4px 8px;}
+
+  /* --- MAIN PADDING --- */
+  main{padding:14px 10px 180px;}
+
+  /* --- CARDS --- */
+  .card{padding:16px 14px;border-radius:var(--r16);}
+  .ch{gap:8px;margin-bottom:14px;}
+  .ci{width:34px;height:34px;font-size:15px;flex-shrink:0;}
+  .ct{font-size:15px;}
+
+  /* --- TAB BAR --- */
+  .tab-bar{
+    width:100%;
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:4px;
+    gap:4px;
+    border-radius:16px;
+  }
+  .tab-bar::-webkit-scrollbar{display:none;}
+  .tab-btn{
+    white-space:nowrap;
+    font-size:12px;
+    padding:7px 14px;
+    flex-shrink:0;
+  }
+
+  /* --- MODAL --- */
+  .modal{padding:24px 18px;border-radius:20px;}
+  .modal h2{font-size:18px;}
+  .modal p{font-size:13px;}
+  .mico{width:56px;height:56px;font-size:26px;border-radius:18px;}
+  .modern-select{width:100%!important;font-size:15px;}
+
+  /* --- DROPZONE --- */
+  .dz{padding:28px 16px;}
+  .di{font-size:32px;}
+  .dl{font-size:13px;}
+
+  /* --- STATS GRID --- */
+  .sg{grid-template-columns:1fr 1fr;gap:8px;}
+  .sc .sv{font-size:26px;}
+  .sc{padding:12px 14px;}
+
+  /* --- BULK PANEL --- */
+  .bulk{padding:14px 14px;}
+  .bulk-hd{gap:6px;}
+  .bulk-title{font-size:13px;}
+  .bulk-grid{grid-template-columns:1fr!important;}
+
+  /* --- TABELA — scroll horizontal com indicação --- */
+  .tw{
+    border-radius:var(--r12);
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  table{font-size:12px;min-width:520px;}
+  th,td{padding:9px 10px;}
+
+  /* --- FIELDS --- */
+  .f input,.f select,.f textarea{font-size:16px;} /* evita zoom no iOS */
+
+  /* --- MANUAL SKU LIST --- */
+  .me-date-row{flex-wrap:wrap;gap:6px;}
+  .me-inp.dat{width:100%;min-width:0;}
+  .me-inp.qtd{width:72px;}
+  .me-sku-name{font-size:12px;}
+  .me-list{border-radius:var(--r12);}
+
+  /* --- ACTION SECTION (barra inferior fixa) --- */
+  #action-section{padding:10px 12px 12px;}
+  #action-inner{flex-direction:column;align-items:stretch;gap:6px;}
+  #action-btns{flex-direction:column;gap:8px;justify-content:stretch;}
+  .btn-save-cloud{
+    width:100%;
+    font-size:15px!important;
+    padding:16px 12px!important;
+    border-radius:12px!important;
+    text-align:center;
+  }
+  .btn-export-small{
+    width:100%;
+    text-align:center;
+    padding:10px 12px;
+    font-size:13px;
+  }
+
+  /* --- PAINEL DE MONITORAMENTO --- */
+  #painel-monitoramento{padding:0 10px 200px;}
+  .monitor-grid{grid-template-columns:1fr 1fr!important;gap:8px;}
+  .monitor-panel{padding:14px;}
+  #painel-monitoramento .btn,
+  #painel-monitoramento button{font-size:12px;}
+
+  /* --- DASHBOARD FILTROS --- */
+  #tab-dashboard-content .card{padding:14px 12px;}
+  #tab-dashboard-content > .card > .ch > div:last-child{margin-left:0;width:100%;}
+  #tab-dashboard-content > .card > .ch{flex-wrap:wrap;}
+  #btn-dash-refresh{width:100%;justify-content:center;}
+
+  /* --- BANNER INFO --- */
+  .bn{padding:10px 12px;font-size:12px;}
+  .bn svg{width:16px;height:16px;flex-shrink:0;}
+
+  /* --- BUTTON GROUPS --- */
+  .btn{font-size:13px;padding:9px 16px;}
+
+  /* --- GRADES CARDS GRID --- */
+  #grades-cards-grid{grid-template-columns:1fr!important;}
+
+  /* --- HEATMAP scroll --- */
+  #dash-heatmap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .heatmap-table{font-size:10px;}
+  .heatmap-table th,.heatmap-table td{padding:4px 7px;}
+  .hm-cell{width:22px;height:22px;font-size:11px;}
+
+  /* --- RELATORIOS TAB --- */
+  #tab-relatorios-content .f{max-width:100%!important;}
+  #btn-baixar-rel{width:100%;justify-content:center;}
+
+  /* --- top bar chip full text clamp --- */
+  #chip-txt{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+}
+
+/* Telas muito pequenas (≤380px) */
+@media(max-width:380px){
+  .bar-title{max-width:130px;font-size:13px;}
+  .sg{grid-template-columns:1fr;}
+  .tab-btn{font-size:11px;padding:6px 11px;}
+  .modal{padding:20px 14px;}
+}
+
+/* Indicador de scroll horizontal nas tabelas */
+.tw::after{
+  content:'';
+  display:block;
+  height:3px;
+  background:linear-gradient(90deg,transparent,var(--p) 50%,transparent);
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+}
+@media(max-width:600px){
+  .tw{position:relative;}
+  .tw::after{opacity:.35;}
+}
+
 </style>
 </head>
 <body>
@@ -255,7 +415,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
 <header class="bar">
   <img src="./logo_nova.jpg" class="logo-round" alt="Logo Panutrir" style="height: 48px; width: 48px; object-fit: cover;">
-  <div><div class="bar-title">Sistema de Padronização de Relatórios</div><div class="bar-sub">Painel Corporativo de Gestão — Panutrir</div></div>
+  <div style="min-width:0;flex:1;"><div class="bar-title">Sistema de Padronização de Relatórios</div><div class="bar-sub">Painel Corporativo de Gestão — Panutrir</div></div>
   <div class="bar-r">
     <div class="chip" id="chip">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
@@ -753,13 +913,12 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
 </main>
 
-<!-- ACTION SECTION — aparece apenas após dados de ESTOQUE prontos -->
 <div id="action-section" style="display:none; position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:2px solid var(--outv);padding:16px 24px;z-index:300;box-shadow:0 -8px 24px rgba(80,50,20,.13);">
-  <div style="max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div id="action-inner" style="max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <div style="font-size:13px;color:var(--txs)">
       Relatório pronto — <strong style="color:var(--p)" id="action-cd-label"></strong>
     </div>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <div id="action-btns" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:100%;justify-content:flex-end;">
       <button class="btn-export-small" onclick="exportarCopia()" title="Exportar cópia local em Excel">
         📥 Exportar Cópia (.xlsx)
       </button>
