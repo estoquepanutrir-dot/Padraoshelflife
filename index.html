@@ -184,6 +184,26 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .me-del-btn:hover{color:var(--err)}
 .hidden{display:none!important}
 
+/* SKU EDIT PENCIL */
+.sku-edit-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;border:none;background:transparent;color:var(--out);cursor:pointer;padding:0;margin-left:5px;vertical-align:middle;flex-shrink:0;transition:color .15s,background .15s;opacity:.6}
+.sku-edit-btn:hover{color:var(--p);background:var(--pc);opacity:1}
+.sku-edit-btn svg{width:10px;height:10px;pointer-events:none}
+.sku-edited-badge{display:inline-flex;align-items:center;gap:3px;background:#FFF3CD;border:1px solid #C8941A;color:#6B4A00;border-radius:8px;padding:1px 6px;font-size:10px;font-weight:500;margin-left:4px;vertical-align:middle;white-space:nowrap}
+.sku-edited-badge svg{width:9px;height:9px;flex-shrink:0}
+/* Modal de edição de SKU inline */
+.sku-edit-inline{display:none;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
+.sku-edit-inline input{background:var(--sur);border:1.5px solid var(--p);border-radius:var(--r8);color:var(--tx);font-family:'Google Sans',sans-serif;font-size:12px;padding:5px 9px;outline:none;flex:1;min-width:140px;max-width:260px}
+.sku-edit-inline .se-ok{background:var(--p);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:500;cursor:pointer;font-family:'Google Sans',sans-serif}
+.sku-edit-inline .se-cancel{background:transparent;border:none;color:var(--txs);font-size:11px;cursor:pointer;padding:4px 6px;font-family:'Google Sans',sans-serif}
+/* Painel de editados para Matriz */
+.edited-sku-panel{background:#FFF8E7;border:1.5px solid #C8941A;border-radius:var(--r16);padding:14px 18px;margin-bottom:14px}
+.edited-sku-panel-title{font-size:12px;font-weight:500;color:#6B4A00;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.edited-sku-panel-title svg{width:14px;height:14px}
+.edited-sku-list{display:flex;flex-direction:column;gap:4px}
+.edited-sku-item{font-size:12px;color:var(--tx);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.edited-sku-item .ecd{background:var(--p);color:#fff;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600}
+.edited-sku-item .earrow{color:var(--txs);font-size:11px}
+
 .logo-round { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--p); box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #fff; flex-shrink: 0; }
 
 .modern-select { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 2px solid var(--p); background: white; color: var(--tx); cursor: pointer; width: 100%; max-width: 300px; }
@@ -435,6 +455,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     <!-- NOVO BOTÃO DE RELATÓRIOS (OCULTO POR PADRÃO, APARECE SÓ PARA MATRIZ) -->
     <button class="tab-btn" id="tab-relatorios" onclick="switchTab('relatorios')" style="display: none;">Relatórios Matriz</button>
     <button class="tab-btn" id="tab-dashboard" onclick="switchTab('dashboard')" style="display: none;">📊 Dashboard</button>
+    <button class="tab-btn" id="tab-cobertura" onclick="switchTab('cobertura')" style="display: none;">📦 Cobertura</button>
   </div>
 
   <!-- ===== IMPORT TAB ===== -->
@@ -730,7 +751,43 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       </button>
     </div>
 
-  </div><!-- end tab-relatorios-content -->
+    <!-- CARD 3: ITENS EDITADOS MANUALMENTE (SÓ MATRIZ) -->
+    <div class="card" id="card-editados" style="display:none;">
+      <div class="ch">
+        <div class="ci am">✏️</div>
+        <div>
+          <div class="ct">SKUs com Qtd/Data Editados Manualmente pelos CDs</div>
+          <div class="cs">Itens cuja quantidade ou data de validade foram corrigidos pelo CD antes do envio</div>
+        </div>
+        <div style="margin-left:auto;">
+          <button class="btn btn-t" onclick="carregarEditados()" style="font-size:12px;padding:8px 16px;border-radius:14px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Atualizar
+          </button>
+        </div>
+      </div>
+      <div class="f" style="max-width:300px; margin-bottom:14px;">
+        <label for="data_editados">Data do relatório</label>
+        <input type="date" id="data_editados">
+      </div>
+      <div id="editados-loading" class="hidden" style="font-size:13px;color:var(--txs);font-style:italic;">⏳ Buscando dados...</div>
+      <div id="editados-vazio" class="hidden">
+        <div class="bn" style="background:var(--surv);border:1px solid var(--out);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <span style="color:var(--txs);">Nenhum SKU foi editado manualmente nesta data.</span>
+        </div>
+      </div>
+      <div id="editados-tabela-wrap" class="hidden">
+        <div class="tw">
+          <table>
+            <thead><tr>
+              <th>CD</th><th>Código</th><th>SKU / Produto</th><th style="text-align:right">Qtd Enviada</th><th style="text-align:right">Qtd Original</th><th>Validade Enviada</th><th>Validade Original</th>
+            </tr></thead>
+            <tbody id="editados-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
   <!-- ===== DASHBOARD TAB (SÓ MATRIZ) ===== -->
   <div id="tab-dashboard-content" class="hidden">
@@ -911,6 +968,152 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     </div><!-- end dash-content -->
   </div><!-- end tab-dashboard-content -->
 
+  <!-- ===== COBERTURA DE ESTOQUE TAB (SÓ MATRIZ) ===== -->
+  <div id="tab-cobertura-content" class="hidden">
+
+    <!-- CARD: INFO + FILTROS -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="ch" style="margin-bottom:14px;">
+        <div class="ci" style="background:linear-gradient(135deg,#C67C2A,#8B5020); color:#fff; font-size:20px;">📦</div>
+        <div>
+          <div class="ct">Cobertura de Estoque por SKU</div>
+          <div class="cs">Dias de estoque disponível com base na venda diária de cada CD. Cobertura alta = risco de vencimento.</div>
+        </div>
+        <div style="margin-left:auto;">
+          <button class="btn btn-f" onclick="carregarCobertura()" id="btn-cob-refresh" style="padding:9px 18px; font-size:13px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Atualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Alertas de legenda -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:6px; background:#F0D5D5; border-radius:20px; padding:5px 14px; font-size:12px; font-weight:500; color:#6B0000;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#8B0000;display:inline-block;"></span>
+          URGENTE (&gt; 7 dias)
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; background:#F5DDD9; border-radius:20px; padding:5px 14px; font-size:12px; font-weight:500; color:#8B1A14;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#C0392B;display:inline-block;"></span>
+          CRÍTICO (&gt; 5 dias)
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; background:#F5EDD5; border-radius:20px; padding:5px 14px; font-size:12px; font-weight:500; color:#6B4A00;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#C8941A;display:inline-block;"></span>
+          ATENÇÃO (&gt; 3 dias)
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; background:#D9EDDD; border-radius:20px; padding:5px 14px; font-size:12px; font-weight:500; color:#1A5C30;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#2E8B50;display:inline-block;"></span>
+          OK (≤ 3 dias)
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; background:var(--surv); border-radius:20px; padding:5px 14px; font-size:12px; font-weight:500; color:var(--txs);">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--out);display:inline-block;"></span>
+          Sem venda cadastrada
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; align-items:end;">
+        <div class="f" style="margin:0;">
+          <label for="cob-filtro-cd">Filtrar por CD</label>
+          <select id="cob-filtro-cd" onchange="renderTabelaCobertura()">
+            <option value="TODOS">Todos os CDs</option>
+            <option value="BARUERI">CD Barueri</option>
+            <option value="BAURU">CD Bauru</option>
+            <option value="CURITIBA">CD Curitiba</option>
+            <option value="LONDRINA">CD Londrina</option>
+            <option value="MATRIZ">CD Matriz</option>
+            <option value="RANCHARIA">CD Rancharia</option>
+            <option value="SJ RIO PRETO">CD SJ Rio Preto</option>
+          </select>
+        </div>
+        <div class="f" style="margin:0;">
+          <label for="cob-filtro-status">Filtrar por Status</label>
+          <select id="cob-filtro-status" onchange="renderTabelaCobertura()">
+            <option value="TODOS">Todos os status</option>
+            <option value="URGENTE">🔴 Urgente (&gt;7d)</option>
+            <option value="CRITICO">🟠 Crítico (&gt;5d)</option>
+            <option value="ATENCAO">🟡 Atenção (&gt;3d)</option>
+            <option value="OK">🟢 OK (≤3d)</option>
+            <option value="SEM_VENDA">⚫ Sem venda</option>
+          </select>
+        </div>
+        <div class="f" style="margin:0;">
+          <label for="cob-busca-sku">Buscar SKU</label>
+          <input type="text" id="cob-busca-sku" placeholder="Digite o nome do produto..." oninput="renderTabelaCobertura()" style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:9px 12px; outline:none; width:100%;">
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding-top:4px;">
+          <button class="btn btn-t" onclick="exportarCobertura()" style="font-size:12px; padding:9px 16px; border-radius:14px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI CARDS COBERTURA -->
+    <div id="cob-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px;"></div>
+
+    <!-- LOADING -->
+    <div id="cob-loading" class="hidden" style="text-align:center; padding:48px; color:var(--txs); font-size:14px; font-style:italic;">
+      <div style="font-size:36px; margin-bottom:12px;">⏳</div>
+      Buscando estoques e vendas diárias...
+    </div>
+
+    <!-- ESTADO VAZIO -->
+    <div id="cob-vazio" class="hidden">
+      <div class="bn" style="background:var(--surv); border:1px solid var(--out);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <span style="color:var(--txs);">Nenhum dado de estoque encontrado. Os CDs precisam enviar os dados primeiro.</span>
+      </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div id="cob-content" class="hidden">
+
+      <!-- GRÁFICO: SKUs mais críticos -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:16px;">
+          <div class="ci" style="background:#FFF0F0; font-size:18px;">🚨</div>
+          <div><div class="ct" style="font-size:15px;">Top 10 SKUs com Maior Cobertura (Risco)</div><div class="cs">Produtos com estoque mais alto em relação à venda diária — os mais urgentes para girar</div></div>
+        </div>
+        <div style="position:relative; height:260px;">
+          <canvas id="chart-cobertura-top"></canvas>
+        </div>
+      </div>
+
+      <!-- TABELA COBERTURA -->
+      <div class="card">
+        <div class="ch" style="margin-bottom:14px;">
+          <div class="ci bl" style="font-size:18px;">📋</div>
+          <div>
+            <div class="ct" style="font-size:15px;">Tabela de Cobertura Detalhada</div>
+            <div class="cs">Cobertura = Estoque atual ÷ Venda Diária | Atualizado com os últimos lançamentos de cada CD</div>
+          </div>
+          <div id="cob-contagem" style="margin-left:auto; font-size:12px; color:var(--txs); font-weight:500;"></div>
+        </div>
+        <div class="tw">
+          <table id="tabela-cobertura">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>CD</th>
+                <th>SKU / Produto</th>
+                <th style="text-align:right">Estoque (un)</th>
+                <th style="text-align:right">Venda Diária</th>
+                <th style="text-align:right">Cobertura (dias)</th>
+                <th style="text-align:right">Validade</th>
+                <th style="text-align:right">Prazo (dias)</th>
+              </tr>
+            </thead>
+            <tbody id="cob-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end tab-cobertura-content -->
+
+
 </main>
 
 <div id="action-section" style="display:none; position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:2px solid var(--outv);padding:16px 24px;z-index:300;box-shadow:0 -8px 24px rgba(80,50,20,.13);">
@@ -967,7 +1170,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 <script>
 const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paezinhos Leite Panutrinha Panutrir 400g","7":"Panetone C/ Frutas Panutrir 400g","11":"Pao Integral Centeio Fitness Zero Panutrir 350g","16":"Pao Integ 7 Graos Damasco Hibisco Zero Panutrir 350g","655":"Pao Integral 12 Graos Panutrir 450g","669":"Bisnaguinha Bisnutrinhas Panutrir 300g","1224":"Pao Cast Para E Quinoa Integ Panutrir Broa 450g","2279":"Pao Pct Caseiro 500g","69251":"Pao Hot Dog Panutrir 400g","81571":"Pao Integral Surpreendente Panutrir 450g","81581":"Pao Integral 12 Graos Zero Panutrir 350g","81591":"Pao Integral Chia Macadamia Panutrir 400g","81661":"Pao Forma Plufi Nut 400g","82051":"Pao Hamburguer Gourmet Panutrir 500g","85181":"Muffato Pao Hot Dog 400g","85841":"Muffato Paezinhos De Leite 400g","86151":"Pao Integral Panutrir 450g","99161":"Pao Integral Plufi Nut 450g","121581":"Us Pao Hot Dog Unisabor 400g","121801":"Us Pao Hamburguer Gourmet Unisabor 500g","121811":"Us Paezinhos De Leite Unisabor 400g","121821":"Us Pao Integral 12 Graos Zero Unisabor 350g","121831":"Us Pao Integral 12 Graos Unisabor 450g","121841":"Us Pao Castanha Para E Quinoa Integ Unisabor 450g","121861":"Us Pao Forma Unisabor 400g","121871":"Us Pao Leite Unisabor 400g","135211":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 500g","135221":"Nossa Padaria Pao Hot Dog Emb Transp 400g","135231":"Nossa Padaria Paezinhos Leite Emb Transp 400g","135241":"Nossa Padaria Pao Forma Emb Transp 400g","141441":"Pao Sirio Tradic Panificadora Dubai 320g","141951":"Pao Sirio Tradic Panificadora Dubai 260g","145511":"Pao Nutri Del Grano Tradicional Panutrir 500g","145521":"Pao Nutri Del Grano Integral Panutrir 500g","152291":"Pao Sirio Integral Panificadora Dubai 300g","156021":"Panetone C/ Frutas Plufi Nut 300g","156051":"Panetone C/ Gotas Chocolate Plufi Nut 300g","162272":"Nossa Padaria Bisnaguinha Emb Transp 300g","162275":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 330g","162276":"Nossa Padaria Pao Integral Emb Transp 450g","162358":"Us Pao Integral Unisabor 450g","162396":"Pao Nutri Del Grano Tipo Caseiro Panutrir 500g","162767":"Muffato Pao Integral 450g","162775":"Muffato Bisnaguinhas 300g","162783":"Us Pao Artesanal Tradicional Unisabor 500g","162784":"Us Pao Artesanal Integral Unisabor 500g","162800":"Muffato Pao Forma 400g","162801":"Muffato Pao Leite 400g","162802":"Muffato Pao Hamburguer 500g","162920":"Pao Nutri Del Grano Hamburguer Artesanal Panutrir 320g","162921":"Pao Nutri Del Grano Hamburguer Brioche Panutrir 320g","162922":"Pao Nutri Del Grano Hamburguer Australiano Panutrir 320g","162923":"Pao Nutri Del Grano Hamburguer Gergelim Panutrir 320g"};
 
-const API_URL = "https://script.google.com/macros/s/AKfycbw4TGZkMoaJUdb4UaR5iUEAiqeQihWQ648WqFZ0P5WJTcc1zlPgvSOmwiiSSxO4Xj8s/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzoGrJEwGHirIMpTg9HO6i00-a-5DzeUFbsRvlyzcUrOowtQOq8D8zUZtrB-h1gszd6/exec";
 
 let cd='',rows=[],hasW=false,wCnt=0;
 let _activeTab = 'import';
@@ -1010,6 +1213,12 @@ function okLocal(){
       document.getElementById('tab-relatorios').style.display = 'inline-block';
       document.getElementById('painel-monitoramento').style.display = 'block';
       document.getElementById('tab-dashboard').style.display = 'inline-block';
+      document.getElementById('tab-cobertura').style.display = 'inline-block';
+      document.getElementById('card-editados').style.display = '';
+      // Preenche a data do card de editados com hoje
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('data_editados').value = hoje;
+      document.getElementById('data_relatorio').value = hoje;
       // Matriz nao tem caminhao chegando - oculta horario de saida
       document.getElementById('campo-horario-saida').style.display = 'none';
       document.getElementById('horario_saida').removeAttribute('required');
@@ -1109,6 +1318,17 @@ function render(){
     if(row.isWarn)tr.classList.add('wr');
     const pc=row.prazo<=14?'pcr':row.prazo<=22?'pca':'pco';
     const sh=row.sku?`<span class="skun">${row.sku}</span>`:`<span class="ukn">COD não mapeado</span>`;
+    const editedBadge=row.skuEditado?`<span class="sku-edited-badge" title="Qtd/data editados manualmente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>editado</span>`:'';
+    const pencilBtn=`<button class="sku-edit-btn" onclick="openSkuEdit(${i})" title="Editar quantidade e data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
+    // converte validade dd/mm/yyyy → yyyy-mm-dd para o input date
+    const valPartes=row.validade.split('/');
+    const valISO=valPartes.length===3?`${valPartes[2]}-${valPartes[1]}-${valPartes[0]}`:row.validade;
+    const inlineEdit=`<div class="sku-edit-inline" id="skuedit${i}">
+      <input type="number" min="0" id="skuqtd${i}" placeholder="Qtd" value="${row.qtd}" style="width:80px;" onkeydown="skuEditKey(event,${i})">
+      <input type="date" id="skudat${i}" value="${valISO}" onkeydown="skuEditKey(event,${i})">
+      <button class="se-ok" onclick="confirmSkuEdit(${i})">✓ Ok</button>
+      <button class="se-cancel" onclick="cancelSkuEdit(${i})">✕</button>
+    </div>`;
     let ex='';
     if(hasW){
       if(row.isWarn){
@@ -1127,13 +1347,77 @@ function render(){
     }
     tr.innerHTML=`
       <td><span class="codn">${row.cod}</span></td>
-      <td>${sh}</td>
-      <td style="font-family:'Roboto Mono',monospace;font-size:12px">${row.validade}</td>
-      <td><span class="pc ${pc}">${row.prazo}d</span></td>
-      <td style="text-align:right;font-variant-numeric:tabular-nums">${row.qtd.toLocaleString('pt-BR')}</td>
+      <td><div style="display:flex;align-items:center;flex-wrap:wrap;gap:3px">${sh}${editedBadge}${pencilBtn}</div>${inlineEdit}</td>
+      <td style="font-family:'Roboto Mono',monospace;font-size:12px" id="skutd-val${i}">${row.validade}</td>
+      <td id="skutd-pc${i}"><span class="pc ${pc}">${row.prazo}d</span></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums" id="skutd-qtd${i}">${row.qtd.toLocaleString('pt-BR')}</td>
       ${ex}`;
     tb.appendChild(tr);
   });
+}
+
+function openSkuEdit(i){
+  document.querySelectorAll('.sku-edit-inline').forEach(el=>el.style.display='none');
+  const el=document.getElementById(`skuedit${i}`);
+  if(el){el.style.display='flex';const inp=document.getElementById(`skuqtd${i}`);if(inp){inp.focus();inp.select();}}
+}
+function cancelSkuEdit(i){
+  const el=document.getElementById(`skuedit${i}`);
+  if(el)el.style.display='none';
+}
+function skuEditKey(e,i){
+  if(e.key==='Enter')confirmSkuEdit(i);
+  if(e.key==='Escape')cancelSkuEdit(i);
+}
+function confirmSkuEdit(i){
+  const qtdInp=document.getElementById(`skuqtd${i}`);
+  const datInp=document.getElementById(`skudat${i}`);
+  if(!qtdInp||!datInp)return;
+  const novaQtd=parseInt(qtdInp.value);
+  const novaDataISO=datInp.value; // yyyy-mm-dd
+  if(isNaN(novaQtd)||!novaDataISO)return;
+  // Formata data para dd/mm/yyyy
+  const p=novaDataISO.split('-');
+  const novaValidade=`${p[2]}/${p[1]}/${p[0]}`;
+  const novoPrazo=Math.round((new Date(novaDataISO)-new Date())/(1000*60*60*24));
+  // Guarda originais só na primeira edição
+  if(!rows[i].skuEditado){
+    rows[i].qtdOriginal=rows[i].qtd;
+    rows[i].validadeOriginal=rows[i].validade;
+    rows[i].prazoOriginal=rows[i].prazo;
+  }
+  rows[i].qtd=novaQtd;
+  rows[i].validade=novaValidade;
+  rows[i].prazo=novoPrazo;
+  rows[i].isWarn=novoPrazo<=22;
+  rows[i].skuEditado=true;
+  // Atualiza células na tabela
+  const tdVal=document.getElementById(`skutd-val${i}`);
+  const tdPc=document.getElementById(`skutd-pc${i}`);
+  const tdQtd=document.getElementById(`skutd-qtd${i}`);
+  if(tdVal)tdVal.textContent=novaValidade;
+  if(tdQtd)tdQtd.textContent=novaQtd.toLocaleString('pt-BR');
+  if(tdPc){const pc2=novoPrazo<=14?'pcr':novoPrazo<=22?'pca':'pco';tdPc.innerHTML=`<span class="pc ${pc2}">${novoPrazo}d</span>`;}
+  // Badge de editado na coluna SKU
+  const skuCell=document.querySelector(`#skuedit${i}`)?.previousElementSibling;
+  const wrapper=document.getElementById(`skuedit${i}`)?.parentElement;
+  if(wrapper&&!wrapper.querySelector('.sku-edited-badge')){
+    const badge=document.createElement('span');
+    badge.className='sku-edited-badge';
+    badge.title='Qtd/data editados manualmente';
+    badge.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>editado';
+    const pencilBtn=wrapper.querySelector('.sku-edit-btn');
+    if(pencilBtn)wrapper.querySelector('div').insertBefore(badge,pencilBtn);
+  }
+  cancelSkuEdit(i);
+  // Recalcula totais no header
+  const tot=rows.reduce((s,r)=>s+r.qtd,0);
+  wCnt=rows.filter(r=>r.isWarn).length;
+  document.getElementById('sg').innerHTML=`
+    <div class="sc b"><div class="sv">${rows.length}</div><div class="sl">Linhas importadas</div></div>
+    <div class="sc"><div class="sv">${tot.toLocaleString('pt-BR')}</div><div class="sl">Unidades totais</div></div>
+    <div class="sc w"><div class="sv">${wCnt}</div><div class="sl">Data curta ≤ 22d</div></div>
+    <div class="sc"><div class="sv">${rows.filter(r=>!r.sku).length}</div><div class="sl">SKUs não mapeados</div></div>`;
 }
 
 function onBD(){
@@ -1212,15 +1496,18 @@ function switchTab(t){
   document.getElementById('tab-grades-content').classList.toggle('hidden',t!=='grades'); 
   document.getElementById('tab-relatorios-content').classList.toggle('hidden',t!=='relatorios');
   document.getElementById('tab-dashboard-content').classList.toggle('hidden',t!=='dashboard');
+  document.getElementById('tab-cobertura-content').classList.toggle('hidden',t!=='cobertura');
   
   document.getElementById('tab-import').classList.toggle('active',t==='import');
   document.getElementById('tab-manual').classList.toggle('active',t==='manual');
   document.getElementById('tab-grades').classList.toggle('active',t==='grades'); 
   document.getElementById('tab-relatorios').classList.toggle('active',t==='relatorios'); 
   document.getElementById('tab-dashboard').classList.toggle('active',t==='dashboard');
+  document.getElementById('tab-cobertura').classList.toggle('active',t==='cobertura');
   
   if(t==='manual'&&!meBuilt)meBuild();
   if(t==='dashboard'&&!dashBuilt)iniciarDashboard();
+  if(t==='cobertura'&&!coberturaLoaded)carregarCobertura();
 }
 
 let meBuilt=false,meProcessed=[],meHasW=false,meWCnt=0;
@@ -1640,64 +1927,149 @@ function baixarRelatorioConsolidado() {
         alert("Por favor, selecione uma data no calendário.");
         return;
     }
-    
-    // Converte de YYYY-MM-DD para DD/MM/YYYY (Padrão do Banco de Dados)
+
     const partes = dataInput.split('-');
     const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-    
+
     const btn = document.getElementById('btn-baixar-rel');
     const textoBotaoOriginal = btn.innerHTML;
     btn.innerHTML = "⏳ Buscando dados na Nuvem...";
     btn.disabled = true;
-    
-    // Solicita os dados daquela data para a API
-    fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(dataFormatada)}`)
-      .then(res => res.json())
-      .then(res => {
-          if(res.status === "sucesso" && res.dados.length > 0) {
-              gerarExcelMatriz(res.dados, dataFormatada);
-          } else {
-              alert(`Atenção: Nenhum lançamento de estoque encontrado na base para o dia ${dataFormatada}.`);
-          }
-      })
-      .catch(err => {
-          console.error(err);
-          alert("Erro ao buscar relatório. Verifique sua conexão com a internet.");
-      })
-      .finally(() => {
-          btn.innerHTML = textoBotaoOriginal;
-          btn.disabled = false;
-      });
+
+    // Busca estoque e vendas diárias em paralelo
+    Promise.all([
+        fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(dataFormatada)}`).then(r => r.json()),
+        fetch(`${API_URL}?action=vendas_diarias`).then(r => r.json())
+    ])
+    .then(([resEstoque, resVendas]) => {
+        if(resEstoque.status !== "sucesso" || !resEstoque.dados.length) {
+            alert(`Atenção: Nenhum lançamento de estoque encontrado na base para o dia ${dataFormatada}.`);
+            return;
+        }
+
+        // Monta mapa de vendas: "PRODUTO_UPPER::CD MATRIZ" → vendaDiaria
+        const vendasMap = {};
+        const CD_MAP = {
+            'BARUERI':'CD BARUERI','BAURU':'CD BAURU','CURITIBA':'CD CURITIBA',
+            'LONDRINA':'CD LONDRINA','MATRIZ':'CD MATRIZ','RANCHARIA':'CD RANCHARIA',
+            'SJRP':'CD SJ RIO PRETO','SJ RIO PRETO':'CD SJ RIO PRETO'
+        };
+        if(resVendas && resVendas.status === 'sucesso') {
+            resVendas.dados.forEach(v => {
+                const prodKey = (v.produto||'').toUpperCase().trim();
+                Object.entries(v.cds||{}).forEach(([cdKey, qty]) => {
+                    if(qty && qty !== '-') vendasMap[prodKey+'::'+cdKey] = parseFloat(qty)||0;
+                });
+            });
+        }
+
+        gerarExcelMatriz(resEstoque.dados, dataFormatada, vendasMap, CD_MAP);
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Erro ao buscar relatório. Verifique sua conexão com a internet.");
+    })
+    .finally(() => {
+        btn.innerHTML = textoBotaoOriginal;
+        btn.disabled = false;
+    });
 }
 
-function gerarExcelMatriz(dados, dataStr) {
+function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
+    vendasMap = vendasMap || {};
+    CD_MAP = CD_MAP || {};
+
     const wb = XLSX.utils.book_new();
-    
-    // Cabeçalho da planilha
-    const header = ['CD ORIGEM', 'CÓDIGO', 'SKU / PRODUTO', 'VALIDADE', 'PRAZO (DIAS)', 'QTD', 'DIRECIONAMENTO', 'MOTIVO'];
+
+    // ── helpers de cobertura ──────────────────────────────────────
+    function calcCobertura(r) {
+        const cdKey  = CD_MAP[r.cd] || ('CD ' + r.cd);
+        const prodKey = (r.produto||'').toUpperCase().trim();
+        const venda  = vendasMap[prodKey+'::'+cdKey] || 0;
+        const estoque = Math.abs(parseFloat(r.quantidade)||0);
+        if(venda <= 0) return null;
+        return +(estoque / venda).toFixed(1);
+    }
+    function cobLabel(c) {
+        if(c === null) return 'Sem venda';
+        if(c > 7) return 'URGENTE';
+        if(c > 5) return 'CRÍTICO';
+        if(c > 3) return 'ATENÇÃO';
+        return 'OK';
+    }
+
+    // ── aba CONSOLIDADO ───────────────────────────────────────────
+    const header = ['CD ORIGEM','CÓDIGO','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','QTD','COBERTURA (DIAS)','STATUS COBERTURA','DIRECIONAMENTO','MOTIVO','✏️ EDITADO MANUALMENTE','QTD ORIGINAL','VALIDADE ORIGINAL'];
     const wsData = [header];
-    
-    // Inserindo os dados
+
     dados.forEach(r => {
+        const cob = calcCobertura(r);
         wsData.push([
-            r.cd, 
-            r.codigo, 
-            r.produto, 
-            r.validade, 
-            r.prazo, 
-            r.quantidade, 
-            r.destino, 
-            r.motivo
+            r.cd, r.codigo, r.produto, r.validade, r.prazo,
+            r.quantidade,
+            cob !== null ? cob : '-',
+            cobLabel(cob),
+            r.destino, r.motivo,
+            r.skuEditado ? 'SIM' : '',
+            r.skuEditado ? (r.qtdOriginal ?? '') : '',
+            r.skuEditado ? (r.validadeOriginal || '') : ''
         ]);
     });
-    
+
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    // Ajustar largura das colunas do Excel
-    ws['!cols'] = [{wch:15}, {wch:12}, {wch:46}, {wch:14}, {wch:14}, {wch:12}, {wch:30}, {wch:36}];
-    
+    ws['!cols'] = [{wch:14},{wch:10},{wch:46},{wch:12},{wch:13},{wch:10},{wch:16},{wch:16},{wch:28},{wch:36},{wch:22},{wch:14},{wch:16}];
+
+    // Cores por status na coluna STATUS COBERTURA (col H = índice 7)
+    const fillUrgente = { patternType:'solid', fgColor:{rgb:'F0D5D5'} };
+    const fillCritico = { patternType:'solid', fgColor:{rgb:'F5DDD9'} };
+    const fillAtencao = { patternType:'solid', fgColor:{rgb:'F5EDD5'} };
+    const fillOk      = { patternType:'solid', fgColor:{rgb:'D9EDDD'} };
+    const fillSem     = { patternType:'solid', fgColor:{rgb:'EDEDED'} };
+
+    for(let i = 1; i < wsData.length; i++) {
+        const cellRef  = XLSX.utils.encode_cell({r: i, c: 7}); // col STATUS
+        const cellRefC = XLSX.utils.encode_cell({r: i, c: 6}); // col COBERTURA
+        const cellEdit = XLSX.utils.encode_cell({r: i, c: 10}); // col EDITADO
+        const status   = wsData[i][7];
+        let fill;
+        if(status === 'URGENTE')    fill = fillUrgente;
+        else if(status === 'CRÍTICO') fill = fillCritico;
+        else if(status === 'ATENÇÃO') fill = fillAtencao;
+        else if(status === 'OK')    fill = fillOk;
+        else                        fill = fillSem;
+        if(ws[cellRef])  ws[cellRef].s  = { fill, font:{bold: status==='URGENTE'||status==='CRÍTICO'} };
+        if(ws[cellRefC]) ws[cellRefC].s = { fill };
+        if(ws[cellEdit] && wsData[i][10]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
+    }
+
+    // Header row estilo
+    for(let c = 0; c < header.length; c++) {
+        const ref = XLSX.utils.encode_cell({r:0, c});
+        if(ws[ref]) ws[ref].s = { font:{bold:true}, fill:{patternType:'solid', fgColor:{rgb:'C67C2A'}}, fontColor:{rgb:'FFFFFF'} };
+    }
+
     XLSX.utils.book_append_sheet(wb, ws, "Consolidado");
-    
-    // Fazer o download do arquivo automaticamente
+
+    // ── aba RESUMO COBERTURA (só urgentes e críticos) ─────────────
+    const criticos = dados
+        .map(r => ({ ...r, cob: calcCobertura(r) }))
+        .filter(r => r.cob !== null && r.cob > 3)
+        .sort((a,b) => b.cob - a.cob);
+
+    if(criticos.length > 0) {
+        const hRes = ['STATUS','CD ORIGEM','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','ESTOQUE','VENDA DIÁRIA','COBERTURA (DIAS)'];
+        const resData = [hRes];
+        criticos.forEach(r => {
+            const cdKey  = CD_MAP[r.cd] || ('CD ' + r.cd);
+            const prodKey = (r.produto||'').toUpperCase().trim();
+            const venda  = vendasMap[prodKey+'::'+cdKey] || 0;
+            resData.push([cobLabel(r.cob), r.cd, r.produto, r.validade, r.prazo, r.quantidade, venda, r.cob]);
+        });
+        const wsRes = XLSX.utils.aoa_to_sheet(resData);
+        wsRes['!cols'] = [{wch:12},{wch:12},{wch:46},{wch:12},{wch:13},{wch:10},{wch:13},{wch:16}];
+        XLSX.utils.book_append_sheet(wb, wsRes, "⚠️ Alertas Cobertura");
+    }
+
     XLSX.writeFile(wb, `Consolidado_Estoque_Geral_${dataStr.replace(/\//g,'-')}.xlsx`);
 }
 
@@ -1707,6 +2079,54 @@ function gerarExcelMatriz(dados, dataStr) {
 function exportarCopia(){
   if(_activeTab==='manual') meDlXlsx();
   else dlXlsx();
+}
+
+// -------------------------------------------------
+// FUNÇÃO: CARREGAR ITENS EDITADOS MANUALMENTE (MATRIZ)
+// -------------------------------------------------
+async function carregarEditados() {
+  const dataInput = document.getElementById('data_editados').value;
+  if (!dataInput) { alert('Selecione uma data.'); return; }
+  const partes = dataInput.split('-');
+  const dataFmt = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+  document.getElementById('editados-loading').classList.remove('hidden');
+  document.getElementById('editados-vazio').classList.add('hidden');
+  document.getElementById('editados-tabela-wrap').classList.add('hidden');
+
+  try {
+    const res = await fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(dataFmt)}`);
+    const data = await res.json();
+    document.getElementById('editados-loading').classList.add('hidden');
+
+    if (data.status !== 'sucesso' || !data.dados.length) {
+      document.getElementById('editados-vazio').classList.remove('hidden');
+      return;
+    }
+
+    const editados = data.dados.filter(r => r.skuEditado === true || r.skuEditado === 'true' || r.skuEditado === 1);
+    if (!editados.length) {
+      document.getElementById('editados-vazio').classList.remove('hidden');
+      return;
+    }
+
+    const tbody = document.getElementById('editados-tbody');
+    tbody.innerHTML = editados.map(r => `
+      <tr>
+        <td><span style="background:var(--p);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;">${r.cd}</span></td>
+        <td><span class="codn">${r.codigo}</span></td>
+        <td><span class="skun">${r.produto}</span> <span class="sku-edited-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>editado</span></td>
+        <td style="text-align:right;font-weight:600;">${(parseInt(r.quantidade)||0).toLocaleString('pt-BR')}</td>
+        <td style="text-align:right;color:var(--txs);font-size:12px;">${r.qtdOriginal !== '' && r.qtdOriginal !== undefined ? Number(r.qtdOriginal).toLocaleString('pt-BR') : '—'}</td>
+        <td style="font-family:'Roboto Mono',monospace;font-size:12px;">${r.validade}</td>
+        <td style="font-family:'Roboto Mono',monospace;font-size:12px;color:var(--txs);">${r.validadeOriginal || '—'}</td>
+      </tr>`).join('');
+
+    document.getElementById('editados-tabela-wrap').classList.remove('hidden');
+  } catch(e) {
+    document.getElementById('editados-loading').classList.add('hidden');
+    document.getElementById('editados-vazio').classList.remove('hidden');
+  }
 }
 
 async function processarEnvioNuvem() {
@@ -1744,7 +2164,10 @@ async function processarEnvioNuvem() {
         prazo: r.prazo,
         quantidade: r.qtd,
         destino: r.dir || '',
-        motivo: r.motivo || ''
+        motivo: r.motivo || '',
+        skuEditado: r.skuEditado ? true : false,
+        qtdOriginal: r.skuEditado ? (r.qtdOriginal ?? '') : '',
+        validadeOriginal: r.skuEditado ? (r.validadeOriginal || '') : ''
     }));
 
     const payload = { tipo: "estoque", nomeCD: cdSelected, itens: itens };
@@ -1855,18 +2278,8 @@ async function atualizarStatusMonitor() {
             `;
         });
 
-        // Resumo dos pendentes
-        const pendentes = unidades.filter(un => {
-            const e = enviadosEstoque.includes(un);
-            const g = enviadosGrades.includes(un);
-            return !e || !g;
-        });
         const resumoEl = document.getElementById('mon-data-label');
-        if (pendentes.length === 0) {
-            resumoEl.innerHTML = `Exibindo: ${labelData} &nbsp;·&nbsp; <span style="color:var(--ot); font-weight:500;">✅ Todos os CDs enviaram</span>`;
-        } else {
-            resumoEl.innerHTML = `Exibindo: ${labelData} &nbsp;·&nbsp; <span style="color:var(--ct); font-weight:500;">⚠️ Pendentes: ${pendentes.join(', ')}</span>`;
-        }
+        resumoEl.innerHTML = `Exibindo: ${labelData}`;
 
     } catch (e) {
         unidades.forEach(un => {
@@ -2557,6 +2970,264 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.log('SW erro:', e));
   });
 }
+
+// =======================================================
+// COBERTURA DE ESTOQUE
+// =======================================================
+let coberturaLoaded = false;
+let _coberturaData = []; // [{cd, produto, estoque, vendaDiaria, cobertura, validade, prazo}]
+
+// Mapeamento: normaliza nomes entre DADOS_UNIFICADOS e Vendas_Diarias
+const VENDAS_DIARIAS_CD_MAP = {
+  'BARUERI':     'CD BARUERI',
+  'BAURU':       'CD BAURU',
+  'CURITIBA':    'CD CURITIBA',
+  'LONDRINA':    'CD LONDRINA',
+  'MATRIZ':      'CD MATRIZ',
+  'RANCHARIA':   'CD RANCHARIA',
+  'SJRP':        'CD SJ RIO PRETO',
+  'SJ RIO PRETO':'CD SJ RIO PRETO'
+};
+
+async function carregarCobertura() {
+  coberturaLoaded = true;
+  const loading = document.getElementById('cob-loading');
+  const vazio   = document.getElementById('cob-vazio');
+  const conteudo= document.getElementById('cob-content');
+  const kpis    = document.getElementById('cob-kpis');
+
+  loading.classList.remove('hidden');
+  vazio.classList.add('hidden');
+  conteudo.classList.add('hidden');
+  kpis.innerHTML = '';
+
+  try {
+    // Busca estoque atual + vendas diárias em paralelo
+    const [resEstoque, resVendas] = await Promise.all([
+      fetch(`${API_URL}?action=cobertura`).then(r => r.json()),
+      fetch(`${API_URL}?action=vendas_diarias`).then(r => r.json())
+    ]);
+
+    if (!resEstoque || resEstoque.status !== 'sucesso' || !resEstoque.dados.length) {
+      loading.classList.add('hidden');
+      vazio.classList.remove('hidden');
+      return;
+    }
+
+    // Monta lookup de vendas: { "NOME_PRODUTO_UPPER::CD BARUERI": vendaDiaria }
+    const vendasMap = {};
+    if (resVendas && resVendas.status === 'sucesso') {
+      resVendas.dados.forEach(v => {
+        const prodKey = (v.produto || '').toUpperCase().trim();
+        Object.entries(v.cds || {}).forEach(([cdKey, qty]) => {
+          if (qty && qty !== '-') {
+            vendasMap[prodKey + '::' + cdKey] = parseFloat(qty) || 0;
+          }
+        });
+      });
+    }
+
+    // Processa dados de cobertura
+    _coberturaData = resEstoque.dados.map(item => {
+      const cdKey = VENDAS_DIARIAS_CD_MAP[item.cd] || ('CD ' + item.cd);
+      const prodKey = (item.produto || '').toUpperCase().trim();
+      const lookupKey = prodKey + '::' + cdKey;
+      const vendaDiaria = vendasMap[lookupKey] || 0;
+      const estoque = Math.abs(parseFloat(item.quantidade) || 0);
+      const cobertura = (vendaDiaria > 0) ? +(estoque / vendaDiaria).toFixed(1) : null;
+      
+      let status = 'SEM_VENDA';
+      if (cobertura !== null) {
+        if (cobertura > 7)      status = 'URGENTE';
+        else if (cobertura > 5) status = 'CRITICO';
+        else if (cobertura > 3) status = 'ATENCAO';
+        else                    status = 'OK';
+      }
+      return {
+        cd: item.cd,
+        produto: item.produto,
+        estoque: estoque,
+        vendaDiaria: vendaDiaria,
+        cobertura: cobertura,
+        validade: item.validade || '-',
+        prazo: item.prazo || '-',
+        status: status
+      };
+    });
+
+    loading.classList.add('hidden');
+    renderKpisCobertura();
+    renderTabelaCobertura();
+    renderGraficoCobertura();
+    conteudo.classList.remove('hidden');
+
+  } catch(err) {
+    console.error('Erro cobertura:', err);
+    loading.classList.add('hidden');
+    vazio.classList.remove('hidden');
+  }
+}
+
+function cobStatusLabel(status) {
+  if (status === 'URGENTE') return { icon: '🔴', label: 'Urgente',   bg: '#F0D5D5',     color: '#6B0000' };
+  if (status === 'CRITICO') return { icon: '🟠', label: 'Crítico',   bg: 'var(--cs)',   color: 'var(--cb)' };
+  if (status === 'ATENCAO') return { icon: '🟡', label: 'Atenção',   bg: 'var(--ws)',   color: 'var(--wb)' };
+  if (status === 'OK')      return { icon: '🟢', label: 'OK',        bg: 'var(--os)',   color: 'var(--ob)' };
+  return                           { icon: '⚫', label: 'Sem venda', bg: 'var(--surv)', color: 'var(--txs)' };
+}
+
+function renderKpisCobertura() {
+  const total   = _coberturaData.length;
+  const urgentes = _coberturaData.filter(d => d.status === 'URGENTE').length;
+  const criticos = _coberturaData.filter(d => d.status === 'CRITICO').length;
+  const atencao  = _coberturaData.filter(d => d.status === 'ATENCAO').length;
+  const ok       = _coberturaData.filter(d => d.status === 'OK').length;
+  const semVenda = _coberturaData.filter(d => d.status === 'SEM_VENDA').length;
+  const cobMedia = _coberturaData.filter(d=>d.cobertura!==null).reduce((s,d)=>s+d.cobertura,0) 
+                   / (_coberturaData.filter(d=>d.cobertura!==null).length || 1);
+
+  const kpis = [
+    { icon:'📦', label:'Total de SKUs',   value: total,    bg:'var(--surv)', color:'var(--tx)' },
+    { icon:'🔴', label:'Urgente (>7d)',   value: urgentes, bg:'#F0D5D5',     color:'#6B0000' },
+    { icon:'🟠', label:'Crítico (>5d)',   value: criticos, bg:'var(--cs)',   color:'var(--cb)' },
+    { icon:'🟡', label:'Atenção (>3d)',   value: atencao,  bg:'var(--ws)',   color:'var(--wb)' },
+    { icon:'🟢', label:'OK (≤3d)',        value: ok,       bg:'var(--os)',   color:'var(--ob)' },
+    { icon:'📊', label:'Cobertura Média', value: cobMedia.toFixed(1)+'d', bg:'var(--pc)', color:'var(--sec)' },
+  ];
+
+  document.getElementById('cob-kpis').innerHTML = kpis.map(k => `
+    <div style="background:${k.bg}; border-radius:var(--r12); padding:16px; box-shadow:var(--sh1);">
+      <div style="font-size:22px; margin-bottom:6px;">${k.icon}</div>
+      <div style="font-size:22px; font-weight:700; color:${k.color};">${k.value}</div>
+      <div style="font-size:11px; color:var(--txs); font-weight:500; margin-top:2px;">${k.label}</div>
+    </div>
+  `).join('');
+}
+
+function renderTabelaCobertura() {
+  const filtroCD     = document.getElementById('cob-filtro-cd').value;
+  const filtroStatus = document.getElementById('cob-filtro-status').value;
+  const buscaSku     = (document.getElementById('cob-busca-sku').value || '').toLowerCase();
+
+  let dados = _coberturaData;
+  if (filtroCD !== 'TODOS') dados = dados.filter(d => d.cd === filtroCD || ('CD ' + d.cd) === filtroCD || d.cd.includes(filtroCD.replace('CD ','')));
+  if (filtroStatus !== 'TODOS') dados = dados.filter(d => d.status === filtroStatus);
+  if (buscaSku) dados = dados.filter(d => d.produto.toLowerCase().includes(buscaSku));
+
+  // Ordena: críticos primeiro, depois atenção, ok, sem venda; dentro de cada grupo, maior cobertura primeiro
+  const ordem = {URGENTE:0, CRITICO:1, ATENCAO:2, OK:3, SEM_VENDA:4};
+  dados.sort((a,b) => {
+    if (ordem[a.status] !== ordem[b.status]) return ordem[a.status] - ordem[b.status];
+    return (b.cobertura||0) - (a.cobertura||0);
+  });
+
+  document.getElementById('cob-contagem').textContent = dados.length + ' itens';
+
+  const tbody = document.getElementById('cob-tbody');
+  if (!dados.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--txs); padding:24px;">Nenhum registro encontrado com os filtros aplicados.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = dados.map(d => {
+    const s = cobStatusLabel(d.status);
+    const cobStr = d.cobertura !== null ? d.cobertura + ' dias' : '—';
+    const cobBar = d.cobertura !== null 
+      ? `<div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">
+           <div style="width:60px; height:6px; background:var(--surv); border-radius:3px; overflow:hidden; flex-shrink:0;">
+             <div style="height:100%; width:${Math.min(100, (d.cobertura/45)*100)}%; background:${d.status==='URGENTE'?'#8B0000':d.status==='CRITICO'?'var(--cb)':d.status==='ATENCAO'?'var(--wb)':'var(--ob)'}; border-radius:3px;"></div>
+           </div>
+           <span style="font-weight:600; color:${d.status==='URGENTE'?'#6B0000':d.status==='CRITICO'?'var(--cb)':d.status==='ATENCAO'?'var(--wb)':d.status==='OK'?'var(--ob)':'var(--txs)'};">${cobStr}</span>
+         </div>` 
+      : `<span style="color:var(--txs);">—</span>`;
+    return `
+      <tr>
+        <td><span style="background:${s.bg}; color:${s.color}; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:600; white-space:nowrap;">${s.icon} ${s.label}</span></td>
+        <td style="font-size:12px; color:var(--txs); font-weight:500;">${d.cd}</td>
+        <td style="font-size:13px; max-width:260px;">${d.produto}</td>
+        <td style="text-align:right; font-weight:600;">${d.estoque.toLocaleString('pt-BR')}</td>
+        <td style="text-align:right; color:var(--txs);">${d.vendaDiaria > 0 ? d.vendaDiaria.toLocaleString('pt-BR') : '—'}</td>
+        <td style="text-align:right;">${cobBar}</td>
+        <td style="text-align:right; font-size:12px; color:var(--txs);">${d.validade}</td>
+        <td style="text-align:right; font-size:12px;">${d.prazo}</td>
+      </tr>`;
+  }).join('');
+}
+
+let _chartCoberturaTop = null;
+function renderGraficoCobertura() {
+  const top10 = [..._coberturaData]
+    .filter(d => d.cobertura !== null)
+    .sort((a,b) => b.cobertura - a.cobertura)
+    .slice(0, 10);
+
+  const labels = top10.map(d => {
+    const nome = d.produto.length > 30 ? d.produto.substring(0,28)+'…' : d.produto;
+    return nome + ' (' + d.cd + ')';
+  });
+  const values = top10.map(d => d.cobertura);
+  const colors = top10.map(d => d.status === 'CRITICO' ? '#C0392B' : d.status === 'ATENCAO' ? '#C8941A' : '#2E8B50');
+
+  const ctx = document.getElementById('chart-cobertura-top');
+  if (_chartCoberturaTop) { _chartCoberturaTop.destroy(); }
+  _chartCoberturaTop = new Chart(ctx, {
+    type: 'bar',
+    data: { 
+      labels, 
+      datasets: [{ 
+        label: 'Cobertura (dias)', 
+        data: values, 
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderSkipped: false
+      }] 
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} dias` } }
+      },
+      scales: {
+        x: { 
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { font: { size: 11 }, color: '#6B5744' }
+        },
+        y: { 
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: '#2C2016' }
+        }
+      }
+    }
+  });
+}
+
+function exportarCobertura() {
+  const filtroCD     = document.getElementById('cob-filtro-cd').value;
+  const filtroStatus = document.getElementById('cob-filtro-status').value;
+  const buscaSku     = (document.getElementById('cob-busca-sku').value || '').toLowerCase();
+
+  let dados = _coberturaData;
+  if (filtroCD !== 'TODOS') dados = dados.filter(d => d.cd === filtroCD || ('CD ' + d.cd) === filtroCD);
+  if (filtroStatus !== 'TODOS') dados = dados.filter(d => d.status === filtroStatus);
+  if (buscaSku) dados = dados.filter(d => d.produto.toLowerCase().includes(buscaSku));
+
+  const wb = XLSX.utils.book_new();
+  const header = ['Status', 'CD', 'Produto', 'Estoque (un)', 'Venda Diária', 'Cobertura (dias)', 'Validade', 'Prazo (dias)'];
+  const wsData = [header, ...dados.map(d => [
+    d.status === 'CRITICO' ? 'Crítico' : d.status === 'ATENCAO' ? 'Atenção' : d.status === 'OK' ? 'OK' : 'Sem venda',
+    d.cd, d.produto, d.estoque, d.vendaDiaria || '', d.cobertura !== null ? d.cobertura : '', d.validade, d.prazo
+  ])];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:12},{wch:12},{wch:46},{wch:14},{wch:14},{wch:16},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Cobertura de Estoque');
+  const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  XLSX.writeFile(wb, `Cobertura_Estoque_${hoje}.xlsx`);
+}
+
 </script>
 </body>
 </html>
