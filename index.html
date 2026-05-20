@@ -10,7 +10,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema de Padronização de Relatórios - Panutrir</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -145,6 +145,16 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .modal .f input{font-size:15px;text-align:center;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
 .modal .btn{width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:14px;margin-top:6px}
 
+/* SUB-TAB BAR (dentro de abas mestras) */
+.subtab-bar{display:flex;gap:4px;background:var(--sur1);border:1.5px solid var(--outv);border-radius:18px;padding:4px;margin-bottom:18px;width:fit-content;flex-wrap:wrap;}
+.subtab-btn{padding:7px 16px;border:none;border-radius:14px;font-family:'Google Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:var(--txs);transition:all .15s}
+.subtab-btn.active{background:var(--p);color:#fff;box-shadow:var(--sh1)}
+@media(max-width:600px){
+  .subtab-bar{width:100%;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .subtab-bar::-webkit-scrollbar{display:none;}
+  .subtab-btn{white-space:nowrap;flex-shrink:0;font-size:11px;padding:6px 13px;}
+}
+
 /* MANUAL ENTRY */
 .tab-bar{display:flex;gap:4px;background:var(--surv);border:1.5px solid var(--outv);border-radius:20px;padding:4px;margin-bottom:20px;width:fit-content;flex-wrap:wrap;}
 .tab-btn{padding:8px 20px;border:none;border-radius:16px;font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--txs);transition:all .15s}
@@ -214,8 +224,8 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
 /* Painel de Monitoramento */
 .monitor-panel { margin-top: 30px; padding: 20px; background: white; border-radius: 12px; border: 1px solid var(--out); }
-.monitor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
-.cd-status-badge { padding: 10px; border-radius: 8px; font-size: 13px; text-align: center; border: 1px solid transparent; }
+.monitor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; margin-top: 15px; }
+.cd-status-badge { padding: 12px 12px; border-radius: 8px; font-size: 13px; text-align: center; border: 1px solid transparent; }
 .status-pending { background: #fdfaf6; color: var(--txs); border: 1px solid #e0d0bc; }
 .status-sent { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
 .status-missing { background: var(--cs); color: var(--ct); border: 1px solid #f1a9a5; }
@@ -448,20 +458,34 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
   <!-- TAB BAR -->
   <div class="tab-bar">
-    <button class="tab-btn active" id="tab-import" onclick="switchTab('import')">Importação de Base de Dados</button>
-    <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">Inserção Manual de Registros</button>
-    <button class="tab-btn" id="tab-grades" onclick="switchTab('grades')">Gestão de Grades</button>
+    <button class="tab-btn active" id="tab-controle" onclick="switchTab('controle')">📅 Controle de datas</button>
+    <button class="tab-btn" id="tab-estoque-cia" onclick="switchTab('estoque-cia')">📦 Estoque da CIA</button>
+    <button class="tab-btn" id="tab-grades" onclick="switchTab('grades')">🚚 Gestão de Grades</button>
     
     <!-- NOVO BOTÃO DE RELATÓRIOS (OCULTO POR PADRÃO, APARECE SÓ PARA MATRIZ) -->
     <button class="tab-btn" id="tab-relatorios" onclick="switchTab('relatorios')" style="display: none;">Relatórios Matriz</button>
     <button class="tab-btn" id="tab-dashboard" onclick="switchTab('dashboard')" style="display: none;">📊 Dashboard</button>
     <button class="tab-btn" id="tab-cobertura" onclick="switchTab('cobertura')" style="display: none;">📦 Cobertura</button>
+    <button class="tab-btn" id="tab-rastreio" onclick="switchTab('rastreio')" style="display: none;">📋 Apontamento de Grades</button>
+  </div>
+
+  <!-- ===== ABA MESTRA: CONTROLE DE DATAS ===== -->
+  <div id="tab-controle-content">
+
+  <!-- Sub-tabs internas -->
+  <div class="subtab-bar">
+    <button class="subtab-btn active" id="subtab-import" onclick="switchSubControle('import')">📂 Importação de Base de Dados</button>
+    <button class="subtab-btn" id="subtab-manual" onclick="switchSubControle('manual')">✏️ Inserção Manual de Registros</button>
   </div>
 
   <!-- ===== IMPORT TAB ===== -->
   <div id="tab-import-content">
   <div class="card" id="s1">
     <div class="ch"><div class="ci bl">📂</div><div><div class="ct">Importar planilha de estoque</div><div class="cs">Arquivo .xlsx com colunas COD · QTD_TOTAL · VALIDADE · PRAZO</div></div></div>
+    <div class="bn bn-i" style="margin-bottom:10px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+      <span>No Inflow, clique em opções e depois em <strong>"Exportar por validade"</strong>.</span>
+    </div>
     <div class="bn bn-i">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
       <span>Os nomes dos SKUs são vinculados automaticamente — basta importar a planilha com COD.</span>
@@ -539,10 +563,14 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   </div>
   </div><!-- end tab-import-content -->
 
-  <!-- ===== MANUAL TAB ===== -->
+  <!-- ===== MANUAL TAB (CONTROLE DE DATAS) ===== -->
   <div id="tab-manual-content" class="hidden">
     <div class="card">
-      <div class="ch"><div class="ci am">✏️</div><div><div class="ct">Lançamento Manual de Estoque</div><div class="cs">Digite a quantidade e a menor data de validade para cada SKU que desejar. Preencha ao menos 1.</div></div></div>
+      <div class="ch"><div class="ci am">✏️</div><div><div class="ct">Inserção Manual de Registros</div><div class="cs">Digite a quantidade e a menor data de validade para cada SKU que desejar. Preencha ao menos 1.</div></div></div>
+      <div class="bn bn-i" style="margin-bottom:14px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <span>No Inflow, clique em opções e depois em <strong>"Exportar por validade"</strong>.</span>
+      </div>
       <div class="me-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" id="me-filter" placeholder="Buscar SKU ou nome do produto..." oninput="meFilter()">
@@ -615,6 +643,92 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     </div>
   </div><!-- end tab-manual-content -->
 
+  </div><!-- end tab-controle-content -->
+
+  <!-- ===== ABA MESTRA: ESTOQUE DA CIA ===== -->
+  <div id="tab-estoque-cia-content" class="hidden">
+
+    <!-- Sub-tabs internas -->
+    <div class="subtab-bar">
+      <button class="subtab-btn active" id="subtab-ec-import" onclick="switchSubEstoqueCia('import')">📂 Importação de Base de Dados</button>
+      <button class="subtab-btn" id="subtab-ec-manual" onclick="switchSubEstoqueCia('manual')">✏️ Inserção Manual de Registros</button>
+    </div>
+
+    <!-- ===== SUB-ABA: IMPORTAÇÃO ===== -->
+    <div id="ec-import-content">
+      <div class="card">
+        <div class="ch">
+          <div class="ci bl">📦</div>
+          <div>
+            <div class="ct">Estoque da CIA — Importação</div>
+            <div class="cs">Importação do estoque total por SKU (sem separação por data de validade)</div>
+          </div>
+        </div>
+
+        <div class="bn bn-i" style="margin-bottom:14px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <span>No Inflow, clique em opções e depois em <strong>"Exportar por produto"</strong>.</span>
+        </div>
+
+        <div class="bn bn-i">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <span>Arquivo .xlsx com colunas <strong>DATA ESTOQUE · COD · PRODUTO · QTD_DISPONÍVEL</strong>. Os SKUs são vinculados automaticamente pelo código.</span>
+        </div>
+
+        <div class="dz" id="ec-dz" style="margin-top:14px;">
+          <input type="file" id="ec-fi" accept=".xlsx,.xls" onchange="ecHandleFile(this.files[0])">
+          <div class="di">📦</div>
+          <div class="dl">Arraste o arquivo <strong>.xlsx</strong> ou <strong>clique para selecionar</strong></div>
+          <div class="fbadge" id="ec-fb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="ec-fn"></span></div>
+        </div>
+        <div id="ec-pp" class="hidden" style="margin-top:14px"><div class="pw"><div class="pb" id="ec-pb"></div></div><div class="pl" id="ec-pl">Processando...</div></div>
+      </div>
+
+      <div id="ec-s2" class="hidden">
+        <div class="sg" id="ec-sg"></div>
+
+        <div class="card" style="padding:0;overflow:hidden;box-shadow:var(--sh2)">
+          <div class="tw">
+            <table>
+              <thead><tr>
+                <th>Cód</th><th>SKU / Produto</th><th>Data Estoque</th>
+                <th style="text-align:right">Qtd Disponível</th>
+              </tr></thead>
+              <tbody id="ec-tb"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-o" onclick="ecReset()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reiniciar
+          </button>
+        </div>
+      </div>
+    </div><!-- end ec-import-content -->
+
+    <!-- ===== SUB-ABA: INSERÇÃO MANUAL ===== -->
+    <div id="ec-manual-content" class="hidden">
+      <div class="card">
+        <div class="ch"><div class="ci am">✏️</div><div><div class="ct">Estoque da CIA — Inserção Manual</div><div class="cs">Digite a quantidade total disponível para cada SKU. Preencha ao menos 1 SKU para enviar.</div></div></div>
+
+        <div class="bn bn-i" style="margin-bottom:14px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <span>Use esta opção quando preferir digitar manualmente o estoque total por SKU, sem importar planilha do Inflow.</span>
+        </div>
+
+        <div class="me-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="ecm-filter" placeholder="Buscar SKU ou nome do produto..." oninput="ecmFilter()">
+        </div>
+        <div class="me-counter">Preenchidos: <strong id="ecm-filled-count">0</strong> de <span id="ecm-total-count">0</span> SKUs</div>
+        <div class="me-list" id="ecm-grid"></div>
+      </div>
+    </div><!-- end ec-manual-content -->
+
+  </div><!-- end tab-estoque-cia-content -->
+
   <!-- ===== GRADES TAB ===== -->
   <div id="tab-grades-content" class="hidden">
     <div class="card">
@@ -633,13 +747,13 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         </div>
 
         <div class="f">
-          <label for="caixas_vazias">Caixas Vazias:</label>
-          <input type="number" id="caixas_vazias" placeholder="Ex: 1200" required min="0">
+          <label for="caixas_vazias">Grades no CD:</label>
+          <input type="number" id="caixas_vazias" placeholder="Ex: 1200" min="0" oninput="atualizarBtnGrades()">
         </div>
 
         <div class="f">
-          <label for="caixas_trocas">Caixas com trocas:</label>
-          <input type="number" id="caixas_trocas" placeholder="Ex: 400" required min="0">
+          <label for="caixas_trocas">Grades retornando:</label>
+          <input type="number" id="caixas_trocas" placeholder="Ex: 400" min="0" oninput="atualizarBtnGrades()">
         </div>
 
         <div class="f" id="campo-horario-saida">
@@ -647,7 +761,12 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           <input type="time" id="horario_saida">
         </div>
 
-        <button type="submit" id="btn-envia-grades" class="btn btn-f" style="margin-top: 10px;">
+        <div class="bn bn-i" id="hint-grades" style="margin-bottom:14px;font-size:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <span>Preencha ao menos <strong>Grades no CD</strong> ou <strong>Grades retornando</strong> para liberar o envio. Os demais campos são opcionais.</span>
+        </div>
+
+        <button type="submit" id="btn-envia-grades" class="btn btn-f" style="margin-top: 10px;" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Gerar Relatório e Lançar
         </button>
@@ -1048,6 +1167,10 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
             Exportar Excel
           </button>
+          <button class="btn btn-f" id="btn-exp-cob-cia" onclick="exportarCoberturaCia()" style="font-size:12px; padding:9px 16px; border-radius:14px;" title="Gera um Excel com o estoque total consolidado da CIA (todos os CDs) e a cobertura calculada pela venda diária total da CIA. Para CDs que não enviaram hoje, usa o último snapshot disponível.">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9h18M9 21V9"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Exportar Cobertura CIA
+          </button>
         </div>
       </div>
     </div>
@@ -1115,6 +1238,215 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     </div>
   </div><!-- end tab-cobertura-content -->
 
+  <!-- ===== APONTAMENTO E RASTREIO DE GRADES (SÓ MATRIZ) ===== -->
+  <div id="tab-rastreio-content" class="hidden">
+
+    <!-- CARD: HEADER + UPLOAD -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="ch" style="margin-bottom:14px;">
+        <div class="ci" style="background:linear-gradient(135deg,#8B5020,#C67C2A); color:#fff; font-size:20px;">📋</div>
+        <div>
+          <div class="ct">Apontamento e Rastreio de Grades</div>
+          <div class="cs">Importe a planilha bruta de saldo de clientes e veja o painel completo de apontamento</div>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button class="btn btn-t" id="ra-btn-export" onclick="raExportPainel()" style="font-size:12px; padding:9px 16px; border-radius:14px; display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+            Exportar Painel
+          </button>
+          <button class="btn btn-o" id="ra-btn-reset" onclick="raReset()" style="font-size:12px; padding:9px 16px; border-radius:14px; display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reiniciar
+          </button>
+        </div>
+      </div>
+
+      <div class="bn bn-i" style="margin-bottom:12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <span>Planilha com as colunas <strong>cod_cli · fantasia · qtde · data · resp · supervisor · promotor · regiao</strong> (coluna <strong>CDs</strong> opcional — é calculada via mapeamento da região quando ausente). Clientes inativos &gt;30 dias (lista embutida) são <strong>removidos</strong> do painel, conforme tratamento da planilha modelo.</span>
+      </div>
+
+      <div class="dz" id="ra-dz">
+        <input type="file" id="ra-fi" accept=".xlsx,.xls" onchange="raHandleFile(this.files[0])">
+        <div class="di">📋</div>
+        <div class="dl">Arraste a planilha <strong>.xlsx</strong> ou <strong>clique para selecionar</strong></div>
+        <div class="fbadge" id="ra-fb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="ra-fn"></span></div>
+      </div>
+      <div id="ra-pp" class="hidden" style="margin-top:14px"><div class="pw"><div class="pb" id="ra-pb"></div></div><div class="pl" id="ra-pl">Processando...</div></div>
+    </div>
+
+    <!-- DASHBOARD (aparece após upload) -->
+    <div id="ra-dash" class="hidden">
+
+      <!-- KPIs -->
+      <div id="ra-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:16px;"></div>
+
+      <!-- FILTROS -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:14px;">
+          <div class="ci" style="background:var(--pc); font-size:18px;">🔍</div>
+          <div><div class="ct" style="font-size:15px;">Filtros</div><div class="cs">Refine os dados das tabelas abaixo</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px;">
+          <div class="f" style="margin:0;">
+            <label for="ra-f-cd">CD</label>
+            <select id="ra-f-cd" onchange="raRender()"><option value="TODOS">Todos os CDs</option></select>
+          </div>
+          <div class="f" style="margin:0;">
+            <label for="ra-f-sup">Supervisor</label>
+            <select id="ra-f-sup" onchange="raRender()"><option value="TODOS">Todos</option></select>
+          </div>
+          <div class="f" style="margin:0;">
+            <label for="ra-f-st">Status</label>
+            <select id="ra-f-st" onchange="raRender()">
+              <option value="TODOS">Todos os clientes</option>
+              <option value="ZERADO">🔴 Apenas sem apontamento</option>
+              <option value="COM_SALDO">🟢 Apenas com saldo</option>
+            </select>
+          </div>
+          <div class="f" style="margin:0;">
+            <label for="ra-f-busca">Buscar cliente</label>
+            <input type="text" id="ra-f-busca" placeholder="Nome do cliente..." oninput="raRender()" style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:9px 12px; outline:none; width:100%;">
+          </div>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;" id="ra-charts-grid">
+        <div class="card">
+          <div class="ch" style="margin-bottom:14px;">
+            <div class="ci bl" style="font-size:18px;">📊</div>
+            <div><div class="ct" style="font-size:15px;">Saldo de grades por CD</div><div class="cs">Distribuição do total de grades entre os CDs</div></div>
+          </div>
+          <div style="position:relative; height:240px;"><canvas id="ra-chart-cds"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="ch" style="margin-bottom:14px;">
+            <div class="ci" style="background:#F0D5D5; font-size:18px;">🚨</div>
+            <div><div class="ct" style="font-size:15px;">% Clientes sem apontamento por supervisor</div><div class="cs">Quanto da carteira de cada supervisor não fez apontamento</div></div>
+          </div>
+          <div style="position:relative; height:240px;"><canvas id="ra-chart-sup-zerados"></canvas></div>
+        </div>
+      </div>
+
+      <!-- TABELA 1: SALDO POR SUPERVISOR -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:14px;">
+          <div class="ci am" style="font-size:18px;">👥</div>
+          <div>
+            <div class="ct" style="font-size:15px;">Saldo por Supervisor</div>
+            <div class="cs">Total de grades sob responsabilidade de cada supervisor. Clique numa linha para ver os clientes.</div>
+          </div>
+          <div id="ra-cnt-sup" style="margin-left:auto; font-size:12px; color:var(--txs); font-weight:500;"></div>
+        </div>
+        <div class="tw">
+          <table id="ra-tab-sup">
+            <thead><tr><th>Supervisor</th><th style="text-align:right">Qtde Grades</th><th style="text-align:right">%</th></tr></thead>
+            <tbody id="ra-tab-sup-tb"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABELA 2: SALDO POR CD -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:14px;">
+          <div class="ci bl" style="font-size:18px;">🏢</div>
+          <div>
+            <div class="ct" style="font-size:15px;">Saldo por CD</div>
+            <div class="cs">Volume de grades, clientes e projeção sem apontamento por unidade</div>
+          </div>
+        </div>
+        <div class="tw">
+          <table id="ra-tab-cd">
+            <thead>
+              <tr>
+                <th>CD</th>
+                <th style="text-align:right">Qtde Grades</th>
+                <th style="text-align:right">Clientes</th>
+                <th style="text-align:right">Sem apontamento</th>
+                <th style="text-align:right">%</th>
+                <th style="text-align:right">Projeção</th>
+              </tr>
+            </thead>
+            <tbody id="ra-tab-cd-tb"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABELA 3: ANÁLISE 80/20 POR SUPERVISOR -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:14px;">
+          <div class="ci" style="background:#F5EDD5; font-size:18px;">📈</div>
+          <div>
+            <div class="ct" style="font-size:15px;">Análise 80/20 — Clientes sem Apontamento por Supervisor</div>
+            <div class="cs">Identifica quem mais contribui para o total de clientes sem apontamento</div>
+          </div>
+        </div>
+        <div class="tw">
+          <table id="ra-tab-8020">
+            <thead>
+              <tr>
+                <th>Supervisor</th>
+                <th style="text-align:right">Clientes</th>
+                <th style="text-align:right">Sem apontamento</th>
+                <th style="text-align:right">% Sem apontamento</th>
+                <th style="text-align:right">% Total Geral</th>
+              </tr>
+            </thead>
+            <tbody id="ra-tab-8020-tb"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DRILL-DOWN: CLIENTES DO SUPERVISOR SELECIONADO -->
+      <div class="card" id="ra-drill-card" style="display:none; margin-bottom:16px;">
+        <div class="ch" style="margin-bottom:14px;">
+          <div class="ci" style="background:var(--pc); font-size:18px;">🔎</div>
+          <div>
+            <div class="ct" style="font-size:15px;">Clientes do supervisor <span id="ra-drill-name" style="color:var(--p);"></span></div>
+            <div class="cs">Detalhamento dos clientes desse supervisor (respeitando filtros)</div>
+          </div>
+          <button class="btn btn-o" onclick="raFecharDrill()" style="margin-left:auto; font-size:11px; padding:7px 14px; border-radius:12px;">Fechar</button>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód</th><th>Cliente (fantasia)</th><th>CD</th><th>Região</th>
+                <th style="text-align:right">Qtde</th><th>Última Atualização</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ra-drill-tb"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABELA COMPLETA -->
+      <div class="card">
+        <div class="ch" style="margin-bottom:14px;">
+          <div class="ci" style="background:var(--surv); font-size:18px;">📑</div>
+          <div>
+            <div class="ct" style="font-size:15px;">Clientes (dados filtrados)</div>
+            <div class="cs">Lista detalhada dos clientes conforme os filtros aplicados</div>
+          </div>
+          <div id="ra-cnt-clientes" style="margin-left:auto; font-size:12px; color:var(--txs); font-weight:500;"></div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód</th><th>Cliente</th><th>CD</th><th>Supervisor</th>
+                <th style="text-align:right">Qtde</th><th>Última Atualização</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ra-clientes-tb"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end tab-rastreio-content -->
+
 
 </main>
 
@@ -1180,6 +1512,58 @@ let _activeTab = 'import';
 // MODAL E SENHAS
 document.getElementById('senha_cd').addEventListener('keydown',e=>{if(e.key==='Enter')okLocal()});
 
+// ============================================================
+//  DIAS DA SEMANA — controla quais abas/lançamentos ficam
+//  liberados conforme o dia de hoje
+//   - Controle de datas (shelflife): seg (1) e qui (4)
+//   - Estoque CIA: ter/qua/sex/sáb (2,3,5,6) — NÃO em seg/qui
+//        pois nesses dias o shelflife já cobre o estoque
+//        (de forma mais detalhada), evitando duplicidade
+//   - Grades: seg a sáb (1..6), bloqueia domingo (0)
+//  Para a MATRIZ, todas as abas próprias (Dashboard, Cobertura,
+//  Relatórios) ficam sempre liberadas, mas o monitoramento
+//  segue as mesmas regras dos CDs (só cobra quem tem o dia).
+// ============================================================
+function getDiasLiberados() {
+  const d = new Date().getDay(); // 0=dom, 1=seg, ..., 6=sáb
+  return {
+    diaSemana: d,
+    nomeDia: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d],
+    controle:    (d === 1 || d === 4),                         // seg ou qui
+    estoqueCia:  (d === 2 || d === 3 || d === 5 || d === 6),   // ter/qua/sex/sáb
+    grades:      (d >= 1 && d <= 6)                            // seg a sáb
+  };
+}
+
+function aplicarRegrasDeDia() {
+  const r = getDiasLiberados();
+  // Esconde/mostra cada botão da tab bar de acordo com o dia
+  // (a MATRIZ sempre vê tudo)
+  const ehMatriz = (cd === 'MATRIZ');
+  const tabControle    = document.getElementById('tab-controle');
+  const tabEstoqueCia  = document.getElementById('tab-estoque-cia');
+  const tabGrades      = document.getElementById('tab-grades');
+
+  if (tabControle)   tabControle.style.display   = (ehMatriz || r.controle)   ? 'inline-block' : 'none';
+  if (tabEstoqueCia) tabEstoqueCia.style.display = (ehMatriz || r.estoqueCia) ? 'inline-block' : 'none';
+  if (tabGrades)     tabGrades.style.display     = (ehMatriz || r.grades)     ? 'inline-block' : 'none';
+
+  // Se a aba ativa do CD não está mais liberada hoje, redireciona para a primeira aba liberada
+  if (!ehMatriz) {
+    const ativa = _activeTab;
+    const ativaLiberada =
+      ((ativa === 'controle' || ativa === 'manual' || ativa === 'import') && r.controle) ||
+      ((ativa === 'estoque-cia' || ativa === 'estoque-cia-manual') && r.estoqueCia) ||
+      (ativa === 'grades' && r.grades);
+    if (!ativaLiberada) {
+      // Escolhe a primeira aba liberada disponível
+      if (r.controle) switchTab('controle');
+      else if (r.estoqueCia) switchTab('estoque-cia');
+      else if (r.grades) switchTab('grades');
+    }
+  }
+}
+
 function okLocal(){
   const senhas = {
     "MATRIZ": "445566@Edu",
@@ -1216,6 +1600,7 @@ function okLocal(){
       document.getElementById('painel-monitoramento').style.display = 'block';
       document.getElementById('tab-dashboard').style.display = 'inline-block';
       document.getElementById('tab-cobertura').style.display = 'inline-block';
+      document.getElementById('tab-rastreio').style.display = 'inline-block';
       document.getElementById('card-editados').style.display = '';
       // Preenche a data do card de editados com hoje
       const hoje = new Date().toISOString().split('T')[0];
@@ -1224,6 +1609,13 @@ function okLocal(){
       // Matriz nao tem caminhao chegando - oculta horario de saida
       document.getElementById('campo-horario-saida').style.display = 'none';
       document.getElementById('horario_saida').removeAttribute('required');
+      // Matriz mantém modelo original: oculta o hint dos CDs
+      document.getElementById('hint-grades').style.display = 'none';
+      // Matriz precisa preencher ambos os campos (modelo original) — adiciona required
+      document.getElementById('caixas_vazias').setAttribute('required','');
+      document.getElementById('caixas_trocas').setAttribute('required','');
+      // Habilita o botão (ele começa disabled por padrão para os CDs)
+      document.getElementById('btn-envia-grades').disabled = false;
       document.querySelector('#tab-grades-content .cs').textContent = 'Lançamento de grades disponíveis na Matriz';
       document.getElementById('btn-envia-grades').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Lançar Grades da Matriz';
       // Adapta labels dos campos para a realidade da Matriz
@@ -1235,7 +1627,12 @@ function okLocal(){
   } else {
       document.getElementById('tab-relatorios').style.display = 'none';
       document.getElementById('painel-monitoramento').style.display = 'none';
+      // CDs: dispara a validação inicial (botão começa disabled)
+      atualizarBtnGrades();
   }
+
+  // Aplica as regras de dia da semana (oculta abas não liberadas para o dia)
+  aplicarRegrasDeDia();
 }
 
 function onSelectUnidade(sel) {
@@ -1493,23 +1890,69 @@ function switchTab(t){
   _activeTab=t;
   document.getElementById('action-section').style.display='none'; 
   
-  document.getElementById('tab-import-content').classList.toggle('hidden',t!=='import');
-  document.getElementById('tab-manual-content').classList.toggle('hidden',t!=='manual');
+  // Abas mestras
+  document.getElementById('tab-controle-content').classList.toggle('hidden',t!=='controle');
+  document.getElementById('tab-estoque-cia-content').classList.toggle('hidden',t!=='estoque-cia');
   document.getElementById('tab-grades-content').classList.toggle('hidden',t!=='grades'); 
   document.getElementById('tab-relatorios-content').classList.toggle('hidden',t!=='relatorios');
   document.getElementById('tab-dashboard-content').classList.toggle('hidden',t!=='dashboard');
   document.getElementById('tab-cobertura-content').classList.toggle('hidden',t!=='cobertura');
+  document.getElementById('tab-rastreio-content').classList.toggle('hidden',t!=='rastreio');
   
-  document.getElementById('tab-import').classList.toggle('active',t==='import');
-  document.getElementById('tab-manual').classList.toggle('active',t==='manual');
+  document.getElementById('tab-controle').classList.toggle('active',t==='controle');
+  document.getElementById('tab-estoque-cia').classList.toggle('active',t==='estoque-cia');
   document.getElementById('tab-grades').classList.toggle('active',t==='grades'); 
   document.getElementById('tab-relatorios').classList.toggle('active',t==='relatorios'); 
   document.getElementById('tab-dashboard').classList.toggle('active',t==='dashboard');
   document.getElementById('tab-cobertura').classList.toggle('active',t==='cobertura');
+  document.getElementById('tab-rastreio').classList.toggle('active',t==='rastreio');
   
-  if(t==='manual'&&!meBuilt)meBuild();
+  // Se entrou em Controle de datas e a sub-aba ativa é "manual", reconstrói se necessário
+  if(t==='controle'){
+    if(_subControle==='manual' && !meBuilt) meBuild();
+  }
+  if(t==='estoque-cia'){
+    if(_subEstoqueCia==='manual' && !ecmBuilt) ecmBuild();
+  }
   if(t==='dashboard'&&!dashBuilt)iniciarDashboard();
   if(t==='cobertura'&&!coberturaLoaded)carregarCobertura();
+}
+
+// Sub-abas dentro de "Controle de datas"
+let _subControle = 'import';
+function switchSubControle(sub){
+  _subControle = sub;
+  document.getElementById('action-section').style.display='none';
+  document.getElementById('tab-import-content').classList.toggle('hidden',sub!=='import');
+  document.getElementById('tab-manual-content').classList.toggle('hidden',sub!=='manual');
+  document.getElementById('subtab-import').classList.toggle('active',sub==='import');
+  document.getElementById('subtab-manual').classList.toggle('active',sub==='manual');
+  // _activeTab passa a refletir a sub-aba ativa, pois várias funções legadas dependem de 'import'/'manual'
+  _activeTab = sub;
+  if(sub==='manual' && !meBuilt) meBuild();
+}
+
+// Sub-abas dentro de "Estoque da CIA"
+let _subEstoqueCia = 'import';
+function switchSubEstoqueCia(sub){
+  _subEstoqueCia = sub;
+  document.getElementById('action-section').style.display='none';
+  document.getElementById('ec-import-content').classList.toggle('hidden',sub!=='import');
+  document.getElementById('ec-manual-content').classList.toggle('hidden',sub!=='manual');
+  document.getElementById('subtab-ec-import').classList.toggle('active',sub==='import');
+  document.getElementById('subtab-ec-manual').classList.toggle('active',sub==='manual');
+  // _activeTab distingue qual fonte de dados será enviada à nuvem
+  _activeTab = sub === 'manual' ? 'estoque-cia-manual' : 'estoque-cia';
+  if(sub==='manual'){
+    if(!ecmBuilt) ecmBuild();
+    ecmRefreshActionBar();
+  } else {
+    // Volta para o estado da importação: só mostra a action bar se já tem rows
+    if(ecRows && ecRows.length > 0){
+      document.getElementById('action-cd-label').textContent = cd;
+      document.getElementById('action-section').style.display = 'flex';
+    }
+  }
 }
 
 let meBuilt=false,meProcessed=[],meHasW=false,meWCnt=0;
@@ -1816,48 +2259,275 @@ function reset(){
 }
 
 // ========================
+// ESTOQUE DA CIA — LÓGICA
+// ========================
+let ecRows = [];
+
+const ecDz = document.getElementById('ec-dz');
+ecDz.addEventListener('dragover', e=>{e.preventDefault();ecDz.classList.add('on');});
+ecDz.addEventListener('dragleave', ()=>ecDz.classList.remove('on'));
+ecDz.addEventListener('drop', e=>{e.preventDefault();ecDz.classList.remove('on');if(e.dataTransfer.files[0])ecHandleFile(e.dataTransfer.files[0]);});
+
+function ecSetP(p,m){
+  document.getElementById('ec-pb').style.width=p+'%';
+  document.getElementById('ec-pl').textContent=m;
+}
+
+function ecHandleFile(f){
+  if(!f) return;
+  document.getElementById('ec-fn').textContent = f.name;
+  document.getElementById('ec-fb').style.display = 'flex';
+  const pp = document.getElementById('ec-pp');
+  pp.classList.remove('hidden');
+  ecSetP(15,'Lendo arquivo...');
+  const r = new FileReader();
+  r.onload = e=>{
+    ecSetP(50,'Interpretando planilha...');
+    try {
+      const wb = XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws,{defval:''});
+      ecSetP(80,'Vinculando SKUs...');
+      // Detecta colunas: "DATA ESTOQUE", "COD", "PRODUTO", "QTD_DISPONÍVEL" (com ou sem acento)
+      const s = raw[0] || {}, ks = Object.keys(s);
+      const ck = ks.find(k=>/^cod/i.test(k.trim())) || 'COD';
+      const dk = ks.find(k=>/data.*estoque|^data$/i.test(k.trim())) || 'DATA ESTOQUE';
+      const pk = ks.find(k=>/produto|sku/i.test(k.trim())) || 'PRODUTO';
+      const qk = ks.find(k=>/qtd.*dispon|disponiv|quantidade|qtd_total|^qtd$/i.test(k.trim())) || 'QTD_DISPONÍVEL';
+      ecRows = raw.filter(r=>r[ck]!==''&&r[ck]!==undefined).map(r=>{
+        const cod = String(r[ck]).trim().replace(/\.0$/,'');
+        let dataEst = r[dk];
+        if(dataEst instanceof Date) dataEst = dataEst.toLocaleString('pt-BR');
+        else dataEst = String(dataEst || '').trim();
+        const qtd = parseInt(r[qk]) || 0;
+        const produtoOriginal = String(r[pk] || '').trim();
+        return {
+          cod,
+          sku: SKU[cod] || produtoOriginal || null,
+          dataEstoque: dataEst,
+          qtd
+        };
+      });
+      ecSetP(100,'Pronto!');
+      setTimeout(()=>{pp.classList.add('hidden'); ecRender();}, 350);
+    } catch(err){ ecSetP(0,'❌ Erro: '+err.message); }
+  };
+  r.readAsArrayBuffer(f);
+}
+
+function ecRender(){
+  document.getElementById('ec-s2').classList.remove('hidden');
+  const tot = ecRows.reduce((s,r)=>s+r.qtd,0);
+  const naoMapeados = ecRows.filter(r=>!SKU[r.cod]).length;
+  document.getElementById('ec-sg').innerHTML = `
+    <div class="sc b"><div class="sv">${ecRows.length}</div><div class="sl">SKUs importados</div></div>
+    <div class="sc"><div class="sv">${tot.toLocaleString('pt-BR')}</div><div class="sl">Unidades totais</div></div>
+    <div class="sc"><div class="sv">${naoMapeados}</div><div class="sl">SKUs não mapeados</div></div>`;
+  const tb = document.getElementById('ec-tb');
+  tb.innerHTML = '';
+  ecRows.forEach(r=>{
+    const sh = r.sku
+      ? `<span class="skun">${r.sku}</span>`
+      : `<span class="ukn">COD não mapeado</span>`;
+    tb.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><span class="codn">${r.cod}</span></td>
+        <td>${sh}</td>
+        <td style="font-family:'Roboto Mono',monospace;font-size:12px;">${r.dataEstoque || '—'}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums;">${r.qtd.toLocaleString('pt-BR')}</td>
+      </tr>`);
+  });
+  // Mostra a barra inferior para envio à nuvem
+  document.getElementById('action-cd-label').textContent = cd;
+  document.getElementById('action-section').style.display = 'flex';
+  _activeTab = 'estoque-cia';
+}
+
+function ecReset(){
+  ecRows = [];
+  document.getElementById('ec-fi').value = '';
+  document.getElementById('ec-fb').style.display = 'none';
+  document.getElementById('ec-pp').classList.add('hidden');
+  document.getElementById('ec-s2').classList.add('hidden');
+  document.getElementById('ec-tb').innerHTML = '';
+  document.getElementById('ec-sg').innerHTML = '';
+  document.getElementById('action-section').style.display = 'none';
+}
+
+// ============================================================
+//  ESTOQUE DA CIA — INSERÇÃO MANUAL
+// ============================================================
+let ecmBuilt = false;
+const ecmData = {};   // { cod: qtd_string }
+
+function ecmBuild(){
+  ecmBuilt = true;
+  document.getElementById('ecm-total-count').textContent = SKU_KEYS.length;
+  ecmRenderList(SKU_KEYS);
+  ecmRefreshActionBar();
+}
+
+function ecmRenderList(keys){
+  const g = document.getElementById('ecm-grid');
+  g.innerHTML = '';
+  keys.forEach(cod => {
+    const qtdAtual = ecmData[cod] || '';
+    const hasData = qtdAtual !== '' && Number(qtdAtual) > 0;
+    g.insertAdjacentHTML('beforeend', `
+      <div class="me-sku-row${hasData ? ' has-data' : ''}" id="ecmrow-${cod}">
+        <div class="me-sku-hd">
+          <div class="me-sku-info" style="padding-left:6px;">
+            <div class="me-sku-cod">${cod}</div>
+            <div class="me-sku-name" title="${SKU[cod]}">${SKU[cod]}</div>
+          </div>
+          <input type="number" min="0" class="me-inp qtd${hasData ? ' ok' : ''}" id="ecminp-${cod}"
+            placeholder="Qtd total" value="${qtdAtual}"
+            oninput="ecmUpdEntry('${cod}', this.value)"
+            style="width:120px; margin-right:10px;">
+        </div>
+      </div>`);
+  });
+}
+
+function ecmUpdEntry(cod, val){
+  if(val === '' || val === null) {
+    delete ecmData[cod];
+  } else {
+    ecmData[cod] = val;
+  }
+  // Atualiza estilo visual da linha
+  const row = document.getElementById(`ecmrow-${cod}`);
+  const inp = document.getElementById(`ecminp-${cod}`);
+  const hasData = val !== '' && Number(val) > 0;
+  if(row){
+    row.className = 'me-sku-row' + (hasData ? ' has-data' : '');
+  }
+  if(inp){
+    inp.className = 'me-inp qtd' + (hasData ? ' ok' : '');
+  }
+  ecmCountFilled();
+  ecmRefreshActionBar();
+}
+
+function ecmCountFilled(){
+  const filled = SKU_KEYS.filter(cod => ecmData[cod] && Number(ecmData[cod]) > 0).length;
+  document.getElementById('ecm-filled-count').textContent = filled;
+}
+
+function ecmFilter(){
+  const q = document.getElementById('ecm-filter').value.toLowerCase().trim();
+  if(!q){ ecmRenderList(SKU_KEYS); return; }
+  const filtered = SKU_KEYS.filter(cod => cod.includes(q) || SKU[cod].toLowerCase().includes(q));
+  ecmRenderList(filtered);
+}
+
+function ecmRefreshActionBar(){
+  // Mostra/esconde a barra inferior conforme tem pelo menos 1 SKU preenchido
+  const filled = SKU_KEYS.filter(cod => ecmData[cod] && Number(ecmData[cod]) > 0).length;
+  if(filled > 0){
+    document.getElementById('action-cd-label').textContent = cd;
+    document.getElementById('action-section').style.display = 'flex';
+  } else {
+    document.getElementById('action-section').style.display = 'none';
+  }
+}
+
+function ecmReset(){
+  Object.keys(ecmData).forEach(k => delete ecmData[k]);
+  document.getElementById('ecm-filter').value = '';
+  document.getElementById('ecm-filled-count').textContent = '0';
+  ecmRenderList(SKU_KEYS);
+  document.getElementById('action-section').style.display = 'none';
+}
+
+// Constrói o array de itens no mesmo formato que ecRows (usado por processarEnvioNuvem e ecDlXlsx)
+function ecmBuildItens(){
+  const hoje = new Date();
+  const dataEstoque = hoje.toLocaleDateString('pt-BR') + ' ' +
+    String(hoje.getHours()).padStart(2,'0') + ':' + String(hoje.getMinutes()).padStart(2,'0');
+  return SKU_KEYS.filter(cod => ecmData[cod] && Number(ecmData[cod]) > 0).map(cod => ({
+    cod,
+    sku: SKU[cod],
+    dataEstoque,
+    qtd: parseInt(ecmData[cod]) || 0
+  }));
+}
+
+// ========================
 // GESTÃO DE GRADES LÓGICA
 // ========================
+
+// Habilita/desabilita o botão de lançar grades conforme regra:
+// CDs (não-matriz): exige pelo menos UM dos campos numéricos preenchidos
+// Matriz: mantém validação tradicional do HTML (required)
+function atualizarBtnGrades() {
+    if (cd === 'MATRIZ') return; // matriz usa required nativo
+    const v = document.getElementById('caixas_vazias').value.trim();
+    const t = document.getElementById('caixas_trocas').value.trim();
+    const btn = document.getElementById('btn-envia-grades');
+    if (!btn) return;
+    // Libera se ao menos UM dos dois estiver preenchido
+    btn.disabled = !(v !== '' || t !== '');
+}
+
 async function lancarGestaoGrades(event) {
     event.preventDefault(); 
 
     let cdNome = document.getElementById('cd_nome').value;
     if (!cdNome && cd) cdNome = "CD " + cd; 
     
-    const caixasVazias = document.getElementById('caixas_vazias').value;
-    const caixasTrocas = document.getElementById('caixas_trocas').value;
+    const caixasVaziasRaw = document.getElementById('caixas_vazias').value.trim();
+    const caixasTrocasRaw = document.getElementById('caixas_trocas').value.trim();
     const horarioSaida = document.getElementById('horario_saida').value;
+
+    // Para CDs (não-matriz): valida que pelo menos um dos campos numéricos esteja preenchido
+    if (cd !== 'MATRIZ' && caixasVaziasRaw === '' && caixasTrocasRaw === '') {
+        alert('⚠️ Preencha ao menos "Grades no CD" ou "Grades retornando" para enviar.');
+        return;
+    }
+
+    // Valores numéricos: vazios viram 0 no banco, exibidos como "—" no texto
+    const caixasVazias = caixasVaziasRaw === '' ? 0 : (parseInt(caixasVaziasRaw) || 0);
+    const caixasTrocas = caixasTrocasRaw === '' ? 0 : (parseInt(caixasTrocasRaw) || 0);
+    const vaziasStr = caixasVaziasRaw === '' ? '—' : caixasVazias.toLocaleString('pt-BR');
+    const trocasStr = caixasTrocasRaw === '' ? '—' : caixasTrocas.toLocaleString('pt-BR');
 
     let horarioChegada = '';
     let textoFinal = '';
 
     if (cd === 'MATRIZ') {
-        // Grades ja estao na Matriz, sem horario de viagem
+        // Grades já estão na Matriz, sem horário de viagem
         textoFinal = `CD MATRIZ - ${caixasVazias} grades com produtos e ${caixasTrocas} grades vazias disponiveis na Matriz`;
     } else {
-        const TEMPO_VIAGEM_HORAS = 5;
-        let [horas, minutos] = horarioSaida.split(':').map(Number);
-        horas += TEMPO_VIAGEM_HORAS;
-        if (horas >= 24) horas -= 24;
-        const horasStr = horas.toString().padStart(2, '0');
-        const minutosStr = minutos.toString().padStart(2, '0');
-        horarioChegada = `${horasStr}:${minutosStr}`;
-        textoFinal = `${cdNome} - ${caixasVazias} Caixas vazias e ${caixasTrocas} caixas com trocas, horario de chegada: ${horarioChegada}`;
+        // Calcula horário de chegada apenas se houver horário de saída preenchido
+        if (horarioSaida) {
+            const TEMPO_VIAGEM_HORAS = 5;
+            const partes = horarioSaida.split(':').map(Number);
+            let horas = partes[0], minutos = partes[1] || 0;
+            horas += TEMPO_VIAGEM_HORAS;
+            if (horas >= 24) horas -= 24;
+            const horasStr = horas.toString().padStart(2, '0');
+            const minutosStr = minutos.toString().padStart(2, '0');
+            horarioChegada = `${horasStr}:${minutosStr}`;
+            textoFinal = `${cdNome} - ${vaziasStr} grades no CD e ${trocasStr} grades retornando, horário de chegada: ${horarioChegada}`;
+        } else {
+            textoFinal = `${cdNome} - ${vaziasStr} grades no CD e ${trocasStr} grades retornando (horário de saída não informado)`;
+        }
     }
 
     const payloadDaAPI = {
         tipo: "grades",
         cd_origem: cdNome,
-        caixas_vazias: parseInt(caixasVazias),
-        caixas_trocas: parseInt(caixasTrocas),
-        horario_saida: cd === 'MATRIZ' ? '' : horarioSaida,
+        caixas_vazias: caixasVazias,
+        caixas_trocas: caixasTrocas,
+        horario_saida: cd === 'MATRIZ' ? '' : (horarioSaida || ''),
         horario_chegada: horarioChegada,
         texto_matriz: textoFinal,
         data_registro: new Date().toLocaleDateString('pt-BR')
     };
 
     const btn = document.getElementById('btn-envia-grades');
-    btn.innerText = "Enviando..."; 
+    btn.innerText = "Enviando...";
     btn.disabled = true;
 
     const confirmouEnvio = await new Promise(resolve => {
@@ -1917,6 +2587,8 @@ async function lancarGestaoGrades(event) {
         document.getElementById('caixas_vazias').value = '';
         document.getElementById('caixas_trocas').value = '';
         if(cd !== 'MATRIZ') document.getElementById('horario_saida').value = '';
+        // CDs: como os campos foram limpos, re-aplica a validação dinâmica (desabilita o botão)
+        atualizarBtnGrades();
     });
 }
 
@@ -2080,7 +2752,39 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
 // -------------------------------------------------
 function exportarCopia(){
   if(_activeTab==='manual') meDlXlsx();
+  else if(_activeTab==='estoque-cia' || _activeTab==='estoque-cia-manual') ecDlXlsx();
   else dlXlsx();
+}
+
+function ecDlXlsx(){
+  const fonte = _activeTab === 'estoque-cia-manual' ? ecmBuildItens() : ecRows;
+  if(!fonte || fonte.length === 0){ alert('Nada para exportar.'); return; }
+  const wb = XLSX.utils.book_new();
+  const now = new Date().toLocaleString('pt-BR');
+  const hd = ['COD','SKU','DATA ESTOQUE','QTD DISPONÍVEL'];
+  const data = [hd];
+  fonte.forEach(r=>{
+    data.push([r.cod, r.sku || 'NÃO MAPEADO', r.dataEstoque || '', r.qtd]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:12},{wch:46},{wch:20},{wch:14}];
+  const fonteLabel = _activeTab === 'estoque-cia-manual' ? 'Inserção Manual' : 'Importação';
+  const meta = [
+    ['ESTOQUE DA CIA — TOTAL POR SKU'],[''],
+    ['Local (CD)', cd],['Fonte', fonteLabel],
+    ['Data/Hora do envio', now],
+    ['Total de SKUs', fonte.length],
+    ['Unidades totais', fonte.reduce((s,r)=>s+r.qtd,0)],['',''],
+    ['Gerado por','Sistema Padronizado de CD']
+  ];
+  const wm = XLSX.utils.aoa_to_sheet(meta);
+  wm['!cols'] = [{wch:30},{wch:42}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Estoque CIA');
+  XLSX.utils.book_append_sheet(wb, wm, 'Info');
+  const now2 = new Date();
+  const datePart = now2.toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const timePart = now2.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}).replace(/:/g,'h');
+  XLSX.writeFile(wb, `ESTOQUE CIA ${cd} (${datePart} ${timePart}).xlsx`);
 }
 
 // -------------------------------------------------
@@ -2139,6 +2843,63 @@ async function processarEnvioNuvem() {
         return;
     }
 
+    // === Caso especial: aba "Estoque da CIA" (import ou inserção manual) ===
+    if (_activeTab === 'estoque-cia' || _activeTab === 'estoque-cia-manual') {
+        const fonteCia = _activeTab === 'estoque-cia-manual' ? ecmBuildItens() : ecRows;
+        if (!fonteCia || fonteCia.length === 0) {
+            const msg = _activeTab === 'estoque-cia-manual'
+                ? "❌ Preencha a quantidade de pelo menos 1 SKU antes de enviar."
+                : "❌ Não há dados para enviar. Importe a planilha primeiro!";
+            alert(msg);
+            return;
+        }
+        const confirmacao = confirm(`Deseja enviar o estoque total da CIA do CD ${cdSelected} para o Sistema Unificado?`);
+        if (!confirmacao) return;
+
+        const btn = document.querySelector('.btn-save-cloud');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ ENVIANDO, AGUARDE...";
+        btn.disabled = true;
+
+        const now = new Date();
+        const dataEnvio = now.toLocaleDateString('pt-BR');
+
+        const itens = fonteCia.map(r => ({
+            dataEnvio: dataEnvio,
+            cd: cdSelected,
+            codigo: r.cod,
+            produto: r.sku || 'NÃO MAPEADO',
+            dataEstoque: r.dataEstoque || '',
+            quantidade: r.qtd
+        }));
+
+        const payload = { tipo: "estoque_cia", nomeCD: cdSelected, itens: itens };
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.status === "sucesso") {
+                alert("✅ SUCESSO! Estoque da CIA enviado com sucesso.");
+                // Limpa o estado da fonte que acabou de ser enviada
+                if(_activeTab === 'estoque-cia-manual') ecmReset();
+                setTimeout(()=>atualizarStatusMonitor(), 1000);
+            } else {
+                alert("❌ Erro no servidor: " + (result.message || 'sem detalhes'));
+            }
+        } catch (error) {
+            console.error("Erro no envio:", error);
+            alert("❌ Falha na conexão. Verifique se a API está ativa.");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+        return;
+    }
+
+    // === Caso padrão: aba de controle de datas (import ou manual) ===
     const fonte = _activeTab === 'manual' ? meProcessed : rows;
 
     if (!fonte || fonte.length === 0) {
@@ -2241,8 +3002,12 @@ async function atualizarStatusMonitor() {
     const hoje = new Date().toLocaleDateString('pt-BR');
     const ontem = new Date(Date.now() - 86400000).toLocaleDateString('pt-BR');
     let labelData = _monitorData;
-    if (_monitorData === hoje)  labelData = `Hoje (${_monitorData})`;
-    if (_monitorData === ontem) labelData = `Ontem (${_monitorData})`;
+    // Nome do dia da semana da data exibida
+    const [dDd, dMm, dYy] = _monitorData.split('/').map(Number);
+    const nomeDia = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][new Date(dYy, dMm - 1, dDd).getDay()];
+    if (_monitorData === hoje)  labelData = `Hoje (${_monitorData} — ${nomeDia})`;
+    else if (_monitorData === ontem) labelData = `Ontem (${_monitorData} — ${nomeDia})`;
+    else labelData = `${_monitorData} — ${nomeDia}`;
     document.getElementById('mon-data-label').textContent = `Exibindo: ${labelData}`;
 
     grid.innerHTML = unidades.map(un =>
@@ -2257,25 +3022,55 @@ async function atualizarStatusMonitor() {
         const response = await fetch(url);
         const data = await response.json();
 
-        const enviadosEstoque = Array.isArray(data.enviadosEstoque) ? data.enviadosEstoque.map(s => s.toUpperCase().trim()) : [];
-        const enviadosGrades = Array.isArray(data.enviadosGrades) ? data.enviadosGrades.map(s => s.toUpperCase().trim()) : [];
+        const enviadosControle  = Array.isArray(data.enviadosEstoque)    ? data.enviadosEstoque.map(s => s.toUpperCase().trim())    : [];
+        const enviadosEstoqueCia = Array.isArray(data.enviadosEstoqueCia) ? data.enviadosEstoqueCia.map(s => s.toUpperCase().trim()) : [];
+        const enviadosGrades    = Array.isArray(data.enviadosGrades)    ? data.enviadosGrades.map(s => s.toUpperCase().trim())    : [];
+
+        // Calcula quais lançamentos eram esperados para a data exibida no monitor.
+        // _monitorData está em "dd/mm/yyyy" — converte para Date para descobrir o dia da semana
+        const [dd, mm, yy] = _monitorData.split('/').map(Number);
+        const dtMonitor = new Date(yy, mm - 1, dd);
+        const diaMonitor = dtMonitor.getDay(); // 0=dom .. 6=sáb
+        const esperaControle    = (diaMonitor === 1 || diaMonitor === 4);                 // seg ou qui
+        const esperaEstoqueCia  = (diaMonitor === 2 || diaMonitor === 3 || diaMonitor === 5 || diaMonitor === 6); // ter/qua/sex/sáb
+        const esperaGrades      = (diaMonitor >= 1 && diaMonitor <= 6);                    // seg a sáb
 
         unidades.forEach(un => {
             const badge = document.getElementById(`badge-${un}`);
             if (!badge) return;
             
-            const enviouEstoque = enviadosEstoque.includes(un);
-            const enviouGrades = enviadosGrades.includes(un);
-            const concluiuTudo = enviouEstoque && enviouGrades;
-            const nenhumEnvio = !enviouEstoque && !enviouGrades;
+            const enviouControle    = enviadosControle.includes(un);
+            const enviouEstoqueCia  = enviadosEstoqueCia.includes(un);
+            const enviouGrades      = enviadosGrades.includes(un);
 
-            badge.className = `cd-status-badge ${concluiuTudo ? 'status-sent' : nenhumEnvio ? 'status-missing' : 'status-pending'}`;
-            
+            // "Pendências" só contam itens que eram esperados nesse dia.
+            const pendControle    = esperaControle   && !enviouControle;
+            const pendEstoqueCia  = esperaEstoqueCia && !enviouEstoqueCia;
+            const pendGrades      = esperaGrades     && !enviouGrades;
+            const enviouAlgum     = (esperaControle && enviouControle)
+                                 || (esperaEstoqueCia && enviouEstoqueCia)
+                                 || (esperaGrades && enviouGrades);
+            const nenhumaPendencia = !pendControle && !pendEstoqueCia && !pendGrades;
+            const algumaPendencia  = pendControle || pendEstoqueCia || pendGrades;
+
+            // Cor do badge:
+            //  - verde   = todos os esperados foram enviados (nenhuma pendência)
+            //  - amarelo = enviou alguns mas tem pendência
+            //  - vermelho= não enviou nada do que era esperado
+            badge.className = `cd-status-badge ${nenhumaPendencia ? 'status-sent' : (enviouAlgum && algumaPendencia ? 'status-pending' : 'status-missing')}`;
+
+            // Monta apenas as linhas que se aplicam ao dia
+            const linhas = [];
+            if (esperaControle)   linhas.push(`<span>Controle de Datas: ${enviouControle ? '✅' : '❌'}</span>`);
+            if (esperaEstoqueCia) linhas.push(`<span>Estoque: ${enviouEstoqueCia ? '✅' : '❌'}</span>`);
+            if (esperaGrades)     linhas.push(`<span>Grades: ${enviouGrades ? '✅' : '❌'}</span>`);
+            // Caso o dia não exija nenhum lançamento (ex.: domingo)
+            if (linhas.length === 0) linhas.push(`<span style="color:var(--txs);font-style:italic;">— Sem lançamentos previstos</span>`);
+
             badge.innerHTML = `
                 <strong>${un}</strong>
-                <div style="display:flex; flex-direction:column; gap:3px; margin-top:6px; font-size:11px;">
-                  <span>Estoque: ${enviouEstoque ? '✅ Enviado' : '❌ Pendente'}</span>
-                  <span>Grades: ${enviouGrades ? '✅ Enviado' : '❌ Pendente'}</span>
+                <div style="display:flex; flex-direction:column; gap:3px; margin-top:6px; font-size:11px; text-align:left;">
+                  ${linhas.join('')}
                 </div>
             `;
         });
@@ -3168,7 +3963,14 @@ function renderGraficoCobertura() {
     return nome + ' (' + d.cd + ')';
   });
   const values = top10.map(d => d.cobertura);
-  const colors = top10.map(d => d.status === 'CRITICO' ? '#C0392B' : d.status === 'ATENCAO' ? '#C8941A' : '#2E8B50');
+  // Cor derivada DIRETAMENTE do valor de cobertura (maior = pior = vermelho escuro)
+  const colors = top10.map(d => {
+    const c = d.cobertura;
+    if (c > 7) return '#8B0000';  // vermelho escuro — URGENTE
+    if (c > 5) return '#C0392B';  // vermelho — CRÍTICO
+    if (c > 3) return '#C8941A';  // amarelo — ATENÇÃO
+    return '#2E8B50';             // verde — OK
+  });
 
   const ctx = document.getElementById('chart-cobertura-top');
   if (_chartCoberturaTop) { _chartCoberturaTop.destroy(); }
@@ -3228,6 +4030,991 @@ function exportarCobertura() {
   XLSX.utils.book_append_sheet(wb, ws, 'Cobertura de Estoque');
   const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
   XLSX.writeFile(wb, `Cobertura_Estoque_${hoje}.xlsx`);
+}
+
+// =======================================================
+// COBERTURA CIA — gera Excel a partir do ESTOQUE_CIA
+// Consolida o ÚLTIMO snapshot de cada CD+SKU e divide pela
+// venda diária total da CIA (soma de todos os CDs).
+// =======================================================
+
+async function exportarCoberturaCia() {
+  const btn = document.getElementById('btn-exp-cob-cia');
+  const btnLbl = btn ? btn.innerHTML : null;
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Gerando...'; }
+
+  try {
+    const [resEstoque, resVendas] = await Promise.all([
+      fetch(`${API_URL}?action=estoque_cia`).then(r => r.json()),
+      fetch(`${API_URL}?action=vendas_diarias`).then(r => r.json())
+    ]);
+
+    if (!resEstoque || resEstoque.status !== 'sucesso' || !resEstoque.dados || !resEstoque.dados.length) {
+      alert('❌ Nenhum dado de Estoque da CIA disponível. Os CDs precisam enviar primeiro.');
+      return;
+    }
+
+    // Consolida: soma estoque do último snapshot de cada CD por SKU
+    const consolidado = {};
+    resEstoque.dados.forEach(item => {
+      const cod = String(item.codigo).trim();
+      if (!cod) return;
+      if (!consolidado[cod]) {
+        consolidado[cod] = {
+          codigo: cod,
+          produto: item.produto || SKU[cod] || 'NÃO MAPEADO',
+          estoqueTotal: 0,
+          cdsComEstoque: new Set(),
+          ultimoEnvio: ''
+        };
+      }
+      const qtd = parseFloat(item.quantidade) || 0;
+      consolidado[cod].estoqueTotal += qtd;
+      if (qtd > 0) consolidado[cod].cdsComEstoque.add(item.cd);
+      if (item.dataEnvio && item.dataEnvio > consolidado[cod].ultimoEnvio) {
+        consolidado[cod].ultimoEnvio = item.dataEnvio;
+      }
+    });
+
+    // Soma venda diária CIA (soma de todos os CDs por SKU)
+    const vendaCiaPorProduto = {};
+    if (resVendas && resVendas.status === 'sucesso') {
+      resVendas.dados.forEach(v => {
+        const prodKey = (v.produto || '').toUpperCase().trim();
+        let soma = 0;
+        Object.values(v.cds || {}).forEach(val => {
+          if (val !== '-' && val !== null && val !== '') {
+            const n = parseFloat(val);
+            if (!isNaN(n)) soma += n;
+          }
+        });
+        vendaCiaPorProduto[prodKey] = soma;
+      });
+    }
+
+    // Monta dataset
+    const dados = Object.values(consolidado).map(c => {
+      const vendaCia = vendaCiaPorProduto[(c.produto || '').toUpperCase().trim()] || 0;
+      const cobertura = (vendaCia > 0) ? +(c.estoqueTotal / vendaCia).toFixed(1) : null;
+      let status = 'Sem venda';
+      if (cobertura !== null) {
+        if (cobertura > 7)      status = 'Urgente';
+        else if (cobertura > 5) status = 'Crítico';
+        else if (cobertura > 3) status = 'Atenção';
+        else                    status = 'OK';
+      }
+      return {
+        status, codigo: c.codigo, produto: c.produto,
+        estoqueTotal: c.estoqueTotal, cdsComEstoque: c.cdsComEstoque.size,
+        vendaDiariaCia: vendaCia, cobertura,
+        ultimoEnvio: c.ultimoEnvio || '—'
+      };
+    });
+
+    // Ordena: maior cobertura primeiro (pior cenário no topo)
+    dados.sort((a,b) => (b.cobertura || 0) - (a.cobertura || 0));
+
+    // Gera Excel
+    const wb = XLSX.utils.book_new();
+    const header = ['Status','Código','Produto','Estoque Total (un)','CDs c/ Estoque','Venda Diária CIA','Cobertura (dias)','Último Envio'];
+    const wsData = [header, ...dados.map(d => [
+      d.status, d.codigo, d.produto, d.estoqueTotal, d.cdsComEstoque,
+      d.vendaDiariaCia || '', d.cobertura !== null ? d.cobertura : '', d.ultimoEnvio
+    ])];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:12},{wch:12},{wch:46},{wch:18},{wch:14},{wch:18},{wch:18},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Cobertura CIA');
+
+    // Aba de metadados
+    const meta = [
+      ['RELATÓRIO DE COBERTURA CIA'],[''],
+      ['Gerado em', new Date().toLocaleString('pt-BR')],
+      ['Fonte', 'Aba ESTOQUE_CIA (último snapshot de cada CD por SKU)'],
+      ['Fórmula', 'Estoque Total (todos os CDs) ÷ Venda Diária Total da CIA = dias de cobertura'],
+      ['',''],
+      ['Total de SKUs', dados.length],
+      ['Estoque total (un)', dados.reduce((s,d) => s + d.estoqueTotal, 0)],
+      ['Urgentes (>7d)', dados.filter(d => d.status === 'Urgente').length],
+      ['Críticos (>5d)', dados.filter(d => d.status === 'Crítico').length],
+      ['Atenção (>3d)', dados.filter(d => d.status === 'Atenção').length],
+      ['OK (≤3d)', dados.filter(d => d.status === 'OK').length],
+      ['Sem venda', dados.filter(d => d.status === 'Sem venda').length]
+    ];
+    const wm = XLSX.utils.aoa_to_sheet(meta);
+    wm['!cols'] = [{wch:32},{wch:60}];
+    XLSX.utils.book_append_sheet(wb, wm, 'Info');
+
+    const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    XLSX.writeFile(wb, `Cobertura_CIA_${hoje}.xlsx`);
+  } catch (err) {
+    console.error('Erro exportar cobertura CIA:', err);
+    alert('❌ Falha ao gerar o relatório: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = btnLbl; }
+  }
+}
+
+// ============================================================
+//  APONTAMENTO E RASTREIO DE GRADES — só Matriz
+// ============================================================
+// ===== DADOS AUXILIARES DA PLANILHA "SALDO CLIENTES" (mapeamento regiao->CD + clientes inativos) =====
+const BASE_CDS_MAP = {"1002 BAURU":"CD BAURU","ASSIS":"CD RANCHARIA","BALNEARIO CAMBORIU":"CD CURITIBA","BANDEIRANTES":"CD MATRIZ","BANDEIRANTES P. ENTREGA":"CD MATRIZ","BAURU":"CD BAURU","CAMPO GRANDE":"CD MATRIZ","CAMPO MOURAO":"CD MATRIZ","CASCAVEL/TOLEDO":"CD MATRIZ","CASTRO":"CD MATRIZ","CORNELIO PROCOPIO":"CD MATRIZ","CURITIBA":"CD CURITIBA","CURITIBA P. ENTREGA":"CD CURITIBA","CURITIBA SEM FRETE":"CD CURITIBA","CURIUVA":"CD MATRIZ","DOURADOS":"CD MATRIZ","FLORIANOPOLIS":"CD CURITIBA","FOZ DO IGUACU":"CD MATRIZ","GUARAPUAVA":"CD MATRIZ","IBAITI":"CD MATRIZ","INDIRETO":"DISTRIBUIDORES E CENTRAIS","ITAJAI":"CD CURITIBA","JACAREZINHO":"CD MATRIZ","JAGUARIAIVA":"CD MATRIZ","JOAQUIM TAVORA":"CD MATRIZ","LONDRINA":"CD LONDRINA","NORTE":"CD MATRIZ","OURINHOS":"CD MATRIZ","PADRAO":"CD MATRIZ","PAGUE MENOS":"CD MATRIZ","PIRACICABA":"CD MATRIZ","PIRAI DO SUL":"CD MATRIZ","PONTA GROSSA":"CD MATRIZ","PRESIDENTE PRUDENTE":"CD RANCHARIA","RESERVA":"CD MATRIZ","RIBEIRAO DO PINHAL":"CD MATRIZ","RIBEIRAO PRETO":"CD MATRIZ","SANTO ANTONIO":"CD MATRIZ","SAO JOSE DO RIO PRETO":"CD SJ RIO PRETO","SAO PAULO REGIAO 1 DOUGLAS":"CD BARUERI","SAO PAULO REGIAO 2 ANDRE":"CD BARUERI","SAO PAULO REGIAO 3 AMERICO":"CD BARUERI","SAO PAULO REGIAO 4 KLEBER":"CD BARUERI","SIQUEIRA CAMPOS":"CD MATRIZ","TELEMACO":"CD MATRIZ","TELEMACO 2":"CD MATRIZ","TELEMACO P. ENTREGA":"CD MATRIZ"};
+const CLIENTES_INATIVOS_30D = [{"cod":"75764","fantasia":"ABEVE AVENIDA BRASIL","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75745","fantasia":"ABEVE CAARAPO","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75749","fantasia":"ABEVE CENTRO","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75763","fantasia":"ABEVE DOM PEDRO II","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75758","fantasia":"ABEVE FACIL UNIVERSITARIO","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75754","fantasia":"ABEVE ITAPORA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75759","fantasia":"ABEVE LEVEMAX ANDRADINA","supervisor":"JOAO LUIS BARBOSA","promotor":"","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"75766","fantasia":"ABEVE LEVEMAX JALES","supervisor":"JOAO LUIS BARBOSA","promotor":"","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"75765","fantasia":"ABEVE LEVEMAX JARDIM","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75762","fantasia":"ABEVE LEVEMAX MARACAJU","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75767","fantasia":"ABEVE LEVEMAX PONTA PORA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75755","fantasia":"ABEVE LEVEMAX RIO BRILHANTE","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"76104","fantasia":"ABEVE LEVEMAX  SAO GABRIEL DO OESTE","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75747","fantasia":"ABEVE LEVEMAX SUPERATACADO AGUA BOA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75750","fantasia":"ABEVE MARACAJU","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75753","fantasia":"ABEVE MARACAJU II","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75757","fantasia":"ABEVE NOVA ANDRADINA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75760","fantasia":"ABEVE PARANAIBA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75756","fantasia":"ABEVE PARQUE DO LAGO","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75748","fantasia":"ABEVE TRES LAGOAS","supervisor":"JOAO LUIS BARBOSA","promotor":"","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"75229","fantasia":"AO FIEL BARATEIRO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"44191","fantasia":"AQUILANTE AMP CIA LTDA","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"76137","fantasia":"ASSAI - LJ 112 - TABOAO DA SERRA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"72201","fantasia":"ASSAI - LJ 13 - SOROCABA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75243","fantasia":"ASSAI - LJ 271  - GUARULHOS DUTRA","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"MARCELO LOPES VIEIRA DA SILVA","regiao":"SAO PAULO REGIAO 3 AMERICO"},{"cod":"76138","fantasia":"ASSAI - LJ 75 - ITAQUAQUECETUBA","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"MONICA MARIA DA SILVA","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"76135","fantasia":"ASSAI - LJ 81 - MOGI DAS CRUZES","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"MONICA MARIA DA SILVA","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"76136","fantasia":"ASSAI - LJ 8 - VILA SONIA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"78096","fantasia":"ASSAI - PIRAJUSSARA LJ 93","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75197","fantasia":"ATACADISTA MEGA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75201","fantasia":"ATACADISTA MEGA - COSTA RICA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75199","fantasia":"ATACADISTA MEGA - IVINHEMA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"38751","fantasia":"ATACADO REDE CENTRO OESTE","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"69741","fantasia":"BAHNIUK  LJ 01  XV DE NOVEMBRO - MALLET","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"69751","fantasia":"BAHNIUK  LJ 03  14 DE DEZEMBRO - PAULO FRONTIN","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"69761","fantasia":"BAHNIUK  LJ 04  - PAULA FREITAS","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"69771","fantasia":"BAHNIUK  LJ 05  JD EMILIA - MALLET","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"69781","fantasia":"BAHNIUK  LJ 06  JOAO GUALBERTO - MALLET","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"69791","fantasia":"BAHNIUK  LJ 07  NAVEGANTES - UNIAO DA VITORIA","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"69801","fantasia":"BAHNIUK  LJ 08  N SRA DO ROCIO - UNIAO DA VITORIA","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"71261","fantasia":"BAHNIUK  LJ 10  -  UNIAO DA VITORIA","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"75592","fantasia":"BAHNIUK  LJ 12 - UNIAO DA VITORIA","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"79692","fantasia":"BANDEIRANTES - AVANHANDAVA","supervisor":"DENIS JOSE PEREIRA","promotor":"RUTH CRISTIANE DA SILVA MENDONA","regiao":"ASSIS"},{"cod":"75702","fantasia":"BARBOSA LJ 01 - TABOAO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75703","fantasia":"BARBOSA LJ 02 - GRACINDA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75704","fantasia":"BARBOSA LJ 03 - SAO JOAO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75668","fantasia":"BARBOSA LJ 04 - BARUERI","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75683","fantasia":"BARBOSA LJ 05 - OSASCO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75705","fantasia":"BARBOSA LJ 06 - VILA BARROS","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75706","fantasia":"BARBOSA LJ 07 - VILA PORANAGUA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75690","fantasia":"BARBOSA LJ 08 - JANDIRA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75684","fantasia":"BARBOSA LJ 09 - NOVO OSASCO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75707","fantasia":"BARBOSA LJ 10 - PIRITUBA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75685","fantasia":"BARBOSA LJ 11 - BUTANTA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75679","fantasia":"BARBOSA LJ 12 - LOREBOX","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75680","fantasia":"BARBOSA LJ 14 - MORRO GRANDE","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75682","fantasia":"BARBOSA LJ 16 - ATACADO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75708","fantasia":"BARBOSA LJ 18 - SOROCABA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75695","fantasia":"BARBOSA LJ 19 - SAO JUDAS","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75691","fantasia":"BARBOSA LJ 20 - ITAPEVI","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75686","fantasia":"BARBOSA LJ 21 - JARDIM BANDEIRAS","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75692","fantasia":"BARBOSA LJ 23 - COTIA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75687","fantasia":"BARBOSA LJ 24 - RAPOSO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75696","fantasia":"BARBOSA LJ 25 - MANHUACU","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75697","fantasia":"BARBOSA LJ 26 - REI SALOMAO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75699","fantasia":"BARBOSA LJ 28 - BELFORT","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75700","fantasia":"BARBOSA LJ 29 - YURI-B","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75693","fantasia":"BARBOSA LJ 31 - CAUCAIA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75688","fantasia":"BARBOSA LJ 33 - JD CONCEICAO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75701","fantasia":"BARBOSA LJ 35 - CAPAO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75694","fantasia":"BARBOSA LJ 37 - VILA SILVA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75689","fantasia":"BARBOSA LJ 38 - PEDREIRA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"75710","fantasia":"BARBOSA LJ 39 - JD BELEM","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75717","fantasia":"BARBOSA LJ 40 - EMBU","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"66891","fantasia":"BIG  ARTHUR BERNARDES","supervisor":"JASON MARQUES PERES","promotor":"","regiao":"CURITIBA"},{"cod":"66791","fantasia":"BIG  AV DAS TORRES","supervisor":"JASON MARQUES PERES","promotor":"","regiao":"CURITIBA"},{"cod":"66711","fantasia":"BIG  BOA VISTA","supervisor":"JASON MARQUES PERES","promotor":"PATRICIA COELHO DANTAS","regiao":"CURITIBA"},{"cod":"66881","fantasia":"BIG  CATANDUVA","supervisor":"JOAO LUIS BARBOSA","promotor":"VANESSA CANOVAS BIZAIO","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"77458","fantasia":"BIG COMPRA - LJ 08 - ITUVERAVA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66321","fantasia":"BIG COMPRA  LOJA 01  JD JOSE SAMPAIO JR","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66331","fantasia":"BIG COMPRA  LOJA 02  VILA TIBERIO","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66341","fantasia":"BIG COMPRA  LOJA 03  PQ VICENTE LEPORACE","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66351","fantasia":"BIG COMPRA  LOJA 04  VILA APARECIDA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66361","fantasia":"BIG COMPRA  LOJA 05  PQ  SAO SEBASTIAO","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66371","fantasia":"BIG COMPRA  LOJA 06  ADELINO SIMIONI","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66381","fantasia":"BIG COMPRA  LOJA 07  SJ DA BARRA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"68821","fantasia":"BIG COMPRA  LOJA 10  CHICO JULIO","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66781","fantasia":"BIG  GRAMINHA","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"PIRACICABA"},{"cod":"66861","fantasia":"BIG  GRANJA VIANA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"TIAGO LIMA DE ALMEIDA","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"66871","fantasia":"BIG  GUARULHOS","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"66831","fantasia":"BIG  INDIANOPOLIS","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"66971","fantasia":"BIG  PACAEMBU","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"66771","fantasia":"BIG  PINHEIRINHO","supervisor":"REINALDO UGUCCIONI DA SILVA","promotor":"ANA MARIA DOS SANTOS SOUZA","regiao":"CURITIBA"},{"cod":"66961","fantasia":"BIG  RIBEIRAO PRETO","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"UEDERLI VILACA FERNANDES","regiao":"RIBEIRAO PRETO"},{"cod":"66951","fantasia":"BIG  SAO BERNARDO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"66741","fantasia":"BIG  SAO BRAZ","supervisor":"JASON MARQUES PERES","promotor":"","regiao":"CURITIBA"},{"cod":"66751","fantasia":"BIG  SHOPPING DOM PEDRO","supervisor":"KLEBER FRANCISCHETTI","promotor":"ANDREA APARECIDA SORGE DA SILVA","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"66721","fantasia":"BIG  XAXIM","supervisor":"REINALDO UGUCCIONI DA SILVA","promotor":"ANA MARIA DOS SANTOS SOUZA","regiao":"CURITIBA"},{"cod":"73301","fantasia":"CARREFOUR  ACLIMACAO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"73501","fantasia":"CARREFOUR ELDORADO SANTOS","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"73211","fantasia":"CARREFOUR  GUARULHOS MACEDO","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"JESIANE CASSIA DE OLIVEIRA","regiao":"SAO PAULO REGIAO 3 AMERICO"},{"cod":"73311","fantasia":"CARREFOUR  ITAIM BIBI","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"LUIZ GUSTAVO JARDIM SANTOS","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"73241","fantasia":"CARREFOUR  PENHA","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"JHONATAN FERREIRA DA CRUZ","regiao":"SAO PAULO REGIAO 3 AMERICO"},{"cod":"79797","fantasia":"CARREFOUR PIRACICABA","supervisor":"KLEBER FRANCISCHETTI","promotor":"WELLINGTON ALVES DOS SANTOS","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"73081","fantasia":"CARREFOUR  SALTO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"73221","fantasia":"CARREFOUR  SANTOS","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"73151","fantasia":"CARREFOUR  SBC TABOAO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"73191","fantasia":"CARREFOUR  TATUAPE","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"73101","fantasia":"CARREFOUR ( VILLA LOBOS)  VILA LEOPOLDINA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"TIAGO LIMA DE ALMEIDA","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"77580","fantasia":"CASA LUANDA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75198","fantasia":"CENTRO DISTRIBUIDOR VRA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"CAMPO GRANDE"},{"cod":"75454","fantasia":"CIDADE CANCAO - MANDACARU","supervisor":"ANDRE LUIZ ZALASKO","promotor":"GISLAINE RUIZ DA SILVA","regiao":"LONDRINA"},{"cod":"77926","fantasia":"COMPRE BEM LJ 5739 GUAIRA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"61071","fantasia":"COMPRE BEM SJ CAMPOS  LOJA 1367","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"FRANSCIELE GUEDES RIBEIRO","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"44311","fantasia":"CONDOR ATACADO  ARAUCARIA","supervisor":"JASON MARQUES PERES","promotor":"KENYARA ANDRADE DA LUZ","regiao":"CURITIBA"},{"cod":"79698","fantasia":"CONFIMAX - GUAICARA","supervisor":"DENIS JOSE PEREIRA","promotor":"RUTH CRISTIANE DA SILVA MENDONA","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"79699","fantasia":"CORTEZ LJ 01 - PENAPOLIS","supervisor":"DENIS JOSE PEREIRA","promotor":"RUTH CRISTIANE DA SILVA MENDONA","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"75415","fantasia":"CUESTA SUPERMERCADOS","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"73511","fantasia":"ELDORADO PRUDENTE","supervisor":"DENIS JOSE PEREIRA","promotor":"","regiao":"PRESIDENTE PRUDENTE"},{"cod":"73521","fantasia":"ELDORADO VILA GUILHERME","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"MARCIO SOARES DE MELO","regiao":"SAO PAULO REGIAO 3 AMERICO"},{"cod":"77578","fantasia":"EMPORIO BOLSOI","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"77579","fantasia":"EMPORIO BOLSOI 1","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60801","fantasia":"EXTRA  1687  MARGINAL TIETE","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"JESSICA MENEZES MARTINS","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"65081","fantasia":"EXTRA  1763  ITAPECERICA VALO VELHO","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"LUIS CLAUDIO BISPO DOS SANTOS","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"63421","fantasia":"EXTRA  2327  BOICUCANGA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"61001","fantasia":"EXTRA HIPER ABOLICAO  LOJA 1305","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"AMANDA BARBOSA SANTANA","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"60661","fantasia":"EXTRA HIPER AERPORTO  LOJA 1337","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"61011","fantasia":"EXTRA HIPER AMOREIRAS  LOJA 1311","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"60611","fantasia":"EXTRA HIPER ANCHIETA  LOJA 1314","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60581","fantasia":"EXTRA HIPER ANHANGUERA  LOJA 1307","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60591","fantasia":"EXTRA HIPER ARICANDUVA  LOJA 1309","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60761","fantasia":"EXTRA HIPER BOSQUE MAIA  LOJA 1384","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"61101","fantasia":"EXTRA HIPER CATANDUVA  LOJA 1394","supervisor":"JOAO LUIS BARBOSA","promotor":"VANESSA CANOVAS BIZAIO","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"60771","fantasia":"EXTRA HIPER COCAIA GUARULHOS  LOJA 1390","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60891","fantasia":"EXTRA HIPER COTIA  LOJA 1323","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60721","fantasia":"EXTRA HIPER FREGUESIA DO O  LOJA 1356","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60781","fantasia":"EXTRA HIPER GAMELINHA  LOJA 1391","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60711","fantasia":"EXTRA HIPER GUAIANASES  LOJA 1350","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60851","fantasia":"EXTRA HIPER GUARAPIRANGA  LOJA 1308","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60791","fantasia":"EXTRA HIPER GUARULHOS  LOJA 1612","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60881","fantasia":"EXTRA HIPER INTERLAGOS  LOJA 1322","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60691","fantasia":"EXTRA HIPER ITAIM BIBI  LOJA 1341","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60921","fantasia":"EXTRA HIPER JAGUARE  LOJA 1357","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60861","fantasia":"EXTRA HIPER JOAO DIAS  LOJA 1310","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"61051","fantasia":"EXTRA HIPER MOGILAR  LOJA 1342","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60741","fantasia":"EXTRA HIPER MOOCA  LOJA 1364","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60961","fantasia":"EXTRA HIPER OSASCO UNIAO  LOJA 2066","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60631","fantasia":"EXTRA HIPER PENHA  LOJA 1319","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60991","fantasia":"EXTRA HIPER RAPOSO TAVARES  LOJA 2412","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60701","fantasia":"EXTRA HIPER SANTOS  LOJA 1348","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60621","fantasia":"EXTRA HIPER SAO CAETANO  LOJA 1315","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60911","fantasia":"EXTRA HIPER TABOAO DA SERRA  LOJA 1351","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"60411","fantasia":"EXTRA SUPER IPIRANGA  LOJA 1686","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"RAFAEL VILANES DA SILVA","regiao":"SAO PAULO REGIAO 3 AMERICO"},{"cod":"60431","fantasia":"EXTRA SUPER  LOJA 1713 DIADEMA CENTRO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60261","fantasia":"EXTRA SUPER PARI LOJA 0021","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"60371","fantasia":"EXTRA SUPER VINHEDO  LOJA 1865","supervisor":"KLEBER FRANCISCHETTI","promotor":"TAMIRIS CANEDO DOMINGUES SANTANA","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"77556","fantasia":"FORTE DO BAIRRO 2","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"23971","fantasia":"GOLFF ARTHUR TOMAZ  LONDRINA","supervisor":"PAULO CESAR ALVES","promotor":"DOUGLAS MOREIRA SOUZA","regiao":"LONDRINA"},{"cod":"170","fantasia":"GOLFF ESPERANCA  CAMBE","supervisor":"PAULO CESAR ALVES","promotor":"","regiao":"LONDRINA"},{"cod":"61671","fantasia":"GUGUY  CH  URBANAS","supervisor":"ANDRE LUIZ ZALASKO","promotor":"GISLAINE RUIZ DA SILVA","regiao":"LONDRINA"},{"cod":"55511","fantasia":"JAU SERVE  LOJA 08  RUA CORONEL COIMBRA","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"75023","fantasia":"L16 SUPERPAO-CACADOR SC","supervisor":"CIRO ROLIM MORAES","promotor":"THAINA AZEVEDO LEAL","regiao":"GUARAPUAVA"},{"cod":"75042","fantasia":"L17 SUPERBARATAO-PITANGA","supervisor":"CIRO ROLIM MORAES","promotor":"THAINA AZEVEDO LEAL","regiao":"GUARAPUAVA"},{"cod":"75044","fantasia":"L21 SUPERBARATAO BOQUEIRAO-GUARAPUAVA","supervisor":"CIRO ROLIM MORAES","promotor":"THAINA AZEVEDO LEAL","regiao":"GUARAPUAVA"},{"cod":"75030","fantasia":"L30 SUPERPAO-PINHAO","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"PINHAO"},{"cod":"76237","fantasia":"LEVEMAX SUPERATACADO PENAPOLIS","supervisor":"JOAO LUIS BARBOSA","promotor":"","regiao":"ASSIS"},{"cod":"43741","fantasia":"LIBARDI LOJA 3","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"55181","fantasia":"LOPES  CENTRO DE DISTRIBUICAO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"45911","fantasia":"MARIANO ATACADISTA  AV VICENTE MACHADO - IRATI","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"66181","fantasia":"MARIANO ATACADISTA  SAO MATEUS DO SUL - S MATEUS DO SUL","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"75282","fantasia":"MARIANO ATACAREJO","supervisor":"CIRO ROLIM MORAES","promotor":"","regiao":"PONTA GROSSA"},{"cod":"53551","fantasia":"MATRIZ MUFFATO","supervisor":"MARCIO JOSE OLIVEIRA ORTIZ","promotor":"DIONATAN SIMAO","regiao":"CASCAVEL/TOLEDO"},{"cod":"62571","fantasia":"MAXXI ARARAS","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"PIRACICABA"},{"cod":"63741","fantasia":"MAXXI ASSIS","supervisor":"DENIS JOSE PEREIRA","promotor":"JOSE APARECIDO DE BRITO","regiao":"ASSIS"},{"cod":"48861","fantasia":"MAXXI BOQUEIRAO","supervisor":"JASON MARQUES PERES","promotor":"","regiao":"CURITIBA"},{"cod":"57471","fantasia":"MAXXI DIADEMA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"48801","fantasia":"MAXXI FAZENDINHA","supervisor":"JASON MARQUES PERES","promotor":"KETLYN COELHO DANTAS","regiao":"CURITIBA"},{"cod":"63761","fantasia":"MAXXI FOZ","supervisor":"MARCIO JOSE OLIVEIRA ORTIZ","promotor":"","regiao":"FOZ DO IGUACU"},{"cod":"57331","fantasia":"MAXXI FRANCA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"67121","fantasia":"MAXXI GUARAPUAVA","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"72481","fantasia":"MAXXI  INDAIATUBA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"66661","fantasia":"MAXXI ITU","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"63711","fantasia":"MAXXI JACAREI","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"63721","fantasia":"MAXXI MOGI GUACU","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"48851","fantasia":"MAXXI PINHAIS","supervisor":"JASON MARQUES PERES","promotor":"","regiao":"CURITIBA"},{"cod":"56871","fantasia":"MAXXI PIRACICABA","supervisor":"KLEBER FRANCISCHETTI","promotor":"WELLINGTON ALVES DOS SANTOS","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"39901","fantasia":"MAXXI PRESIDENTE PRUDENTE","supervisor":"DENIS JOSE PEREIRA","promotor":"JOSIANE GAZONI MOREIRA DA SILVA","regiao":"PRESIDENTE PRUDENTE"},{"cod":"57061","fantasia":"MAXXI SANTO ANDRE","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"MARIA GEILDA DE SOUZA","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"63751","fantasia":"MAXXI SAO JOSE DOS CAMPOS","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"58101","fantasia":"MAXXI TABOAO DA SERRA","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"71571","fantasia":"MAXXI TOLEDO","supervisor":"MARCIO JOSE OLIVEIRA ORTIZ","promotor":"EDIANE LUCIELY FRIES","regiao":"CASCAVEL/TOLEDO"},{"cod":"63731","fantasia":"MAXXI UMUARAMA","supervisor":"ANDRE LUIZ ZALASKO","promotor":"","regiao":"CAMPO MOURAO"},{"cod":"57481","fantasia":"MAXXI VILA GUILHERME","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"77577","fantasia":"MERCADO MARTINHO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"77576","fantasia":"MERCADO RODRIGUES","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"77560","fantasia":"MERCADO SAITO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"77581","fantasia":"MERCADO TALISMA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"MAGNUM OLIVEIRA SILVA","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"2154","fantasia":"MOLICENTER APUCARANA CLOVIS DA FONSECA","supervisor":"PAULO CESAR ALVES","promotor":"INGREDY ARTEMAN DE OLIVEIRA","regiao":"LONDRINA"},{"cod":"2179","fantasia":"MOLICENTER INTERVENTOR  APUCARANA","supervisor":"PAULO CESAR ALVES","promotor":"","regiao":"LONDRINA"},{"cod":"38381","fantasia":"MUSAMAR EXPRESS  SOUZA NAVES","supervisor":"PAULO CESAR ALVES","promotor":"DHEISLE ELLEN SILVA","regiao":"LONDRINA"},{"cod":"79687","fantasia":"NILTON LJ 04 - ANDRADINA","supervisor":"CASSIO DOMENICO ROCHA CARVALHO","promotor":"ROBERTO SEVERO DE OLIVEIRA","regiao":"SAO JOSE DO RIO PRETO"},{"cod":"75992","fantasia":"OBA OBA IOGURTES - AV SAO JOAO","supervisor":"PAULO CESAR ALVES","promotor":"VAGNER VINICIUS MENDES","regiao":"LONDRINA"},{"cod":"75995","fantasia":"OBA OBA QUEIJOS - AV ANTONIO RAMINELLI","supervisor":"PAULO CESAR ALVES","promotor":"ALEXANDRE MARQUES SANTOS","regiao":"LONDRINA"},{"cod":"75993","fantasia":"OBA OBA QUEIJOS - AV AVENIDA SAUL ELKIND","supervisor":"PAULO CESAR ALVES","promotor":"ALEXANDRE MARQUES SANTOS","regiao":"LONDRINA"},{"cod":"75994","fantasia":"OBA OBA QUEIJOS - AV INGLATERRA","supervisor":"PAULO CESAR ALVES","promotor":"ALEXANDRE MARQUES SANTOS","regiao":"LONDRINA"},{"cod":"78465","fantasia":"PAO DE ACUCAR - LJ 1017 ANA ROSA","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"PAULO VITOR ALMEIDA LOPES","regiao":"SAO PAULO REGIAO 3 AMERICO"},{"cod":"78524","fantasia":"PAO DE ACUCAR - LJ 1182 ARARAQUARA SHOPPING","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"1002 BAURU"},{"cod":"78430","fantasia":"PAO DE ACUCAR - LJ 1774 SAO SEBASTIAO","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"78512","fantasia":"PAO DE ACUCAR - LJ 2385 INDAIATUBA","supervisor":"KLEBER FRANCISCHETTI","promotor":"VALERIA CRISTINA GONCALVES FONTES","regiao":"SAO PAULO REGIAO 4 KLEBER"},{"cod":"78517","fantasia":"PAO DE ACUCAR - LJ 2435 MARACATINS","supervisor":"AMERICO ADAUTO VARELA JUNIOR","promotor":"","regiao":"SAO PAULO REGIAO 3 AMERICO"},{"cod":"78438","fantasia":"PAO DE ACUCAR - LJ 5792 PA UBATUBA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"45441","fantasia":"SALADAO","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"42451","fantasia":"SALADAO LOJA 3  AVARE","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"75561","fantasia":"SAMS BLUB - BAURU","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"61351","fantasia":"SAMS CLUB JARDIM DAS ROSAS","supervisor":"DENIS JOSE PEREIRA","promotor":"","regiao":"PRESIDENTE PRUDENTE"},{"cod":"775","fantasia":"SANCHES  GATURAMO  ARAPONGAS","supervisor":"PAULO CESAR ALVES","promotor":"INGREDY ARTEMAN DE OLIVEIRA","regiao":"LONDRINA"},{"cod":"787","fantasia":"SANCHES  SANTOS DUMONT","supervisor":"CIRO ROLIM MORAES","promotor":"","regiao":"TELEMACO"},{"cod":"91","fantasia":"SERVE BEM 1  COMERCIO DE ALIMENTOS","supervisor":"JOAO MARCOS CARNEIRO","promotor":"JONATHAN HENRIQUE FUZATI","regiao":"SANTO ANTONIO"},{"cod":"75456","fantasia":"STOCK ATACADISTA - CIANORTE","supervisor":"ANDRE LUIZ ZALASKO","promotor":"MAX ANTONIO PEREIRA","regiao":"CAMPO MOURAO"},{"cod":"75983","fantasia":"SUPERBOM  - AL FLOR DO AMOR","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"75984","fantasia":"SUPERBOM - AV ORLANDO RANIERI","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"75982","fantasia":"SUPERBOM - R FELICIO ATALA","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"59331","fantasia":"SUPERCENTER","supervisor":"PAULO CESAR ALVES","promotor":"INGREDY ARTEMAN DE OLIVEIRA","regiao":"LONDRINA"},{"cod":"358","fantasia":"SUPER CENTER  PAULO BRODA  CORNELIO","supervisor":"JOAO MARCOS CARNEIRO","promotor":"JOHNNY DOS SANTOS","regiao":"BANDEIRANTES"},{"cod":"31401","fantasia":"SUPERCENTER  TIRADENTES","supervisor":"JOAO MARCOS CARNEIRO","promotor":"JOHNNY DOS SANTOS","regiao":"BANDEIRANTES"},{"cod":"78861","fantasia":"SUPERDIA - XAXIM - 28","supervisor":"JASON MARQUES PERES","promotor":"","regiao":"CURITIBA"},{"cod":"38821","fantasia":"SUPERMERCADO AQUILANTE  AV DARIO FOLONI","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"38831","fantasia":"SUPERMERCADO AQUILANTE  SERGIO FURCIN","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"70501","fantasia":"SUPERMERCADO BAHNIUK - ANTONIO OLINTO","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"PONTA GROSSA"},{"cod":"75499","fantasia":"SUPERMERCADO BARROS - SANTOS","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75413","fantasia":"SUPERMERCADO BERTONCINI","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"2151","fantasia":"SUPERMERCADO BOM DEMAIS  ARAPONGAS","supervisor":"PAULO CESAR ALVES","promotor":"INGREDY ARTEMAN DE OLIVEIRA","regiao":"LONDRINA"},{"cod":"74203","fantasia":"SUPERMERCADO CANTERI CENTRO - IMBITUVA","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"74202","fantasia":"SUPERMERCADO CANTERI - IMBITUVA","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"35671","fantasia":"SUPERMERCADO CARDADOR  ANDRADAS","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"28571","fantasia":"SUPERMERCADO DANTAS","supervisor":"CIRO ROLIM MORAES","promotor":"LUIZ FERNANDO CUSTODIO MARTINS","regiao":"RIBEIRAO DO PINHAL"},{"cod":"39471","fantasia":"SUPERMERCADO DANTAS  ABATIA","supervisor":"CIRO ROLIM MORAES","promotor":"LUIZ FERNANDO CUSTODIO MARTINS","regiao":"BANDEIRANTES P. ENTREGA"},{"cod":"37171","fantasia":"SUPERMERCADO FERNANDES LOJA 1","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"37181","fantasia":"SUPERMERCADO FERNANDES LOJA 2","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"37191","fantasia":"SUPERMERCADO FERNANDES LOJA 3","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"37201","fantasia":"SUPERMERCADO FERNANDES LOJA 4","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"75959","fantasia":"SUPERMERCADO FORTALEZA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75961","fantasia":"SUPERMERCADO FORTALEZA - AV JOSE ROBERTO TEIXEIRA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75960","fantasia":"SUPERMERCADO FORTALEZA - R CUIABA","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"75529","fantasia":"SUPERMERCADO GERMANIA - LJ 041","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75528","fantasia":"SUPERMERCADO GERMANIA - LJ 042","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75523","fantasia":"SUPERMERCADO GERMANIA - LJ 043","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75530","fantasia":"SUPERMERCADO GERMANIA - LJ 044","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75525","fantasia":"SUPERMERCADO GERMANIA - LJ 045","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75524","fantasia":"SUPERMERCADO GERMANIA - LJ 046","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75522","fantasia":"SUPERMERCADO GERMANIA - LJ 049","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75526","fantasia":"SUPERMERCADO GERMANIA - LJ 051","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"75520","fantasia":"SUPERMERCADO GERMANIA - LJ 053","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"CURITIBA"},{"cod":"77584","fantasia":"SUPERMERCADO GOL","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"MARCIA SILVA DOS SANTOS CARVALHO","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"45861","fantasia":"SUPERMERCADO IVASKO  DEZENOVE - IRATI","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"45881","fantasia":"SUPERMERCADO IVASKO  DONA NOCA - IRATI","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"45891","fantasia":"SUPERMERCADO IVASKO  GETULIO - IRATI","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"75134","fantasia":"SUPERMERCADO IVASKO - SAO MATEUS DO SUL","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"45871","fantasia":"SUPERMERCADO IVASKO  VICENTE - IRATI","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"75241","fantasia":"SUPER MERCADO JOIA LJ02","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"MARCIA SILVA DOS SANTOS CARVALHO","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75242","fantasia":"SUPERMERCADO JOIA LJ03","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"MARCIA SILVA DOS SANTOS CARVALHO","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"38361","fantasia":"SUPERMERCADO MUSAMAR  PERNAMBUCO","supervisor":"PAULO CESAR ALVES","promotor":"DHEISLE ELLEN SILVA","regiao":"LONDRINA"},{"cod":"38371","fantasia":"SUPERMERCADO MUSAMAR  PIO XII JARDIM","supervisor":"PAULO CESAR ALVES","promotor":"DHEISLE ELLEN SILVA","regiao":"LONDRINA"},{"cod":"45901","fantasia":"SUPERMERCADO NEW  SUPER NEW - IRATI","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"77475","fantasia":"SUPERMERCADO NORI - AEROPORTO","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66431","fantasia":"SUPERMERCADO NORI  ARARAS","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66441","fantasia":"SUPERMERCADO NORI  AV ALBERTO CRIVELENTI","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66421","fantasia":"SUPERMERCADO NORI - CORONEL JOAQUIM ROSA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66481","fantasia":"SUPERMERCADO NORI  JD DAVI RODR","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66471","fantasia":"SUPERMERCADO NORI  PQ NOVA ALVORADA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66451","fantasia":"SUPERMERCADO NORI  SANTA CRUZ","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"66461","fantasia":"SUPERMERCADO NORI  VILA MARIA","supervisor":"ANDRE SEVERINO DOS SANTOS","promotor":"","regiao":"RIBEIRAO PRETO"},{"cod":"55861","fantasia":"SUPERMERCADO PAGUE MENOS ANTONINA","supervisor":"REINALDO UGUCCIONI DA SILVA","promotor":"STEFANI DE SOUZA","regiao":"CURITIBA"},{"cod":"56331","fantasia":"SUPERMERCADO PAGUE MENOS JOAO VIANA","supervisor":"REINALDO UGUCCIONI DA SILVA","promotor":"STEFANI DE SOUZA","regiao":"CURITIBA"},{"cod":"56921","fantasia":"SUPERMERCADO PARANAPANEMA LTDA","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"75416","fantasia":"SUPERMERCADO PARDINHENSE","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"61981","fantasia":"SUPERMERCADO REAL LJ 2  CENTRO OESTE","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"61991","fantasia":"SUPERMERCADO REAL LJ 3  CENTRO OESTE","supervisor":"DOUGLAS SOTTO REZENDE","promotor":"","regiao":"SAO PAULO REGIAO 1 DOUGLAS"},{"cod":"62001","fantasia":"SUPERMERCADO REAL LJ 4  CENTRO OESTE","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"73721","fantasia":"SUPERMERCADOS AVENIDA","supervisor":"DENIS JOSE PEREIRA","promotor":"JOSE APARECIDO DE BRITO","regiao":"PRESIDENTE PRUDENTE"},{"cod":"38521","fantasia":"SUPERMERCADOS MICHELASSI LOJA 1","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"37021","fantasia":"SUPERMERCADOS MICHELASSI LOJA 2","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"75148","fantasia":"SUPERMERCADOS SANTA HELENA- OSASCO","supervisor":"JASON MARQUES PERES","promotor":"","regiao":"CURITIBA"},{"cod":"57971","fantasia":"SUPERMERCADO VERONA  AV THEODORO VICTORELLI","supervisor":"PAULO CESAR ALVES","promotor":"VAGNER VINICIUS MENDES","regiao":"LONDRINA"},{"cod":"75230","fantasia":"SUPERMERCADO VIP","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"62351","fantasia":"SUPERMERCDO REAL LJ01  CESARIO LANGE","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"","regiao":"BAURU"},{"cod":"39341","fantasia":"SUPER MUFFATO  NOVA RUSSIA","supervisor":"CIRO ROLIM MORAES","promotor":"EDNA MARIA SCHEMBERGER OLIVEIRA","regiao":"PONTA GROSSA"},{"cod":"53861","fantasia":"SUPER MUFFATO  TOLEDO  MARIPA","supervisor":"MARCIO JOSE OLIVEIRA ORTIZ","promotor":"EDIANE LUCIELY FRIES","regiao":"CASCAVEL/TOLEDO"},{"cod":"75039","fantasia":"SUPERPAO - LJ 107 IVAIPORA","supervisor":"CIRO ROLIM MORAES","promotor":"THAINA AZEVEDO LEAL","regiao":"GUARAPUAVA"},{"cod":"78052","fantasia":"SUPERPAO - LJ 29 CONRADINHO","supervisor":"CIRO ROLIM MORAES","promotor":"THAINA AZEVEDO LEAL","regiao":"GUARAPUAVA"},{"cod":"38631","fantasia":"SUP  SANTA CATARINA 1","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"38651","fantasia":"SUP  SANTA CATARINA 2","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"38661","fantasia":"SUP  SANTA CATARINA 3","supervisor":"NAYRON MATHIAS DELGADINHO","promotor":"ESTEVAO VIEIRA SALVADIO","regiao":"BAURU"},{"cod":"69691","fantasia":"TODO DIA  ARAUCARIA","supervisor":"JASON MARQUES PERES","promotor":"FERNANDA DA SILVA BARBOSA RODRIGUES","regiao":"CURITIBA"},{"cod":"68531","fantasia":"TODO DIA  CASTRO","supervisor":"CIRO ROLIM MORAES","promotor":"","regiao":"CASTRO"},{"cod":"68521","fantasia":"TODO DIA PONTA GROSSA  SANTA PAULA","supervisor":"CIRO ROLIM MORAES","promotor":"","regiao":"PONTA GROSSA"},{"cod":"69701","fantasia":"TODO DIA  - SAO MATEUS DO SUL","supervisor":"CIRO ROLIM MORAES","promotor":"LEANDRO ALVES DE CAMARGO","regiao":"GUARAPUAVA"},{"cod":"61","fantasia":"UEDA ANDIRA","supervisor":"JOAO MARCOS CARNEIRO","promotor":"JOHNNY DOS SANTOS","regiao":"CORNELIO PROCOPIO"},{"cod":"603","fantasia":"UEDA BANDEIRANTES LOJA 2","supervisor":"JOAO MARCOS CARNEIRO","promotor":"JOHNNY DOS SANTOS","regiao":"BANDEIRANTES"},{"cod":"604","fantasia":"UEDA BANDEIRANTES MENEGHEL LOJA 1","supervisor":"JOAO MARCOS CARNEIRO","promotor":"JOHNNY DOS SANTOS","regiao":"BANDEIRANTES"},{"cod":"77615","fantasia":"VARANDAS NAUTICA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"77611","fantasia":"VARANDAS VILA NOVA","supervisor":"ANDRE LUIZ ALVES PEREIRA","promotor":"JENNIFER LOPES LEITE","regiao":"SAO PAULO REGIAO 2 ANDRE"},{"cod":"75200","fantasia":"VERATTI SUPERMERCADOS","supervisor":"JOAO LUIS BARBOSA","promotor":"MARCOS ROBERTO FERREIRA DO CARMO","regiao":"DOURADOS"},{"cod":"56341","fantasia":"W M E  MERCADO LTDA CARLOS GOMES DA COSTA","supervisor":"REINALDO UGUCCIONI DA SILVA","promotor":"STEFANI DE SOUZA","regiao":"CURITIBA"},{"cod":"56351","fantasia":"W M E  MERCADO LTDA MIGUEL BUFARA","supervisor":"REINALDO UGUCCIONI DA SILVA","promotor":"STEFANI DE SOUZA","regiao":"CURITIBA"}];
+function raNormReg(s){
+  return String(s||'').toUpperCase().replace(/\s+/g,' ').trim();
+}
+function raNormCod(c){
+  return String(c||'').replace(/[^0-9]/g,'');
+}
+function raLookupCD(regiao){
+  const key = raNormReg(regiao);
+  return BASE_CDS_MAP[key] || 'SEM CD';
+}
+
+let raRows = [];
+let raSelecionadoSup = null;
+let _raChartCDs = null;
+let _raChartSupZer = null;
+
+(function(){
+  const dz = document.getElementById('ra-dz');
+  if (!dz) return;
+  dz.addEventListener('dragover', e=>{e.preventDefault(); dz.classList.add('on');});
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('on'));
+  dz.addEventListener('drop', e=>{
+    e.preventDefault(); dz.classList.remove('on');
+    if(e.dataTransfer.files[0]) raHandleFile(e.dataTransfer.files[0]);
+  });
+})();
+
+function raSetP(p,m){
+  document.getElementById('ra-pb').style.width=p+'%';
+  document.getElementById('ra-pl').textContent=m;
+}
+
+function raHandleFile(f){
+  if(!f) return;
+  document.getElementById('ra-fn').textContent = f.name;
+  document.getElementById('ra-fb').style.display = 'flex';
+  const pp = document.getElementById('ra-pp');
+  pp.classList.remove('hidden');
+  raSetP(15,'Lendo arquivo...');
+  const r = new FileReader();
+  r.onload = e => {
+    raSetP(45,'Interpretando planilha...');
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      let sheetName = wb.SheetNames.find(n => /resultado.*consulta|consulta|saldo|clientes/i.test(n))
+                   || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const raw = XLSX.utils.sheet_to_json(ws, {defval:''});
+      raSetP(70,'Aplicando VLOOKUP de CDs e unindo clientes inativos...');
+
+      if (!raw.length) throw new Error('Planilha vazia ou sem dados.');
+
+      const k = Object.keys(raw[0]);
+      const find = re => k.find(c => re.test(String(c).toLowerCase().trim()));
+      const cCod   = find(/^cod[_ ]?cli/) || k[0];
+      const cFan   = find(/fantasia|cliente/) || k[1];
+      const cQtd   = find(/^qtde?$|quantidade/) || k[2];
+      const cData  = find(/^data$/) || k[3];
+      const cResp  = find(/^resp/) || k[4];
+      const cSup   = find(/supervisor/) || k[5];
+      const cProm  = find(/promotor/) || k[6];
+      const cReg   = find(/regiao|regi[aã]o/) || k[7];
+      // CDs é OPCIONAL — se não vier, é calculado via lookup na BASE_CDS_MAP
+      const cCDs   = find(/^cds?$|^cd$|centro/);
+
+      // Conjunto de cod_cli vindos do arquivo (para detectar duplicidade com clientes inativos)
+      const codsArquivo = new Set();
+
+      const fromFile = raw
+        .filter(r => r[cCod] !== '' && r[cCod] !== undefined && r[cCod] !== null)
+        .map(r => {
+          let data = r[cData];
+          if (data instanceof Date) data = data.toLocaleDateString('pt-BR');
+          else data = String(data || '').trim();
+          const regiao = String(r[cReg] || '').trim();
+          // Se a coluna CDs existir e tiver valor, usa ela. Senão, faz VLOOKUP.
+          let cd = '';
+          if (cCDs) cd = String(r[cCDs] || '').trim().toUpperCase();
+          if (!cd) cd = raLookupCD(regiao);
+          const codigo = String(r[cCod]).trim();
+          codsArquivo.add(raNormCod(codigo));
+          return {
+            codigo,
+            fantasia: String(r[cFan] || '').trim(),
+            qtde: parseFloat(r[cQtd]) || 0,
+            data,
+            resp: String(r[cResp] || '').trim(),
+            supervisor: String(r[cSup] || '').trim().toUpperCase(),
+            promotor: String(r[cProm] || '').trim(),
+            regiao,
+            cd
+          };
+        });
+
+      // EXCLUSÃO de clientes inativos há mais de 30 dias (lista da aba "Clientes 2020" do modelo).
+      // A planilha modelo NÃO inclui esses clientes no Painel — eles são removidos do dataset.
+      const codsExcluidos = new Set(CLIENTES_INATIVOS_30D.map(c => raNormCod(c.cod)));
+      const removidos = fromFile.filter(r => codsExcluidos.has(raNormCod(r.codigo)));
+      raRows = fromFile.filter(r => !codsExcluidos.has(raNormCod(r.codigo)));
+
+      raSetP(95,'Renderizando dashboard...');
+      raPreencherFiltros();
+      raRender();
+      document.getElementById('ra-dash').classList.remove('hidden');
+      document.getElementById('ra-btn-export').style.display = 'inline-flex';
+      document.getElementById('ra-btn-reset').style.display = 'inline-flex';
+
+      raSetP(100, 'Pronto! ' + raRows.length + ' clientes (removidos ' + removidos.length + ' inativos da lista Clientes 2020).');
+      setTimeout(()=>pp.classList.add('hidden'), 1000);
+    } catch(err) {
+      console.error(err);
+      raSetP(0, '❌ Erro: ' + err.message);
+    }
+  };
+  r.readAsArrayBuffer(f);
+}
+
+function raPreencherFiltros() {
+  const cds = [...new Set(raRows.map(r => r.cd).filter(Boolean))].sort();
+  const sups = [...new Set(raRows.map(r => r.supervisor).filter(Boolean))].sort();
+  document.getElementById('ra-f-cd').innerHTML  = '<option value="TODOS">Todos os CDs</option>'   + cds.map(c =>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('ra-f-sup').innerHTML = '<option value="TODOS">Todos</option>'           + sups.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+function raFiltrados() {
+  const fCd  = document.getElementById('ra-f-cd').value;
+  const fSup = document.getElementById('ra-f-sup').value;
+  const fSt  = document.getElementById('ra-f-st').value;
+  const fBus = (document.getElementById('ra-f-busca').value || '').toLowerCase().trim();
+  return raRows.filter(r => {
+    if (fCd !== 'TODOS'  && r.cd !== fCd) return false;
+    if (fSup !== 'TODOS' && r.supervisor !== fSup) return false;
+    if (fSt === 'ZERADO'    && r.qtde !== 0) return false;
+    if (fSt === 'COM_SALDO' && r.qtde === 0) return false;
+    if (fBus && !r.fantasia.toLowerCase().includes(fBus) && !r.codigo.includes(fBus)) return false;
+    return true;
+  });
+}
+
+function raRender() {
+  const dados = raFiltrados();
+  raRenderKpis(dados);
+  raRenderTabelaSup(dados);
+  raRenderTabelaCD(dados);
+  raRenderTabela8020(dados);
+  raRenderClientes(dados);
+  raRenderCharts(dados);
+  if (raSelecionadoSup) raAbrirDrill(raSelecionadoSup);
+}
+
+function raRenderKpis(dados) {
+  const totGrades  = dados.reduce((s,r) => s + r.qtde, 0);
+  const totClientes = dados.length;
+  const zerados    = dados.filter(r => r.qtde === 0).length;
+  const pctZerados = totClientes > 0 ? (zerados / totClientes * 100) : 0;
+  const porCd = {};
+  dados.forEach(r => {
+    if (!porCd[r.cd]) porCd[r.cd] = {qtde:0, clientes:0, zerados:0};
+    porCd[r.cd].qtde += r.qtde;
+    porCd[r.cd].clientes += 1;
+    if (r.qtde === 0) porCd[r.cd].zerados += 1;
+  });
+  let projecao = 0;
+  Object.values(porCd).forEach(c => {
+    if (c.clientes > 0) projecao += (c.qtde / c.clientes) * c.zerados;
+  });
+
+  const kpis = [
+    {icon:'📦', label:'Grades (Saldo Total)', value: totGrades.toLocaleString('pt-BR'), bg:'var(--pc)', color:'var(--sec)'},
+    {icon:'🏪', label:'Clientes',             value: totClientes.toLocaleString('pt-BR'), bg:'var(--surv)', color:'var(--tx)'},
+    {icon:'🔴', label:'Clientes sem apontamentos', value: zerados.toLocaleString('pt-BR'), bg:'#F0D5D5', color:'#6B0000'},
+    {icon:'📉', label:'% Sem apontamentos',         value: pctZerados.toFixed(1).replace('.',',') + '%', bg:'var(--ws)', color:'var(--wb)'},
+    {icon:'⚠️', label:'Projeção sem apontamento',  value: Math.round(projecao).toLocaleString('pt-BR'), bg:'#F5DDD9', color:'#8B1A14'}
+  ];
+  document.getElementById('ra-kpis').innerHTML = kpis.map(k => `
+    <div style="background:${k.bg}; border-radius:var(--r12); padding:16px; box-shadow:var(--sh1);">
+      <div style="font-size:22px; margin-bottom:6px;">${k.icon}</div>
+      <div style="font-size:22px; font-weight:700; color:${k.color};">${k.value}</div>
+      <div style="font-size:11px; color:var(--txs); font-weight:500; margin-top:2px;">${k.label}</div>
+    </div>`).join('');
+}
+
+function raRenderTabelaSup(dados) {
+  const m = {};
+  dados.forEach(r => {
+    if (!r.supervisor) return;
+    if (!m[r.supervisor]) m[r.supervisor] = 0;
+    m[r.supervisor] += r.qtde;
+  });
+  const total = Object.values(m).reduce((s,v)=>s+v, 0);
+  const lista = Object.entries(m).map(([sup, qtde]) => ({
+    sup, qtde, pct: total > 0 ? (qtde/total*100) : 0
+  })).sort((a,b) => b.qtde - a.qtde);
+
+  document.getElementById('ra-cnt-sup').textContent = lista.length + ' supervisores';
+  document.getElementById('ra-tab-sup-tb').innerHTML = lista.map(r => `
+    <tr style="cursor:pointer;" onclick="raAbrirDrill('${r.sup.replace(/'/g,"\\'")}')" title="Clique para ver os clientes deste supervisor">
+      <td><strong>${r.sup}</strong></td>
+      <td style="text-align:right; font-weight:600;">${r.qtde.toLocaleString('pt-BR')}</td>
+      <td style="text-align:right; color:var(--txs);">${r.pct.toFixed(1).replace('.',',')}%</td>
+    </tr>`).join('') + `
+    <tr style="background:var(--surv); font-weight:700;">
+      <td>Total Geral</td>
+      <td style="text-align:right;">${total.toLocaleString('pt-BR')}</td>
+      <td style="text-align:right;">100,0%</td>
+    </tr>`;
+}
+
+function raRenderTabelaCD(dados) {
+  const m = {};
+  dados.forEach(r => {
+    if (!r.cd) return;
+    if (!m[r.cd]) m[r.cd] = {qtde:0, clientes:0, zerados:0};
+    m[r.cd].qtde += r.qtde;
+    m[r.cd].clientes += 1;
+    if (r.qtde === 0) m[r.cd].zerados += 1;
+  });
+  const lista = Object.entries(m).map(([cd, v]) => ({
+    cd, qtde: v.qtde, clientes: v.clientes, zerados: v.zerados,
+    pct: v.clientes > 0 ? (v.zerados/v.clientes*100) : 0,
+    projecao: v.clientes > 0 ? Math.round((v.qtde/v.clientes) * v.zerados) : 0
+  })).sort((a,b) => b.qtde - a.qtde);
+
+  const totQ = lista.reduce((s,r)=>s+r.qtde,0);
+  const totC = lista.reduce((s,r)=>s+r.clientes,0);
+  const totZ = lista.reduce((s,r)=>s+r.zerados,0);
+  const totP = lista.reduce((s,r)=>s+r.projecao,0);
+  const pctTotal = totC > 0 ? (totZ/totC*100) : 0;
+
+  document.getElementById('ra-tab-cd-tb').innerHTML = lista.map(r => {
+    const cor = r.pct > 20 ? '#8B1A14' : r.pct > 10 ? 'var(--wb)' : 'var(--ob)';
+    const bg  = r.pct > 20 ? '#F5DDD9' : r.pct > 10 ? 'var(--ws)' : 'var(--os)';
+    return `
+      <tr>
+        <td><strong>${r.cd}</strong></td>
+        <td style="text-align:right;">${r.qtde.toLocaleString('pt-BR')}</td>
+        <td style="text-align:right; color:var(--txs);">${r.clientes}</td>
+        <td style="text-align:right;"><span style="background:${bg}; color:${cor}; border-radius:20px; padding:2px 10px; font-size:12px; font-weight:600;">${r.zerados}</span></td>
+        <td style="text-align:right; color:${cor}; font-weight:600;">${r.pct.toFixed(1).replace('.',',')}%</td>
+        <td style="text-align:right; font-weight:600;">${r.projecao.toLocaleString('pt-BR')}</td>
+      </tr>`;
+  }).join('') + `
+    <tr style="background:var(--surv); font-weight:700;">
+      <td>Total Geral</td>
+      <td style="text-align:right;">${totQ.toLocaleString('pt-BR')}</td>
+      <td style="text-align:right;">${totC}</td>
+      <td style="text-align:right;">${totZ}</td>
+      <td style="text-align:right;">${pctTotal.toFixed(1).replace('.',',')}%</td>
+      <td style="text-align:right;">${totP.toLocaleString('pt-BR')}</td>
+    </tr>`;
+}
+
+function raRenderTabela8020(dados) {
+  const m = {};
+  dados.forEach(r => {
+    if (!r.supervisor) return;
+    if (!m[r.supervisor]) m[r.supervisor] = {clientes:0, zerados:0};
+    m[r.supervisor].clientes += 1;
+    if (r.qtde === 0) m[r.supervisor].zerados += 1;
+  });
+  const totZerados = Object.values(m).reduce((s,v)=>s+v.zerados, 0);
+  const lista = Object.entries(m).map(([sup, v]) => ({
+    sup, clientes: v.clientes, zerados: v.zerados,
+    pctZerados: v.clientes > 0 ? (v.zerados/v.clientes*100) : 0,
+    pctTotal: totZerados > 0 ? (v.zerados/totZerados*100) : 0
+  })).sort((a,b) => b.pctZerados - a.pctZerados);
+
+  const totC = lista.reduce((s,r)=>s+r.clientes,0);
+  const pctTotalGeral = totC > 0 ? (totZerados/totC*100) : 0;
+
+  document.getElementById('ra-tab-8020-tb').innerHTML = lista.map(r => {
+    const cor = r.pctZerados > 20 ? '#8B1A14' : r.pctZerados > 10 ? 'var(--wb)' : 'var(--ob)';
+    return `
+      <tr style="cursor:pointer;" onclick="raAbrirDrill('${r.sup.replace(/'/g,"\\'")}')">
+        <td><strong>${r.sup}</strong></td>
+        <td style="text-align:right; color:var(--txs);">${r.clientes}</td>
+        <td style="text-align:right;">${r.zerados}</td>
+        <td style="text-align:right; color:${cor}; font-weight:600;">${r.pctZerados.toFixed(1).replace('.',',')}%</td>
+        <td style="text-align:right;">${r.pctTotal.toFixed(1).replace('.',',')}%</td>
+      </tr>`;
+  }).join('') + `
+    <tr style="background:var(--surv); font-weight:700;">
+      <td>Total Geral</td>
+      <td style="text-align:right;">${totC}</td>
+      <td style="text-align:right;">${totZerados}</td>
+      <td style="text-align:right;">${pctTotalGeral.toFixed(1).replace('.',',')}%</td>
+      <td style="text-align:right;">100,0%</td>
+    </tr>`;
+}
+
+function raRenderClientes(dados) {
+  const lista = [...dados].sort((a,b) => b.qtde - a.qtde);
+  document.getElementById('ra-cnt-clientes').textContent = lista.length + ' clientes';
+  const tb = document.getElementById('ra-clientes-tb');
+  const MAX = 500;
+  const visivel = lista.slice(0, MAX);
+  tb.innerHTML = visivel.map(r => {
+    const isZ = r.qtde === 0;
+    const badge = isZ
+      ? `<span style="background:#F0D5D5; color:#6B0000; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600;">🔴 Sem apontamento</span>`
+      : `<span style="background:var(--os); color:var(--ob); border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600;">🟢 Com saldo</span>`;
+    return `
+      <tr>
+        <td><span class="codn">${r.codigo}</span></td>
+        <td style="font-size:13px; max-width:300px;">${r.fantasia}</td>
+        <td style="font-size:12px; color:var(--txs);">${r.cd}</td>
+        <td style="font-size:12px; color:var(--txs);">${r.supervisor}</td>
+        <td style="text-align:right; font-weight:600; ${isZ ? 'color:#6B0000;' : ''}">${r.qtde.toLocaleString('pt-BR')}</td>
+        <td style="font-size:12px; color:var(--txs);">${r.data || '—'}</td>
+        <td>${badge}</td>
+      </tr>`;
+  }).join('');
+  if (lista.length > MAX) {
+    tb.insertAdjacentHTML('beforeend', `
+      <tr><td colspan="7" style="text-align:center; padding:14px; color:var(--txs); font-style:italic; font-size:12px;">
+        Exibindo os primeiros ${MAX} de ${lista.length} clientes — refine os filtros para visualizar todos.
+      </td></tr>`);
+  }
+}
+
+function raAbrirDrill(supervisor) {
+  raSelecionadoSup = supervisor;
+  const dados = raFiltrados().filter(r => r.supervisor === supervisor);
+  document.getElementById('ra-drill-name').textContent = supervisor;
+  document.getElementById('ra-drill-card').style.display = '';
+  const lista = dados.sort((a,b) => a.qtde - b.qtde);
+  document.getElementById('ra-drill-tb').innerHTML = lista.map(r => {
+    const isZ = r.qtde === 0;
+    const badge = isZ
+      ? `<span style="background:#F0D5D5; color:#6B0000; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600;">🔴 Sem apontamento</span>`
+      : `<span style="background:var(--os); color:var(--ob); border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600;">🟢 Com saldo</span>`;
+    return `
+      <tr>
+        <td><span class="codn">${r.codigo}</span></td>
+        <td style="font-size:13px; max-width:300px;">${r.fantasia}</td>
+        <td style="font-size:12px; color:var(--txs);">${r.cd}</td>
+        <td style="font-size:12px; color:var(--txs);">${r.regiao}</td>
+        <td style="text-align:right; font-weight:600; ${isZ ? 'color:#6B0000;' : ''}">${r.qtde.toLocaleString('pt-BR')}</td>
+        <td style="font-size:12px; color:var(--txs);">${r.data || '—'}</td>
+        <td>${badge}</td>
+      </tr>`;
+  }).join('');
+  document.getElementById('ra-drill-card').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function raFecharDrill() {
+  raSelecionadoSup = null;
+  document.getElementById('ra-drill-card').style.display = 'none';
+}
+
+function raRenderCharts(dados) {
+  const porCd = {};
+  dados.forEach(r => { porCd[r.cd] = (porCd[r.cd] || 0) + r.qtde; });
+  const cdEntries = Object.entries(porCd).sort((a,b) => b[1] - a[1]);
+  const cdLabels = cdEntries.map(([c]) => c);
+  const cdValues = cdEntries.map(([,v]) => v);
+  const cdColors = ['#8B5020','#C67C2A','#D7A05C','#A2845E','#6B5744','#8B7355','#C8A47A'];
+
+  const ctx1 = document.getElementById('ra-chart-cds');
+  if (_raChartCDs) _raChartCDs.destroy();
+  _raChartCDs = new Chart(ctx1, {
+    type: 'doughnut',
+    data: { labels: cdLabels, datasets: [{ data: cdValues, backgroundColor: cdColors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 11 }, color: '#2C2016', boxWidth: 12, padding: 8 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString('pt-BR')} grades` } }
+      }
+    }
+  });
+
+  const supM = {};
+  dados.forEach(r => {
+    if (!r.supervisor) return;
+    if (!supM[r.supervisor]) supM[r.supervisor] = {c:0, z:0};
+    supM[r.supervisor].c += 1;
+    if (r.qtde === 0) supM[r.supervisor].z += 1;
+  });
+  const supLista = Object.entries(supM).map(([s,v]) => ({
+    sup: s, pct: v.c > 0 ? (v.z/v.c*100) : 0, zerados: v.z, clientes: v.c
+  })).sort((a,b) => b.pct - a.pct).slice(0, 10);
+
+  const ctx2 = document.getElementById('ra-chart-sup-zerados');
+  if (_raChartSupZer) _raChartSupZer.destroy();
+  _raChartSupZer = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: supLista.map(s => s.sup.length > 26 ? s.sup.substring(0,24)+'…' : s.sup),
+      datasets: [{
+        label: '% Sem apontamento',
+        data: supLista.map(s => +s.pct.toFixed(1)),
+        backgroundColor: supLista.map(s => s.pct > 20 ? '#8B0000' : s.pct > 10 ? '#C8941A' : '#2E8B50'),
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => {
+          const s = supLista[ctx.dataIndex];
+          return ` ${s.pct.toFixed(1).replace('.',',')}% (${s.zerados}/${s.clientes} clientes)`;
+        } } }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { font: { size: 11 }, color: '#6B5744', callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        y: { ticks: { font: { size: 10 }, color: '#2C2016' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function raReset() {
+  raRows = [];
+  raSelecionadoSup = null;
+  document.getElementById('ra-fi').value = '';
+  document.getElementById('ra-fb').style.display = 'none';
+  document.getElementById('ra-pp').classList.add('hidden');
+  document.getElementById('ra-dash').classList.add('hidden');
+  document.getElementById('ra-btn-export').style.display = 'none';
+  document.getElementById('ra-btn-reset').style.display = 'none';
+  document.getElementById('ra-drill-card').style.display = 'none';
+  document.getElementById('ra-f-cd').value = 'TODOS';
+  document.getElementById('ra-f-sup').value = 'TODOS';
+  document.getElementById('ra-f-st').value = 'TODOS';
+  document.getElementById('ra-f-busca').value = '';
+  if (_raChartCDs)    { _raChartCDs.destroy();    _raChartCDs = null; }
+  if (_raChartSupZer) { _raChartSupZer.destroy(); _raChartSupZer = null; }
+}
+
+function raExportPainel() {
+  if (!raRows.length) { alert('Importe a planilha primeiro.'); return; }
+  const dados = raFiltrados();
+
+  // ===== Agregados =====
+  const mSup = {};
+  dados.forEach(r => { if (r.supervisor) mSup[r.supervisor] = (mSup[r.supervisor] || 0) + r.qtde; });
+  const totSupAll = Object.values(mSup).reduce((s,v)=>s+v, 0);
+  const linhasSup = Object.entries(mSup)
+    .map(([s,q]) => ({sup:s, q, pct: totSupAll>0 ? q/totSupAll : 0}))
+    .sort((a,b)=>b.q-a.q);
+
+  const mCD = {};
+  dados.forEach(r => {
+    if (!r.cd) return;
+    if (!mCD[r.cd]) mCD[r.cd] = {q:0, c:0, z:0};
+    mCD[r.cd].q += r.qtde;
+    mCD[r.cd].c += 1;
+    if (r.qtde === 0) mCD[r.cd].z += 1;
+  });
+  const linhasCD = Object.entries(mCD)
+    .map(([cd,v]) => ({
+      cd, q:v.q, c:v.c, z:v.z,
+      pct:  v.c>0 ? v.z/v.c : 0,
+      proj: v.c>0 ? (v.q/v.c)*v.z : 0
+    }))
+    .sort((a,b)=>b.q-a.q);
+
+  const m80 = {};
+  dados.forEach(r => {
+    if (!r.supervisor) return;
+    if (!m80[r.supervisor]) m80[r.supervisor] = {c:0, z:0};
+    m80[r.supervisor].c += 1;
+    if (r.qtde === 0) m80[r.supervisor].z += 1;
+  });
+  const totZ80 = Object.values(m80).reduce((s,v)=>s+v.z, 0);
+  const linhas80 = Object.entries(m80)
+    .map(([s,v]) => ({
+      sup: s, c: v.c, z: v.z,
+      pctZ: v.c>0 ? v.z/v.c : 0,
+      pctT: totZ80>0 ? v.z/totZ80 : 0
+    }))
+    .sort((a,b) => b.pctZ - a.pctZ);
+
+  // ===== Paleta minimalista profissional =====
+  const C = {
+    bannerBg:  '2C2016',  // marrom muito escuro (texto Panutrir)
+    bannerFg:  'FFFFFF',
+    dateBg:    'EDE4D7',  // surface2 Panutrir
+    dateFg:    '2C2016',
+    hdrBg:     '8B5020',  // marrom escuro Panutrir
+    hdrFg:     'FFFFFF',
+    border:    'B8A898',  // border Panutrir (cinza-marrom suave)
+    text:      '2C2016',
+    textSoft:  '6B5744',
+    rowBg:     'FFFFFF',
+    totalBg:   'EDE4D7',
+    totalFg:   '2C2016',
+    // Heatmap (branco -> peach suave)
+    heatLight: 'FFFFFF',
+    heatDark:  'E8C896'   // peach médio
+  };
+
+  // ===== Helpers =====
+  const FF = 'Calibri';
+  const hx = n => n.toString(16).padStart(2,'0').toUpperCase();
+  const lerp = (a,b,t) => Math.round(a + (b-a)*t);
+  const grad = (val, max, lt, dk) => {
+    if (!max || max <= 0) return lt;
+    const t = Math.max(0, Math.min(1, val / max));
+    const sR=parseInt(lt.substring(0,2),16), sG=parseInt(lt.substring(2,4),16), sB=parseInt(lt.substring(4,6),16);
+    const eR=parseInt(dk.substring(0,2),16), eG=parseInt(dk.substring(2,4),16), eB=parseInt(dk.substring(4,6),16);
+    return hx(lerp(sR,eR,t)) + hx(lerp(sG,eG,t)) + hx(lerp(sB,eB,t));
+  };
+
+  const thin   = (rgb)=>({style:'thin', color:{rgb: rgb || C.border}});
+  const medium = (rgb)=>({style:'medium', color:{rgb: rgb || C.bannerBg}});
+  const ab = (rgb)=>({top:thin(rgb), bottom:thin(rgb), left:thin(rgb), right:thin(rgb)});
+
+  // Builders de estilo
+  const stBanner = {
+    font:{name:FF, bold:true, sz:16, color:{rgb:C.bannerFg}},
+    fill:{patternType:'solid', fgColor:{rgb:C.bannerBg}},
+    alignment:{horizontal:'center', vertical:'center'}
+  };
+  const stDate = {
+    font:{name:FF, bold:true, sz:11, color:{rgb:C.dateFg}},
+    fill:{patternType:'solid', fgColor:{rgb:C.dateBg}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: ab()
+  };
+  const stHdr = {
+    font:{name:FF, bold:true, sz:10, color:{rgb:C.hdrFg}},
+    fill:{patternType:'solid', fgColor:{rgb:C.hdrBg}},
+    alignment:{horizontal:'center', vertical:'center', wrapText:true},
+    border: ab(C.hdrBg)
+  };
+  const stText = {
+    font:{name:FF, sz:10, color:{rgb:C.text}},
+    fill:{patternType:'solid', fgColor:{rgb:C.rowBg}},
+    alignment:{vertical:'center', indent:1},
+    border: ab()
+  };
+  const stTextRight = {
+    font:{name:FF, sz:10, color:{rgb:C.text}},
+    fill:{patternType:'solid', fgColor:{rgb:C.rowBg}},
+    alignment:{horizontal:'right', vertical:'center', indent:1},
+    border: ab(),
+    numFmt:'#,##0'
+  };
+  const numHeat = (val, max) => ({
+    font:{name:FF, sz:10, color:{rgb:C.text}},
+    fill:{patternType:'solid', fgColor:{rgb: grad(val, max, C.heatLight, C.heatDark)}},
+    alignment:{horizontal:'right', vertical:'center', indent:1},
+    border: ab(),
+    numFmt:'#,##0'
+  });
+  const pctHeat = (val, max) => ({
+    font:{name:FF, sz:10, bold:true, color:{rgb:C.text}},
+    fill:{patternType:'solid', fgColor:{rgb: grad(val, max, C.heatLight, C.heatDark)}},
+    alignment:{horizontal:'right', vertical:'center', indent:1},
+    border: ab(),
+    numFmt:'0.0%'
+  });
+  const stTotalLabel = {
+    font:{name:FF, bold:true, sz:10, color:{rgb:C.totalFg}},
+    fill:{patternType:'solid', fgColor:{rgb:C.totalBg}},
+    alignment:{vertical:'center', indent:1},
+    border:{top:medium(), bottom:medium(), left:thin(), right:thin()}
+  };
+  const stTotalNum = {
+    font:{name:FF, bold:true, sz:10, color:{rgb:C.totalFg}},
+    fill:{patternType:'solid', fgColor:{rgb:C.totalBg}},
+    alignment:{horizontal:'right', vertical:'center', indent:1},
+    border:{top:medium(), bottom:medium(), left:thin(), right:thin()},
+    numFmt:'#,##0'
+  };
+  const stTotalPct = {
+    font:{name:FF, bold:true, sz:10, color:{rgb:C.totalFg}},
+    fill:{patternType:'solid', fgColor:{rgb:C.totalBg}},
+    alignment:{horizontal:'right', vertical:'center', indent:1},
+    border:{top:medium(), bottom:medium(), left:thin(), right:thin()},
+    numFmt:'0.0%'
+  };
+  const stBlank = {
+    fill:{patternType:'solid', fgColor:{rgb:'FFFFFF'}}
+  };
+
+  const set = (ws, addr, value, style, type) => {
+    const cell = { v: value };
+    if (type) cell.t = type;
+    else if (typeof value === 'number') cell.t = 'n';
+    else if (typeof value === 'boolean') cell.t = 'b';
+    else cell.t = 's';
+    if (style) cell.s = style;
+    ws[addr] = cell;
+  };
+  const A = (c, r) => XLSX.utils.encode_cell({c:c, r:r});
+
+  const wb = XLSX.utils.book_new();
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+  // ============================================================
+  // ABA 1: "Painel" — 3 tabelas lado a lado (igual ao modelo)
+  // ============================================================
+  // Colunas: A=margem | B-D = Sup | E=gap | F-K = CD | L=gap | M-Q = 80/20
+  //   B=1 C=2 D=3 | F=5 G=6 H=7 I=8 J=9 K=10 | M=12 N=13 O=14 P=15 Q=16
+  const ws1 = {};
+  const merges = [];
+
+  // --- Linha 1: Banner (B1:Q1) ---
+  set(ws1, A(1,0), 'Apontamento de Grades — Painel Executivo', stBanner);
+  for (let c=2; c<=16; c++) set(ws1, A(c,0), '', stBanner);
+  merges.push({s:{r:0,c:1}, e:{r:0,c:16}});
+
+  // --- Linha 3: Data (em M3, sozinha) ---
+  // Coluna A em todas as linhas com fill branco para limpar fundo
+  set(ws1, A(0,1), '', stBlank);
+  set(ws1, A(0,2), '', stBlank);
+  set(ws1, A(12,2), dataHoje, stDate);
+
+  // --- Linha 4: Headers ---
+  const HEADER_ROW = 3;
+  // Left: B-D
+  set(ws1, A(1,HEADER_ROW), 'Saldo Supervisor', stHdr);
+  set(ws1, A(2,HEADER_ROW), 'Qtde',             stHdr);
+  set(ws1, A(3,HEADER_ROW), '%',                stHdr);
+  // gap E
+  set(ws1, A(4,HEADER_ROW), '', stBlank);
+  // Middle: F-K
+  set(ws1, A(5, HEADER_ROW), 'Saldo CD',                                  stHdr);
+  set(ws1, A(6, HEADER_ROW), 'Qtde',                                      stHdr);
+  set(ws1, A(7, HEADER_ROW), 'Qtde Total de Clientes',                    stHdr);
+  set(ws1, A(8, HEADER_ROW), 'Qtde de Clientes sem Apontamento',          stHdr);
+  set(ws1, A(9, HEADER_ROW), '%',                                         stHdr);
+  set(ws1, A(10,HEADER_ROW), 'Projeção',                                  stHdr);
+  // gap L
+  set(ws1, A(11,HEADER_ROW), '', stBlank);
+  // Right: M-Q
+  set(ws1, A(12,HEADER_ROW), 'Supervisor',                                stHdr);
+  set(ws1, A(13,HEADER_ROW), 'Qtde Total de Clientes',                    stHdr);
+  set(ws1, A(14,HEADER_ROW), 'Qtde de Clientes sem Apontamento',          stHdr);
+  set(ws1, A(15,HEADER_ROW), '%',                                         stHdr);
+  set(ws1, A(16,HEADER_ROW), 'Proporção do Total — Análise 80/20',        stHdr);
+
+  // Maxes para heatmap
+  const maxSupQ   = Math.max(...linhasSup.map(s=>s.q),   1);
+  const maxSupPct = Math.max(...linhasSup.map(s=>s.pct), 0.0001);
+  const maxCDQ    = Math.max(...linhasCD.map(c=>c.q),    1);
+  const maxCDC    = Math.max(...linhasCD.map(c=>c.c),    1);
+  const maxCDZ    = Math.max(...linhasCD.map(c=>c.z),    1);
+  const maxCDPct  = Math.max(...linhasCD.map(c=>c.pct),  0.0001);
+  const maxCDPrj  = Math.max(...linhasCD.map(c=>c.proj), 1);
+  const max80C    = Math.max(...linhas80.map(s=>s.c),    1);
+  const max80Z    = Math.max(...linhas80.map(s=>s.z),    1);
+  const max80PctZ = Math.max(...linhas80.map(s=>s.pctZ), 0.0001);
+  const max80PctT = Math.max(...linhas80.map(s=>s.pctT), 0.0001);
+
+  // --- Linhas de dados ---
+  const DATA_START = 4;
+  const maxRows = Math.max(linhasSup.length, linhasCD.length, linhas80.length);
+  for (let i = 0; i < maxRows; i++) {
+    const r = DATA_START + i;
+    const sup = linhasSup[i], cd = linhasCD[i], a80 = linhas80[i];
+
+    // Left
+    if (sup) {
+      set(ws1, A(1,r), sup.sup, stText);
+      set(ws1, A(2,r), sup.q,   numHeat(sup.q, maxSupQ));
+      set(ws1, A(3,r), sup.pct, pctHeat(sup.pct, maxSupPct));
+    } else {
+      set(ws1, A(1,r), '', stBlank); set(ws1, A(2,r), '', stBlank); set(ws1, A(3,r), '', stBlank);
+    }
+    set(ws1, A(4,r), '', stBlank); // gap
+
+    // Middle
+    if (cd) {
+      set(ws1, A(5,r),  cd.cd,   stText);
+      set(ws1, A(6,r),  cd.q,    numHeat(cd.q,    maxCDQ));
+      set(ws1, A(7,r),  cd.c,    numHeat(cd.c,    maxCDC));
+      set(ws1, A(8,r),  cd.z,    numHeat(cd.z,    maxCDZ));
+      set(ws1, A(9,r),  cd.pct,  pctHeat(cd.pct,  maxCDPct));
+      set(ws1, A(10,r), cd.proj, numHeat(cd.proj, maxCDPrj));
+    } else {
+      for (let c=5; c<=10; c++) set(ws1, A(c,r), '', stBlank);
+    }
+    set(ws1, A(11,r), '', stBlank); // gap
+
+    // Right
+    if (a80) {
+      set(ws1, A(12,r), a80.sup,  stText);
+      set(ws1, A(13,r), a80.c,    numHeat(a80.c,    max80C));
+      set(ws1, A(14,r), a80.z,    numHeat(a80.z,    max80Z));
+      set(ws1, A(15,r), a80.pctZ, pctHeat(a80.pctZ, max80PctZ));
+      set(ws1, A(16,r), a80.pctT, pctHeat(a80.pctT, max80PctT));
+    } else {
+      for (let c=12; c<=16; c++) set(ws1, A(c,r), '', stBlank);
+    }
+  }
+
+  // --- Linha de Total Geral ---
+  const TOTAL_ROW = DATA_START + maxRows;
+  // Left
+  set(ws1, A(1,TOTAL_ROW), 'Total Geral', stTotalLabel);
+  set(ws1, A(2,TOTAL_ROW), totSupAll,     stTotalNum);
+  set(ws1, A(3,TOTAL_ROW), 1,             stTotalPct);
+  set(ws1, A(4,TOTAL_ROW), '', stBlank);
+  // Middle
+  const totCDQ  = linhasCD.reduce((s,r)=>s+r.q,    0);
+  const totCDC  = linhasCD.reduce((s,r)=>s+r.c,    0);
+  const totCDZ  = linhasCD.reduce((s,r)=>s+r.z,    0);
+  const totCDPr = linhasCD.reduce((s,r)=>s+r.proj, 0);
+  set(ws1, A(5, TOTAL_ROW), 'Total Geral',                stTotalLabel);
+  set(ws1, A(6, TOTAL_ROW), totCDQ,                       stTotalNum);
+  set(ws1, A(7, TOTAL_ROW), totCDC,                       stTotalNum);
+  set(ws1, A(8, TOTAL_ROW), totCDZ,                       stTotalNum);
+  set(ws1, A(9, TOTAL_ROW), totCDC>0 ? totCDZ/totCDC : 0, stTotalPct);
+  set(ws1, A(10,TOTAL_ROW), totCDPr,                      stTotalNum);
+  set(ws1, A(11,TOTAL_ROW), '', stBlank);
+  // Right
+  const tot80C = linhas80.reduce((s,r)=>s+r.c, 0);
+  const tot80Z = linhas80.reduce((s,r)=>s+r.z, 0);
+  set(ws1, A(12,TOTAL_ROW), 'Total Geral',                stTotalLabel);
+  set(ws1, A(13,TOTAL_ROW), tot80C,                       stTotalNum);
+  set(ws1, A(14,TOTAL_ROW), tot80Z,                       stTotalNum);
+  set(ws1, A(15,TOTAL_ROW), tot80C>0 ? tot80Z/tot80C : 0, stTotalPct);
+  set(ws1, A(16,TOTAL_ROW), 1,                            stTotalPct);
+
+  // --- Finalização do ws1 ---
+  ws1['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:TOTAL_ROW, c:16}});
+  ws1['!cols'] = [
+    {wch:2},   // A
+    {wch:36},  // B Saldo Supervisor
+    {wch:11},  // C Qtde
+    {wch:8},   // D %
+    {wch:2},   // E gap
+    {wch:22},  // F Saldo CD
+    {wch:11},  // G Qtde
+    {wch:13},  // H Qtde Total Cli
+    {wch:17},  // I Qtde Sem Apontamento
+    {wch:8},   // J %
+    {wch:11},  // K Projeção
+    {wch:2},   // L gap
+    {wch:36},  // M Supervisor
+    {wch:13},  // N Qtde Total Cli
+    {wch:17},  // O Qtde Sem Apontamento
+    {wch:8},   // P %
+    {wch:22}   // Q Proporção
+  ];
+  ws1['!rows'] = [];
+  ws1['!rows'][0] = {hpt: 28};                  // banner
+  ws1['!rows'][HEADER_ROW] = {hpt: 42};         // headers (wrap)
+  ws1['!rows'][TOTAL_ROW] = {hpt: 22};          // total
+  ws1['!merges'] = merges;
+  ws1['!freeze'] = { xSplit: 0, ySplit: DATA_START };
+  XLSX.utils.book_append_sheet(wb, ws1, 'Painel');
+
+  // ============================================================
+  // ABA 2: "Resultado da consulta" — dados completos com CD
+  // ============================================================
+  const ws2 = {};
+  const hdr2 = ['cod_cli','fantasia','qtde','data','resp','supervisor','promotor','regiao','CDs'];
+  hdr2.forEach((h,i) => set(ws2, A(i,0), h, stHdr));
+  dados.forEach((d, idx) => {
+    const r = idx + 1;
+    set(ws2, A(0,r), d.codigo,     stText);
+    set(ws2, A(1,r), d.fantasia,   stText);
+    set(ws2, A(2,r), d.qtde,       stTextRight);
+    set(ws2, A(3,r), d.data,       stText);
+    set(ws2, A(4,r), d.resp,       stText);
+    set(ws2, A(5,r), d.supervisor, stText);
+    set(ws2, A(6,r), d.promotor,   stText);
+    set(ws2, A(7,r), d.regiao,     stText);
+    set(ws2, A(8,r), d.cd,         stText);
+  });
+  ws2['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:dados.length, c:8}});
+  ws2['!cols'] = [{wch:10},{wch:46},{wch:8},{wch:12},{wch:36},{wch:36},{wch:36},{wch:28},{wch:22}];
+  ws2['!rows'] = [{hpt: 24}];
+  ws2['!freeze'] = { xSplit: 0, ySplit: 1 };
+  ws2['!autofilter'] = { ref: ws2['!ref'] };
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resultado da consulta');
+
+  // ============================================================
+  // ABA 3: "Dinamica" — 4 pivots
+  // ============================================================
+  const ws3 = {};
+  const supSomaSorted = Object.entries(mSup).sort((a,b)=>a[0].localeCompare(b[0]));
+  const cdSomaSorted  = Object.entries(mCD).map(([k,v])=>[k,v.q]).sort((a,b)=>a[0].localeCompare(b[0]));
+  const supZerSorted  = Object.entries(m80).filter(([,v])=>v.z>0).map(([k,v])=>[k,v.z]).sort((a,b)=>a[0].localeCompare(b[0]));
+  const cdZer = {};
+  dados.forEach(d => { if (d.qtde===0 && d.cd) cdZer[d.cd] = (cdZer[d.cd]||0) + 1; });
+  const cdZerSorted = Object.entries(cdZer).sort((a,b)=>a[0].localeCompare(b[0]));
+  // Headers
+  set(ws3, A(0,0), 'Supervisor',          stHdr); set(ws3, A(1,0), 'Soma de qtde',          stHdr);
+  set(ws3, A(3,0), 'CD',                  stHdr); set(ws3, A(4,0), 'Soma de qtde',          stHdr);
+  set(ws3, A(6,0), 'Supervisor',          stHdr); set(ws3, A(7,0), 'Contagem sem apontam.', stHdr);
+  set(ws3, A(9,0), 'CD',                  stHdr); set(ws3, A(10,0),'Contagem sem apontam.', stHdr);
+  // Dados
+  const dinMax = Math.max(supSomaSorted.length, cdSomaSorted.length, supZerSorted.length, cdZerSorted.length);
+  for (let i = 0; i < dinMax; i++) {
+    const r = i + 1;
+    const sSup=supSomaSorted[i], sCD=cdSomaSorted[i], zSup=supZerSorted[i], zCD=cdZerSorted[i];
+    if (sSup) { set(ws3, A(0,r),  sSup[0], stText); set(ws3, A(1,r),  sSup[1], stTextRight); }
+    if (sCD)  { set(ws3, A(3,r),  sCD[0],  stText); set(ws3, A(4,r),  sCD[1],  stTextRight); }
+    if (zSup) { set(ws3, A(6,r),  zSup[0], stText); set(ws3, A(7,r),  zSup[1], stTextRight); }
+    if (zCD)  { set(ws3, A(9,r),  zCD[0],  stText); set(ws3, A(10,r), zCD[1],  stTextRight); }
+  }
+  // Totais
+  const r3 = dinMax + 1;
+  set(ws3, A(0,r3),  'Total Geral', stTotalLabel); set(ws3, A(1,r3),  supSomaSorted.reduce((s,[,v])=>s+v,0), stTotalNum);
+  set(ws3, A(3,r3),  'Total Geral', stTotalLabel); set(ws3, A(4,r3),  cdSomaSorted.reduce((s,[,v])=>s+v,0),  stTotalNum);
+  set(ws3, A(6,r3),  'Total Geral', stTotalLabel); set(ws3, A(7,r3),  supZerSorted.reduce((s,[,v])=>s+v,0),  stTotalNum);
+  set(ws3, A(9,r3),  'Total Geral', stTotalLabel); set(ws3, A(10,r3), cdZerSorted.reduce((s,[,v])=>s+v,0),   stTotalNum);
+  ws3['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:r3, c:10}});
+  ws3['!cols'] = [{wch:36},{wch:14},{wch:2},{wch:22},{wch:14},{wch:2},{wch:36},{wch:18},{wch:2},{wch:22},{wch:18}];
+  ws3['!rows'] = [{hpt: 28}];
+  ws3['!freeze'] = { xSplit: 0, ySplit: 1 };
+  XLSX.utils.book_append_sheet(wb, ws3, 'Dinamica');
+
+  // ============================================================
+  // ABA 4: "Base Cds"
+  // ============================================================
+  const ws4 = {};
+  set(ws4, A(0,0), 'regiao',    stHdr);
+  set(ws4, A(1,0), 'cd_origem', stHdr);
+  const baseKeys = Object.keys(BASE_CDS_MAP).sort();
+  baseKeys.forEach((reg, idx) => {
+    const r = idx + 1;
+    set(ws4, A(0,r), reg,                stText);
+    set(ws4, A(1,r), BASE_CDS_MAP[reg],  stText);
+  });
+  ws4['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:baseKeys.length, c:1}});
+  ws4['!cols'] = [{wch:34},{wch:28}];
+  ws4['!rows'] = [{hpt: 24}];
+  ws4['!freeze'] = { xSplit: 0, ySplit: 1 };
+  XLSX.utils.book_append_sheet(wb, ws4, 'Base Cds');
+
+  // ============================================================
+  // ABA 5: "Clientes 2020"
+  // ============================================================
+  const ws5 = {};
+  const hdr5 = ['cod_cli','fantasia','qtde','data','resp','supervisor','promotor','regiao'];
+  hdr5.forEach((h,i) => set(ws5, A(i,0), h, stHdr));
+  CLIENTES_INATIVOS_30D.forEach((c, idx) => {
+    const r = idx + 1;
+    set(ws5, A(0,r), c.cod,           stText);
+    set(ws5, A(1,r), c.fantasia,      stText);
+    set(ws5, A(2,r), 0,               stTextRight);
+    set(ws5, A(3,r), '01/01/2020',    stText);
+    set(ws5, A(4,r), 'sem atualização últimos 30 dias', stText);
+    set(ws5, A(5,r), c.supervisor,    stText);
+    set(ws5, A(6,r), c.promotor,      stText);
+    set(ws5, A(7,r), c.regiao,        stText);
+  });
+  ws5['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:CLIENTES_INATIVOS_30D.length, c:7}});
+  ws5['!cols'] = [{wch:10},{wch:46},{wch:8},{wch:12},{wch:36},{wch:36},{wch:36},{wch:28}];
+  ws5['!rows'] = [{hpt: 24}];
+  ws5['!freeze'] = { xSplit: 0, ySplit: 1 };
+  ws5['!autofilter'] = { ref: ws5['!ref'] };
+  XLSX.utils.book_append_sheet(wb, ws5, 'Clientes 2020');
+
+  const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  XLSX.writeFile(wb, `Apontamento_Grades_${hoje}.xlsx`);
 }
 
 </script>
