@@ -223,13 +223,17 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .btn-export-small:hover { background: #fdfaf6; border-color: var(--p); }
 
 /* Painel de Monitoramento */
-.monitor-panel { margin-top: 30px; padding: 20px; background: white; border-radius: 12px; border: 1px solid var(--out); }
-.monitor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; margin-top: 15px; }
-.cd-status-badge { padding: 12px 12px; border-radius: 8px; font-size: 13px; text-align: center; border: 1px solid transparent; }
+.monitor-panel { margin-top: 0; padding: 20px; background: white; border-radius: 12px; border: 1px solid var(--out); }
+.monitor-grid { display: flex; flex-wrap: nowrap; gap: 10px; margin-top: 15px; overflow-x: auto; }
+.cd-status-badge { padding: 12px 14px; border-radius: 8px; font-size: 13px; text-align: center; border: 1px solid transparent; flex: 1 1 0; min-width: 110px; }
 .status-pending { background: #fdfaf6; color: var(--txs); border: 1px solid #e0d0bc; }
 .status-sent { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
 .status-missing { background: var(--cs); color: var(--ct); border: 1px solid #f1a9a5; }
 .loading-api { font-size: 12px; color: var(--txs); font-style: italic; }
+
+/* Spinner de carregamento */
+.spinner{width:32px;height:32px;border:3px solid var(--outv);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Dashboard */
 .dash-kpi{background:var(--sur1);border:1px solid var(--outv);border-radius:var(--r16);padding:18px 20px;}
@@ -354,7 +358,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
   /* --- PAINEL DE MONITORAMENTO --- */
   #painel-monitoramento{padding:0 10px 200px;}
-  .monitor-grid{grid-template-columns:1fr 1fr!important;gap:8px;}
+  .monitor-grid{gap:8px;}
   .monitor-panel{padding:14px;}
   #painel-monitoramento .btn,
   #painel-monitoramento button{font-size:12px;}
@@ -413,12 +417,14 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 }
 
 </style>
+<!-- OneSignal Web Push -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
 <body>
 
 <div id="mo">
   <div class="modal">
-    <div class="mico">📍</div>
+    <img src="./logo_nova.jpg" class="logo-round" alt="Logo Panutrir" style="width:72px;height:72px;border-radius:24px;margin:0 auto 18px;display:block;">
     <h2>Autenticação</h2>
     <p>Informe o nome e a senha do <strong>Centro de Distribuição</strong> antes de continuar.</p>
     <div class="f">
@@ -443,18 +449,81 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   </div>
 </div>
 
+<!-- ===== AVISO DIÁRIO DE IMPORTAÇÃO ===== -->
+<div id="aviso-diario" style="display:none; position:fixed; inset:0; z-index:600; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center;">
+  <div id="aviso-diario-card" style="background:var(--sur); border-radius:28px; padding:36px 40px; max-width:460px; width:90%; text-align:center; box-shadow:0 12px 48px rgba(0,0,0,.25); position:relative;">
+    <!-- Faixa colorida no topo -->
+    <div id="aviso-faixa" style="position:absolute; top:0; left:0; right:0; height:6px; border-radius:28px 28px 0 0;"></div>
+
+    <div id="aviso-icone" style="font-size:48px; margin-bottom:12px; line-height:1;"></div>
+
+    <div style="font-size:12px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; opacity:.6;" id="aviso-subtag"></div>
+
+    <h2 style="font-family:'Google Sans Display',sans-serif; font-size:20px; font-weight:600; line-height:1.3; margin:0 0 6px; color:var(--tx);">
+      Hoje você irá importar aqui o
+    </h2>
+    <div id="aviso-tipo" style="font-size:26px; font-weight:700; margin-bottom:20px;"></div>
+
+    <div id="aviso-tutorial" style="background:var(--surv); border:1px solid var(--out); border-radius:14px; padding:14px 18px; font-size:13px; color:var(--txs); line-height:1.6; margin-bottom:28px; text-align:left;"></div>
+
+    <button onclick="fecharAvisoDiario()" id="aviso-btn"
+      style="width:100%; padding:14px; border:none; border-radius:14px; font-family:'Google Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; color:#fff; transition:opacity .15s;">
+      Entendido ✓
+    </button>
+  </div>
+</div>
+
 <header class="bar">
   <img src="./logo_nova.jpg" class="logo-round" alt="Logo Panutrir" style="height: 48px; width: 48px; object-fit: cover;">
   <div style="min-width:0;flex:1;"><div class="bar-title">Sistema de Padronização de Relatórios</div><div class="bar-sub">Painel Corporativo de Gestão — Panutrir</div></div>
-  <div class="bar-r">
+    <div class="bar-r">
     <div class="chip" id="chip">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
       <span id="chip-txt"></span>
     </div>
+    <button id="btn-logout" onclick="logout()" style="display:none;align-items:center;gap:6px;background:transparent;color:var(--err);border:none;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Google Sans',sans-serif;margin-left:8px;transition:all .15s;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </button>
   </div>
 </header>
 
 <main>
+
+  <!-- PAINEL DE MONITORAMENTO — topo da página, visível só para a Matriz -->
+  <div id="painel-monitoramento" style="padding:0 0 24px;display:none;">
+    <div class="monitor-panel">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h3 style="margin:0; font-size:16px;">Monitoramento de Envios</h3>
+                <p style="font-size:12px; color:var(--txs); margin-top:4px;">Verifique o status de cada unidade por data.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button onclick="monitorSetData('hoje')" id="mon-btn-hoje"
+                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--p); background:var(--p); color:#fff; font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s;">
+                    Hoje
+                </button>
+                <button onclick="monitorSetData('ontem')" id="mon-btn-ontem"
+                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--out); background:transparent; color:var(--txs); font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s;">
+                    Ontem
+                </button>
+                <input type="date" id="mon-data-custom"
+                    style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:6px 12px; outline:none; cursor:pointer;"
+                    onchange="monitorSetData('custom')"
+                    title="Selecionar outra data">
+                <button onclick="atualizarStatusMonitor()" id="mon-btn-refresh"
+                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--out); background:var(--surv); color:var(--txs); font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .15s;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Atualizar
+                </button>
+            </div>
+        </div>
+        <div id="mon-data-label" style="font-size:12px; color:var(--txs); margin-top:10px; font-style:italic;"></div>
+        <div id="status-grid" class="monitor-grid" style="margin-top:12px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="spinner"></div><span style="font-size:12px;color:var(--txs);font-style:italic;">Carregando status das unidades...</span></div>
+        </div>
+    </div>
+  </div>
 
   <!-- TAB BAR -->
   <div class="tab-bar">
@@ -746,24 +815,49 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           <input type="text" id="cd_nome" placeholder="Ex: CD Bauru" required readonly>
         </div>
 
-        <div class="f">
-          <label for="caixas_vazias">Grades no CD:</label>
-          <input type="number" id="caixas_vazias" placeholder="Ex: 1200" min="0" oninput="atualizarBtnGrades()">
+        <!-- Pergunta ponto de entrada — exibida apenas para CDs (oculta para MATRIZ) -->
+        <div id="bloco-retorno-pergunta" style="display:none;">
+          <div class="f" style="margin-bottom:0;">
+            <label style="display:block; margin-bottom:10px; font-weight:600;">O que deseja lançar?</label>
+            <div role="radiogroup" style="display:flex; gap:10px; flex-wrap:wrap;">
+              <label id="lbl-radio-nao" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border:1.5px solid var(--out); border-radius:var(--r12); background:var(--surv); cursor:pointer; font-size:13px; transition:border-color .15s;">
+                <input type="radio" name="vai_retornar" value="nao" onchange="onVaiRetornarChange()" style="accent-color:var(--p);"> 📦 Grades no CD
+              </label>
+              <label id="lbl-radio-sim" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border:1.5px solid var(--out); border-radius:var(--r12); background:var(--surv); cursor:pointer; font-size:13px; transition:border-color .15s;">
+                <input type="radio" name="vai_retornar" value="sim" onchange="onVaiRetornarChange()" style="accent-color:var(--p);"> 🚛 Grades retornando à matriz
+              </label>
+            </div>
+          </div>
+          <div style="height:16px;"></div>
         </div>
 
-        <div class="f">
-          <label for="caixas_trocas">Grades retornando:</label>
-          <input type="number" id="caixas_trocas" placeholder="Ex: 400" min="0" oninput="atualizarBtnGrades()">
+        <!-- Bloco "Não" — Grades no CD (visível para MATRIZ por padrão, para CDs só após escolher) -->
+        <div id="bloco-grades-cd" style="display:none;">
+          <div class="f">
+            <label for="caixas_vazias">Grades com produtos:</label>
+            <input type="number" id="caixas_vazias" placeholder="Ex: 800" min="0" oninput="atualizarBtnGrades()">
+          </div>
+          <div class="f">
+            <label for="caixas_trocas">Grades vazias:</label>
+            <input type="number" id="caixas_trocas" placeholder="Ex: 400" min="0" oninput="atualizarBtnGrades()">
+          </div>
         </div>
 
-        <div class="f" id="campo-horario-saida">
-          <label for="horario_saida">Horário de Saída do Caminhão:</label>
-          <input type="time" id="horario_saida">
+        <!-- Bloco "Sim" — Grades retornando (só para CDs quando selecionarem "Sim") -->
+        <div id="bloco-retorno-detalhes" style="display:none;">
+          <div class="f">
+            <label for="grades_retornando">Quantidade de grades retornando:</label>
+            <input type="number" id="grades_retornando" placeholder="Ex: 200" min="0" oninput="atualizarBtnGrades()">
+          </div>
+          <div class="f" id="campo-horario-saida">
+            <label for="horario_saida">Horário de Saída do Caminhão:</label>
+            <input type="time" id="horario_saida">
+          </div>
         </div>
 
-        <div class="bn bn-i" id="hint-grades" style="margin-bottom:14px;font-size:12px;">
+        <div class="bn bn-i" id="hint-grades" style="margin-bottom:14px;font-size:12px; display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-          <span>Preencha ao menos <strong>Grades no CD</strong> ou <strong>Grades retornando</strong> para liberar o envio. Os demais campos são opcionais.</span>
+          <span id="hint-grades-texto"></span>
         </div>
 
         <button type="submit" id="btn-envia-grades" class="btn btn-f" style="margin-top: 10px;" disabled>
@@ -812,7 +906,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       </div>
 
       <!-- Área de loading -->
-      <div id="grades-loading" class="hidden" style="margin-top:18px; font-size:13px; color:var(--txs); font-style:italic;">⏳ Buscando dados na nuvem...</div>
+      <div id="grades-loading" class="hidden" style="margin-top:18px;text-align:center;font-size:13px;color:var(--txs);"><div class="spinner"></div>Buscando dados na nuvem...</div>
 
       <!-- Área de resultado -->
       <div id="grades-resumo-area" class="hidden" style="margin-top:18px;">
@@ -889,7 +983,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         <label for="data_editados">Data do relatório</label>
         <input type="date" id="data_editados">
       </div>
-      <div id="editados-loading" class="hidden" style="font-size:13px;color:var(--txs);font-style:italic;">⏳ Buscando dados...</div>
+      <div id="editados-loading" class="hidden" style="text-align:center;font-size:13px;color:var(--txs);"><div class="spinner"></div>Buscando dados...</div>
       <div id="editados-vazio" class="hidden">
         <div class="bn" style="background:var(--surv);border:1px solid var(--out);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
@@ -960,8 +1054,8 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     </div>
 
     <!-- LOADING STATE -->
-    <div id="dash-loading" class="hidden" style="text-align:center; padding:48px; color:var(--txs); font-size:14px; font-style:italic;">
-      <div style="font-size:36px; margin-bottom:12px;">⏳</div>
+    <div id="dash-loading" class="hidden" style="text-align:center; padding:48px; color:var(--txs); font-size:14px;">
+      <div class="spinner" style="width:40px;height:40px;border-width:4px;"></div>
       Buscando dados na nuvem, aguarde...
     </div>
 
@@ -1040,7 +1134,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <!-- GRÁFICO: PRAZO MÉDIO POR CD -->
       <div class="card" style="margin-bottom:16px;">
         <div class="ch" style="margin-bottom:16px;">
-          <div class="ci am" style="font-size:18px;">🗓️</div>
+          <div class="ci am" style="font-size:18px;">️</div>
           <div><div class="ct" style="font-size:15px;">Prazo Médio de Validade por CD</div><div class="cs">Quanto tempo médio de prateleira o estoque de cada CD possui</div></div>
         </div>
         <div style="position:relative; height:200px;">
@@ -1151,8 +1245,8 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           <label for="cob-filtro-status">Filtrar por Status</label>
           <select id="cob-filtro-status" onchange="renderTabelaCobertura()">
             <option value="TODOS">Todos os status</option>
-            <option value="URGENTE">🔴 Urgente (&gt;7d)</option>
-            <option value="CRITICO">🟠 Crítico (&gt;5d)</option>
+            <option value="URGENTE"> Urgente (&gt;7d)</option>
+            <option value="CRITICO"> Crítico (&gt;5d)</option>
             <option value="ATENCAO">🟡 Atenção (&gt;3d)</option>
             <option value="OK">🟢 OK (≤3d)</option>
             <option value="SEM_VENDA">⚫ Sem venda</option>
@@ -1178,9 +1272,9 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     <!-- KPI CARDS COBERTURA -->
     <div id="cob-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px;"></div>
 
-    <!-- LOADING -->
-    <div id="cob-loading" class="hidden" style="text-align:center; padding:48px; color:var(--txs); font-size:14px; font-style:italic;">
-      <div style="font-size:36px; margin-bottom:12px;">⏳</div>
+    <!-- LOADING STATE -->
+    <div id="cob-loading" class="hidden" style="text-align:center; padding:48px; color:var(--txs); font-size:14px;">
+      <div class="spinner" style="width:40px;height:40px;border-width:4px;"></div>
       Buscando estoques e vendas diárias...
     </div>
 
@@ -1466,40 +1560,6 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   </div>
 </div>
 
-<!-- PAINEL DE MONITORAMENTO -->
-<div id="painel-monitoramento" class="container" style="max-width:1160px;margin:0 auto;padding:0 16px 120px;display:none;">
-    <div class="monitor-panel">
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-            <div>
-                <h3 style="margin:0; font-size:16px;">Monitoramento de Envios</h3>
-                <p style="font-size:12px; color:var(--txs); margin-top:4px;">Verifique o status de cada unidade por data.</p>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <button onclick="monitorSetData('hoje')" id="mon-btn-hoje"
-                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--p); background:var(--p); color:#fff; font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s;">
-                    Hoje
-                </button>
-                <button onclick="monitorSetData('ontem')" id="mon-btn-ontem"
-                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--out); background:transparent; color:var(--txs); font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s;">
-                    Ontem
-                </button>
-                <input type="date" id="mon-data-custom"
-                    style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:6px 12px; outline:none; cursor:pointer;"
-                    onchange="monitorSetData('custom')"
-                    title="Selecionar outra data">
-                <button onclick="atualizarStatusMonitor()" id="mon-btn-refresh"
-                    style="padding:6px 14px; border-radius:20px; border:1.5px solid var(--out); background:var(--surv); color:var(--txs); font-family:'Google Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .15s;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    Atualizar
-                </button>
-            </div>
-        </div>
-        <div id="mon-data-label" style="font-size:12px; color:var(--txs); margin-top:10px; font-style:italic;"></div>
-        <div id="status-grid" class="monitor-grid" style="margin-top:12px;">
-            <span class="loading-api">Carregando status das unidades...</span>
-        </div>
-    </div>
-</div>
 
 <script>
 const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paezinhos Leite Panutrinha Panutrir 400g","7":"Panetone C/ Frutas Panutrir 400g","11":"Pao Integral Centeio Fitness Zero Panutrir 350g","16":"Pao Integ 7 Graos Damasco Hibisco Zero Panutrir 350g","655":"Pao Integral 12 Graos Panutrir 450g","669":"Bisnaguinha Bisnutrinhas Panutrir 300g","1224":"Pao Cast Para E Quinoa Integ Panutrir Broa 450g","2279":"Pao Pct Caseiro 500g","69251":"Pao Hot Dog Panutrir 400g","81571":"Pao Integral Surpreendente Panutrir 450g","81581":"Pao Integral 12 Graos Zero Panutrir 350g","81591":"Pao Integral Chia Macadamia Panutrir 400g","81661":"Pao Forma Plufi Nut 400g","82051":"Pao Hamburguer Gourmet Panutrir 500g","85181":"Muffato Pao Hot Dog 400g","85841":"Muffato Paezinhos De Leite 400g","86151":"Pao Integral Panutrir 450g","99161":"Pao Integral Plufi Nut 450g","121581":"Us Pao Hot Dog Unisabor 400g","121801":"Us Pao Hamburguer Gourmet Unisabor 500g","121811":"Us Paezinhos De Leite Unisabor 400g","121821":"Us Pao Integral 12 Graos Zero Unisabor 350g","121831":"Us Pao Integral 12 Graos Unisabor 450g","121841":"Us Pao Castanha Para E Quinoa Integ Unisabor 450g","121861":"Us Pao Forma Unisabor 400g","121871":"Us Pao Leite Unisabor 400g","135211":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 500g","135221":"Nossa Padaria Pao Hot Dog Emb Transp 400g","135231":"Nossa Padaria Paezinhos Leite Emb Transp 400g","135241":"Nossa Padaria Pao Forma Emb Transp 400g","141441":"Pao Sirio Tradic Panificadora Dubai 320g","141951":"Pao Sirio Tradic Panificadora Dubai 260g","145511":"Pao Nutri Del Grano Tradicional Panutrir 500g","145521":"Pao Nutri Del Grano Integral Panutrir 500g","152291":"Pao Sirio Integral Panificadora Dubai 300g","156021":"Panetone C/ Frutas Plufi Nut 300g","156051":"Panetone C/ Gotas Chocolate Plufi Nut 300g","162272":"Nossa Padaria Bisnaguinha Emb Transp 300g","162275":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 330g","162276":"Nossa Padaria Pao Integral Emb Transp 450g","162358":"Us Pao Integral Unisabor 450g","162396":"Pao Nutri Del Grano Tipo Caseiro Panutrir 500g","162767":"Muffato Pao Integral 450g","162775":"Muffato Bisnaguinhas 300g","162783":"Us Pao Artesanal Tradicional Unisabor 500g","162784":"Us Pao Artesanal Integral Unisabor 500g","162800":"Muffato Pao Forma 400g","162801":"Muffato Pao Leite 400g","162802":"Muffato Pao Hamburguer 500g","162920":"Pao Nutri Del Grano Hamburguer Artesanal Panutrir 320g","162921":"Pao Nutri Del Grano Hamburguer Brioche Panutrir 320g","162922":"Pao Nutri Del Grano Hamburguer Australiano Panutrir 320g","162923":"Pao Nutri Del Grano Hamburguer Gergelim Panutrir 320g"};
@@ -1533,6 +1593,59 @@ function getDiasLiberados() {
     estoqueCia:  (d === 2 || d === 3 || d === 5 || d === 6),   // ter/qua/sex/sáb
     grades:      (d >= 1 && d <= 6)                            // seg a sáb
   };
+}
+
+// ============================================================
+//  AVISO DIÁRIO DE IMPORTAÇÃO
+//  Seg/Qui → Estoque por validade (laranja)
+//  Ter/Qua/Sex/Sáb → Estoque por produto (azul)
+// ============================================================
+function mostrarAvisoDiario() {
+  const d = new Date().getDay();
+  const overlay = document.getElementById('aviso-diario');
+  if (!overlay) return;
+
+  let config = null;
+
+  if (d === 1 || d === 4) {
+    // Segunda ou Quinta — Estoque por validade
+    config = {
+      icone:    '📋',
+      subtag:   'Segunda-feira / Quinta-feira',
+      tipo:     'Estoque por Validade',
+      tipoCor:  '#E37400',
+      tutorial: 'No <strong>Inflow</strong>, na aba <strong>Estoque</strong>, clique em <strong>Opções</strong> e selecione <strong>"Exportar por validade"</strong>.',
+      faixaCor: '#E37400',
+      btnCor:   '#E37400',
+    };
+  } else if (d === 2 || d === 3 || d === 5 || d === 6) {
+    // Terça, Quarta, Sexta ou Sábado — Estoque por produto
+    config = {
+      icone:    '📦',
+      subtag:   'Terça / Quarta / Sexta / Sábado',
+      tipo:     'Estoque por Produto',
+      tipoCor:  '#1A73E8',
+      tutorial: 'No <strong>Inflow</strong>, na aba <strong>Estoque</strong>, clique em <strong>Opções</strong> e selecione <strong>"Exportar por produtos"</strong>.',
+      faixaCor: '#1A73E8',
+      btnCor:   '#1A73E8',
+    };
+  }
+
+  if (!config) return; // Domingo ou dia sem lançamento — não exibe
+
+  document.getElementById('aviso-icone').textContent      = config.icone;
+  document.getElementById('aviso-subtag').textContent     = config.subtag;
+  document.getElementById('aviso-tipo').textContent       = config.tipo;
+  document.getElementById('aviso-tipo').style.color       = config.tipoCor;
+  document.getElementById('aviso-tutorial').innerHTML     = config.tutorial;
+  document.getElementById('aviso-faixa').style.background = config.faixaCor;
+  document.getElementById('aviso-btn').style.background   = config.btnCor;
+  document.getElementById('aviso-diario').style.display   = 'flex';
+}
+
+function fecharAvisoDiario() {
+  const el = document.getElementById('aviso-diario');
+  if (el) el.style.display = 'none';
 }
 
 function aplicarRegrasDeDia() {
@@ -1590,12 +1703,14 @@ function okLocal(){
   const c = document.getElementById('chip');
   document.getElementById('chip-txt').textContent = v;
   c.style.display='flex';
+  document.getElementById('btn-logout').style.display='flex';
   document.getElementById('action-cd-label').textContent = v;
   
   document.getElementById('cd_nome').value = "CD " + v;
   
-  // SE FOR A MATRIZ, MOSTRA A ABA DE RELATÓRIOS E MONITORAMENTO
+  // SE FOR A MATRIZ, ATIVA PUSH E MOSTRA A ABA DE RELATÓRIOS E MONITORAMENTO
   if (cd === "MATRIZ") {
+      ativarPushAdmin();
       document.getElementById('tab-relatorios').style.display = 'inline-block';
       document.getElementById('painel-monitoramento').style.display = 'block';
       document.getElementById('tab-dashboard').style.display = 'inline-block';
@@ -1606,33 +1721,77 @@ function okLocal(){
       const hoje = new Date().toISOString().split('T')[0];
       document.getElementById('data_editados').value = hoje;
       document.getElementById('data_relatorio').value = hoje;
-      // Matriz nao tem caminhao chegando - oculta horario de saida
-      document.getElementById('campo-horario-saida').style.display = 'none';
-      document.getElementById('horario_saida').removeAttribute('required');
-      // Matriz mantém modelo original: oculta o hint dos CDs
+      // MATRIZ: oculta a pergunta Sim/Não e mostra os campos diretamente
+      document.getElementById('bloco-retorno-pergunta').style.display = 'none';
+      document.getElementById('bloco-grades-cd').style.display = '';
+      document.getElementById('bloco-retorno-detalhes').style.display = 'none';
       document.getElementById('hint-grades').style.display = 'none';
-      // Matriz precisa preencher ambos os campos (modelo original) — adiciona required
+      document.getElementById('horario_saida').removeAttribute('required');
+      // Matriz exige ambos os campos
       document.getElementById('caixas_vazias').setAttribute('required','');
       document.getElementById('caixas_trocas').setAttribute('required','');
-      // Habilita o botão (ele começa disabled por padrão para os CDs)
       document.getElementById('btn-envia-grades').disabled = false;
       document.querySelector('#tab-grades-content .cs').textContent = 'Lançamento de grades disponíveis na Matriz';
       document.getElementById('btn-envia-grades').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Lançar Grades da Matriz';
-      // Adapta labels dos campos para a realidade da Matriz
-      document.querySelector('label[for="caixas_vazias"]').textContent = 'Grades com Produtos:';
-      document.getElementById('caixas_vazias').placeholder = 'Ex: 800';
-      document.querySelector('label[for="caixas_trocas"]').textContent = 'Grades Vazias:';
-      document.getElementById('caixas_trocas').placeholder = 'Ex: 400';
       document.querySelector('#resultado_gestao .bn span').textContent = 'Confirmação de lançamento (Grades da Matriz):';
   } else {
       document.getElementById('tab-relatorios').style.display = 'none';
       document.getElementById('painel-monitoramento').style.display = 'none';
-      // CDs: dispara a validação inicial (botão começa disabled)
+      // CDs: mostra só a pergunta — nenhum bloco de campos visível até o CD escolher
+      document.getElementById('bloco-retorno-pergunta').style.display = '';
+      document.getElementById('bloco-grades-cd').style.display = 'none';
+      document.getElementById('bloco-retorno-detalhes').style.display = 'none';
+      document.getElementById('hint-grades').style.display = 'none';
+      // Desmarca qualquer seleção anterior e redefine borda dos rótulos
+      document.querySelectorAll('input[name="vai_retornar"]').forEach(r => r.checked = false);
+      const lblNao = document.getElementById('lbl-radio-nao');
+      const lblSim = document.getElementById('lbl-radio-sim');
+      if (lblNao) lblNao.style.borderColor = 'var(--out)';
+      if (lblSim) lblSim.style.borderColor = 'var(--out)';
+      // Limpa todos os campos
+      ['caixas_vazias','caixas_trocas','grades_retornando','horario_saida'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+      });
       atualizarBtnGrades();
   }
 
   // Aplica as regras de dia da semana (oculta abas não liberadas para o dia)
   aplicarRegrasDeDia();
+
+  // Exibe aviso diário de importação para CDs (não aparece para a Matriz)
+  if (cd !== 'MATRIZ') mostrarAvisoDiario();
+}
+
+function logout(){
+  cd = '';
+  rows = [];
+  hasW = false;
+  wCnt = 0;
+  _activeTab = 'import';
+  document.getElementById('mo').style.display = 'flex';
+  document.getElementById('chip').style.display = 'none';
+  document.getElementById('btn-logout').style.display = 'none';
+  document.getElementById('li').value = '';
+  document.getElementById('senha_cd').value = '';
+  document.getElementById('senha-field').style.display = 'none';
+  document.getElementById('btn-acessar').style.display = 'none';
+  // Oculta abas exclusivas da matriz
+  document.getElementById('tab-relatorios').style.display = 'none';
+  document.getElementById('painel-monitoramento').style.display = 'none';
+  document.getElementById('tab-dashboard').style.display = 'none';
+  document.getElementById('tab-cobertura').style.display = 'none';
+  document.getElementById('tab-rastreio').style.display = 'none';
+  document.getElementById('card-editados').style.display = 'none';
+  // Reseta estados visuais
+  document.getElementById('s2').classList.add('hidden');
+  document.getElementById('pp').classList.add('hidden');
+  document.getElementById('bulk').classList.add('hidden');
+  document.getElementById('wb2').classList.add('hidden');
+  document.getElementById('fpill').classList.add('hidden');
+  // Volta para a aba controle como padrão
+  switchTab('controle');
+  switchSubControle('import');
 }
 
 function onSelectUnidade(sel) {
@@ -2462,88 +2621,165 @@ function ecmBuildItens(){
 // Matriz: mantém validação tradicional do HTML (required)
 function atualizarBtnGrades() {
     if (cd === 'MATRIZ') return; // matriz usa required nativo
-    const v = document.getElementById('caixas_vazias').value.trim();
-    const t = document.getElementById('caixas_trocas').value.trim();
     const btn = document.getElementById('btn-envia-grades');
     if (!btn) return;
-    // Libera se ao menos UM dos dois estiver preenchido
-    btn.disabled = !(v !== '' || t !== '');
+    const selecionado = document.querySelector('input[name="vai_retornar"]:checked');
+    if (!selecionado) { btn.disabled = true; return; }
+
+    if (selecionado.value === 'nao') {
+        const v = document.getElementById('caixas_vazias').value.trim();
+        const t = document.getElementById('caixas_trocas').value.trim();
+        btn.disabled = !(v !== '' || t !== '');
+    } else {
+        const gr = document.getElementById('grades_retornando').value.trim();
+        btn.disabled = gr === '';
+    }
+}
+
+// Ponto de entrada: a seleção libera o bloco correto de campos
+function onVaiRetornarChange() {
+    const selecionado = document.querySelector('input[name="vai_retornar"]:checked');
+    const escolha = selecionado ? selecionado.value : null;
+
+    const blocoNao = document.getElementById('bloco-grades-cd');
+    const blocoSim = document.getElementById('bloco-retorno-detalhes');
+    const hint     = document.getElementById('hint-grades');
+    const hintTxt  = document.getElementById('hint-grades-texto');
+    const lblNao   = document.getElementById('lbl-radio-nao');
+    const lblSim   = document.getElementById('lbl-radio-sim');
+
+    if (lblNao) lblNao.style.borderColor = escolha === 'nao' ? 'var(--p)' : 'var(--out)';
+    if (lblSim) lblSim.style.borderColor = escolha === 'sim' ? 'var(--p)' : 'var(--out)';
+
+    if (escolha === 'nao') {
+        if (blocoNao) blocoNao.style.display = '';
+        if (blocoSim) blocoSim.style.display = 'none';
+        const gr = document.getElementById('grades_retornando');
+        const hs = document.getElementById('horario_saida');
+        if (gr) gr.value = '';
+        if (hs) hs.value = '';
+        if (hint) hint.style.display = '';
+        if (hintTxt) hintTxt.innerHTML = 'Preencha ao menos <strong>Grades com produtos</strong> ou <strong>Grades vazias</strong>.';
+    } else if (escolha === 'sim') {
+        if (blocoNao) blocoNao.style.display = 'none';
+        if (blocoSim) blocoSim.style.display = '';
+        const cv = document.getElementById('caixas_vazias');
+        const ct = document.getElementById('caixas_trocas');
+        if (cv) cv.value = '';
+        if (ct) ct.value = '';
+        if (hint) hint.style.display = '';
+        if (hintTxt) hintTxt.innerHTML = 'Informe a <strong>quantidade retornando</strong> e o <strong>horário de saída</strong>.';
+    }
+
+    atualizarBtnGrades();
 }
 
 async function lancarGestaoGrades(event) {
-    event.preventDefault(); 
+    event.preventDefault();
 
     let cdNome = document.getElementById('cd_nome').value;
-    if (!cdNome && cd) cdNome = "CD " + cd; 
-    
-    const caixasVaziasRaw = document.getElementById('caixas_vazias').value.trim();
-    const caixasTrocasRaw = document.getElementById('caixas_trocas').value.trim();
-    const horarioSaida = document.getElementById('horario_saida').value;
+    if (!cdNome && cd) cdNome = "CD " + cd;
 
-    // Para CDs (não-matriz): valida que pelo menos um dos campos numéricos esteja preenchido
-    if (cd !== 'MATRIZ' && caixasVaziasRaw === '' && caixasTrocasRaw === '') {
-        alert('⚠️ Preencha ao menos "Grades no CD" ou "Grades retornando" para enviar.');
+    // Nome amigável sem prefixo "CD " para o texto do relatório
+    const cfgKey = Object.keys(CD_CONFIG).find(k => cdNome.toUpperCase() === k.toUpperCase());
+    const cdLabel = cfgKey ? CD_CONFIG[cfgKey].label : cdNome.replace(/^CD\s*/i, '');
+
+    // ── MATRIZ: formato único ──────────────────────────────────────────
+    if (cd === 'MATRIZ') {
+        const caixasVazias = parseInt(document.getElementById('caixas_vazias').value) || 0;
+        const caixasTrocas = parseInt(document.getElementById('caixas_trocas').value) || 0;
+        const textoFinal = `Matriz - ${caixasVazias.toLocaleString('pt-BR')} grades com produtos, ${caixasTrocas.toLocaleString('pt-BR')} grades vazias`;
+        const payload = {
+            tipo: "grades", cd_origem: cdNome,
+            caixas_vazias: caixasVazias, caixas_trocas: caixasTrocas,
+            horario_saida: '', horario_chegada: '', vai_retornar: '',
+            quantidade_retornando: 0, texto_matriz: textoFinal,
+            data_registro: new Date().toLocaleDateString('pt-BR')
+        };
+        await _enviarGrades(payload, textoFinal, cdNome);
         return;
     }
 
-    // Valores numéricos: vazios viram 0 no banco, exibidos como "—" no texto
-    const caixasVazias = caixasVaziasRaw === '' ? 0 : (parseInt(caixasVaziasRaw) || 0);
-    const caixasTrocas = caixasTrocasRaw === '' ? 0 : (parseInt(caixasTrocasRaw) || 0);
-    const vaziasStr = caixasVaziasRaw === '' ? '—' : caixasVazias.toLocaleString('pt-BR');
-    const trocasStr = caixasTrocasRaw === '' ? '—' : caixasTrocas.toLocaleString('pt-BR');
+    // ── CDs: detecta qual bloco está ativo ────────────────────────────
+    const selecionado = document.querySelector('input[name="vai_retornar"]:checked');
+    if (!selecionado) {
+        alert('⚠️ Selecione o tipo de lançamento antes de enviar.');
+        return;
+    }
+    const vaiRetornar = selecionado.value;
 
-    let horarioChegada = '';
     let textoFinal = '';
+    let payloadDaAPI = { tipo: "grades", cd_origem: cdNome, data_registro: new Date().toLocaleDateString('pt-BR') };
 
-    if (cd === 'MATRIZ') {
-        // Grades já estão na Matriz, sem horário de viagem
-        textoFinal = `CD MATRIZ - ${caixasVazias} grades com produtos e ${caixasTrocas} grades vazias disponiveis na Matriz`;
-    } else {
-        // Calcula horário de chegada apenas se houver horário de saída preenchido
-        if (horarioSaida) {
-            const TEMPO_VIAGEM_HORAS = 5;
-            const partes = horarioSaida.split(':').map(Number);
-            let horas = partes[0], minutos = partes[1] || 0;
-            horas += TEMPO_VIAGEM_HORAS;
-            if (horas >= 24) horas -= 24;
-            const horasStr = horas.toString().padStart(2, '0');
-            const minutosStr = minutos.toString().padStart(2, '0');
-            horarioChegada = `${horasStr}:${minutosStr}`;
-            textoFinal = `${cdNome} - ${vaziasStr} grades no CD e ${trocasStr} grades retornando, horário de chegada: ${horarioChegada}`;
-        } else {
-            textoFinal = `${cdNome} - ${vaziasStr} grades no CD e ${trocasStr} grades retornando (horário de saída não informado)`;
+    if (vaiRetornar === 'nao') {
+        // ── Formato 1: Grades no CD ───────────────────────────────────
+        const comProdutosRaw = document.getElementById('caixas_vazias').value.trim();
+        const vaziasRaw      = document.getElementById('caixas_trocas').value.trim();
+        if (comProdutosRaw === '' && vaziasRaw === '') {
+            alert('⚠️ Preencha ao menos "Grades com produtos" ou "Grades vazias".');
+            return;
         }
+        const comProdutos = comProdutosRaw === '' ? 0 : (parseInt(comProdutosRaw) || 0);
+        const vazias      = vaziasRaw      === '' ? 0 : (parseInt(vaziasRaw)      || 0);
+        const partesProd  = comProdutosRaw !== '' ? `${comProdutos.toLocaleString('pt-BR')} grades com produtos` : '';
+        const partesVaz   = vaziasRaw      !== '' ? `${vazias.toLocaleString('pt-BR')} grades vazias`            : '';
+        const partes = [partesProd, partesVaz].filter(Boolean).join(', ');
+        textoFinal = `${cdLabel} - ${partes}`;
+        Object.assign(payloadDaAPI, {
+            caixas_vazias: comProdutos, caixas_trocas: vazias,
+            horario_saida: '', horario_chegada: '',
+            vai_retornar: 'nao', quantidade_retornando: 0,
+            texto_matriz: textoFinal
+        });
+
+    } else {
+        // ── Formato 2: Grades retornando ──────────────────────────────
+        const qtdRaw     = document.getElementById('grades_retornando').value.trim();
+        const horaSaida  = document.getElementById('horario_saida').value;
+        if (qtdRaw === '') {
+            alert('⚠️ Informe a quantidade de grades retornando.');
+            return;
+        }
+        if (!horaSaida) {
+            alert('⚠️ Informe o horário de saída do caminhão.');
+            return;
+        }
+        const qtd = parseInt(qtdRaw) || 0;
+        // Calcula chegada usando o tempo de viagem do CD_CONFIG
+        const hViagem = (CD_CONFIG[cdNome.toUpperCase()] || {}).horas ?? 5;
+        const [hh, mm] = horaSaida.split(':').map(Number);
+        let hCheg = (hh + hViagem) % 24;
+        const horarioChegada = `${String(hCheg).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+        textoFinal = `${cdLabel} - ${qtd.toLocaleString('pt-BR')} grades retornando, saída: ${horaSaida} chegada ${horarioChegada}`;
+        Object.assign(payloadDaAPI, {
+            caixas_vazias: 0, caixas_trocas: qtd,
+            horario_saida: horaSaida, horario_chegada: horarioChegada,
+            vai_retornar: 'sim', quantidade_retornando: qtd,
+            texto_matriz: textoFinal
+        });
     }
 
-    const payloadDaAPI = {
-        tipo: "grades",
-        cd_origem: cdNome,
-        caixas_vazias: caixasVazias,
-        caixas_trocas: caixasTrocas,
-        horario_saida: cd === 'MATRIZ' ? '' : (horarioSaida || ''),
-        horario_chegada: horarioChegada,
-        texto_matriz: textoFinal,
-        data_registro: new Date().toLocaleDateString('pt-BR')
-    };
+    await _enviarGrades(payloadDaAPI, textoFinal, cdNome);
+}
 
+async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
     const btn = document.getElementById('btn-envia-grades');
     btn.innerText = "Enviando...";
     btn.disabled = true;
 
     const confirmouEnvio = await new Promise(resolve => {
-        // Verifica se já existe lançamento do dia para este CD
         const today = new Date().toLocaleDateString('pt-BR');
         fetch(`${API_URL}?action=status&data=${encodeURIComponent(today)}`)
             .then(r => r.json())
             .then(statusData => {
-                const gradesEnviadas = Array.isArray(statusData.enviadosGrades) 
+                const gradesEnviadas = Array.isArray(statusData.enviadosGrades)
                     ? statusData.enviadosGrades.map(s => s.toUpperCase().trim()) : [];
                 const cdSigla = cdNome.replace(/^CD\s*/i,'').toUpperCase();
                 if (gradesEnviadas.includes(cdSigla)) {
                     const ok = confirm(
-                        `⚠️ Retorno de grades já registrado para ${cdNome} hoje.\n\n` +
-                        `Deseja registrar um novo retorno de caminhão?\n\n` +
-                        `(Múltiplos retornos no mesmo dia são permitidos.)`
+                        `⚠️ Lançamento de grades já registrado para ${cdNome} hoje.\n\n` +
+                        `Deseja registrar um novo lançamento?\n\n` +
+                        `(Múltiplos lançamentos no mesmo dia são permitidos.)`
                     );
                     resolve(ok);
                 } else {
@@ -2554,26 +2790,21 @@ async function lancarGestaoGrades(event) {
     });
 
     if (!confirmouEnvio) {
-        btn.innerText = "Gerar Relatório e Lançar";
+        const btnLabel = cd === 'MATRIZ' ? 'Lançar Grades da Matriz' : 'Gerar Relatório e Lançar';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ' + btnLabel;
         btn.disabled = false;
         return;
     }
 
-    fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payloadDaAPI)
-    })
+    fetch(API_URL, { method: 'POST', body: JSON.stringify(payloadDaAPI) })
     .then(response => response.json())
-    .then(data => {
+    .then(() => {
         const msg = cd === 'MATRIZ'
-            ? '✅ Grades da Matriz lançadas com sucesso na base!'
-            : '✅ Retorno de grades registrado com sucesso na base!';
+            ? '✅ Grades da Matriz lançadas com sucesso!'
+            : '✅ Lançamento registrado com sucesso!';
         alert(msg);
-
-        // Exibe o texto gerado para todos os CDs
         document.getElementById('texto_gerado').innerText = textoFinal;
         document.getElementById('resultado_gestao').classList.remove('hidden');
-
         atualizarStatusMonitor();
     })
     .catch(error => {
@@ -2584,10 +2815,22 @@ async function lancarGestaoGrades(event) {
         const btnLabel = cd === 'MATRIZ' ? 'Lançar Grades da Matriz' : 'Gerar Relatório e Lançar';
         btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ' + btnLabel;
         btn.disabled = false;
-        document.getElementById('caixas_vazias').value = '';
-        document.getElementById('caixas_trocas').value = '';
-        if(cd !== 'MATRIZ') document.getElementById('horario_saida').value = '';
-        // CDs: como os campos foram limpos, re-aplica a validação dinâmica (desabilita o botão)
+        // Limpa todos os campos do formulário
+        ['caixas_vazias','caixas_trocas','grades_retornando','horario_saida'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        if (cd !== 'MATRIZ') {
+            // Volta ao estado inicial: nenhum bloco visível, nenhum radio selecionado
+            document.querySelectorAll('input[name="vai_retornar"]').forEach(r => r.checked = false);
+            document.getElementById('bloco-grades-cd').style.display = 'none';
+            document.getElementById('bloco-retorno-detalhes').style.display = 'none';
+            document.getElementById('hint-grades').style.display = 'none';
+            const lblNao = document.getElementById('lbl-radio-nao');
+            const lblSim = document.getElementById('lbl-radio-sim');
+            if (lblNao) lblNao.style.borderColor = 'var(--out)';
+            if (lblSim) lblSim.style.borderColor = 'var(--out)';
+        }
         atualizarBtnGrades();
     });
 }
@@ -2607,7 +2850,7 @@ function baixarRelatorioConsolidado() {
 
     const btn = document.getElementById('btn-baixar-rel');
     const textoBotaoOriginal = btn.innerHTML;
-    btn.innerHTML = "⏳ Buscando dados na Nuvem...";
+    btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;"></span>Buscando dados na Nuvem...';
     btn.disabled = true;
 
     // Busca estoque e vendas diárias em paralelo
@@ -2858,7 +3101,7 @@ async function processarEnvioNuvem() {
 
         const btn = document.querySelector('.btn-save-cloud');
         const originalText = btn.innerText;
-        btn.innerText = "⏳ ENVIANDO, AGUARDE...";
+        btn.innerText = " ENVIANDO, AGUARDE...";
         btn.disabled = true;
 
         const now = new Date();
@@ -2912,7 +3155,7 @@ async function processarEnvioNuvem() {
 
     const btn = document.querySelector('.btn-save-cloud');
     const originalText = btn.innerText;
-    btn.innerText = "⏳ ENVIANDO, AGUARDE...";
+    btn.innerText = " ENVIANDO, AGUARDE...";
     btn.disabled = true;
 
     const now = new Date();
@@ -3013,7 +3256,7 @@ async function atualizarStatusMonitor() {
     grid.innerHTML = unidades.map(un =>
         `<div class="cd-status-badge status-pending" id="badge-${un}">
             <strong>${un}</strong><br>
-            <small>⏳ Consultando...</small>
+            <small><span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--p);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px;"></span>Consultando...</small>
         </div>`
     ).join('');
 
@@ -3061,14 +3304,13 @@ async function atualizarStatusMonitor() {
 
             // Monta apenas as linhas que se aplicam ao dia
             const linhas = [];
-            if (esperaControle)   linhas.push(`<span>Controle de Datas: ${enviouControle ? '✅' : '❌'}</span>`);
-            if (esperaEstoqueCia) linhas.push(`<span>Estoque: ${enviouEstoqueCia ? '✅' : '❌'}</span>`);
-            if (esperaGrades)     linhas.push(`<span>Grades: ${enviouGrades ? '✅' : '❌'}</span>`);
-            // Caso o dia não exija nenhum lançamento (ex.: domingo)
-            if (linhas.length === 0) linhas.push(`<span style="color:var(--txs);font-style:italic;">— Sem lançamentos previstos</span>`);
+            if (esperaControle)   linhas.push(`<span style="white-space:nowrap;">Controle de Datas ${enviouControle ? '✅' : '❌'}</span>`);
+            if (esperaEstoqueCia) linhas.push(`<span style="white-space:nowrap;">Estoque ${enviouEstoqueCia ? '✅' : '❌'}</span>`);
+            if (esperaGrades)     linhas.push(`<span style="white-space:nowrap;">Grades ${enviouGrades ? '✅' : '❌'}</span>`);
+            if (linhas.length === 0) linhas.push(`<span style="color:var(--txs);font-style:italic;white-space:nowrap;">— Sem lançamentos</span>`);
 
             badge.innerHTML = `
-                <strong>${un}</strong>
+                <strong style="white-space:nowrap;">${un}</strong>
                 <div style="display:flex; flex-direction:column; gap:3px; margin-top:6px; font-size:11px; text-align:left;">
                   ${linhas.join('')}
                 </div>
@@ -3191,17 +3433,19 @@ async function carregarResumoGrades() {
         const chegadaStr = chegada ? chegada : '—';
         const saidaStr = horarioSaida || '—';
 
-        // Linha de texto: Matriz nao tem horario de chegada
-        if (isMatriz) {
+        // Texto consolidado: usa texto_matriz já formatado quando disponível
+        if (reg.texto_matriz) {
+          linhasTexto.push(reg.texto_matriz);
+        } else if (isMatriz) {
           linhasTexto.push(`Matriz: ${vazias.toLocaleString('pt-BR')} grades com produtos e ${trocas.toLocaleString('pt-BR')} grades vazias disponíveis na Matriz`);
         } else {
-          linhasTexto.push(`${label}: ${vazias.toLocaleString('pt-BR')} caixas vazias e ${trocas.toLocaleString('pt-BR')} com trocas — chegada às ${chegadaStr}`);
+          linhasTexto.push(`${label}: ${vazias.toLocaleString('pt-BR')} grades com produtos e ${trocas.toLocaleString('pt-BR')} grades vazias — chegada às ${chegadaStr}`);
         }
 
         const iconeCD = isMatriz ? '🏭' : '🚚';
         const subtituloCard = isMatriz ? 'Grades na Matriz' : 'Retorno ao CD';
-        const labelVazias = isMatriz ? 'Grades c/ Produtos' : 'Caixas Vazias';
-        const labelTrocas = isMatriz ? 'Grades Vazias' : 'Com Trocas';
+        const labelVazias = isMatriz ? 'Grades c/ Produtos' : 'Com Produtos';
+        const labelTrocas = isMatriz ? 'Grades Vazias' : 'Grades Vazias';
         const rodapeCard = isMatriz
           ? `<div style="font-size:12px; color:var(--ot); border-top:1px solid var(--outv); padding-top:10px; text-align:center;">📍 Grades já disponíveis na Matriz</div>`
           : `<div style="display:flex; justify-content:space-between; font-size:12px; color:var(--txs); border-top:1px solid var(--outv); padding-top:10px;">
@@ -4041,7 +4285,7 @@ function exportarCobertura() {
 async function exportarCoberturaCia() {
   const btn = document.getElementById('btn-exp-cob-cia');
   const btnLbl = btn ? btn.innerHTML : null;
-  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Gerando...'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--p);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px;"></span>Gerando...'; }
 
   try {
     const [resEstoque, resVendas] = await Promise.all([
@@ -4172,6 +4416,7 @@ function raLookupCD(regiao){
 }
 
 let raRows = [];
+let raRemovidos2020 = [];
 let raSelecionadoSup = null;
 let _raChartCDs = null;
 let _raChartSupZer = null;
@@ -4258,7 +4503,15 @@ function raHandleFile(f){
       // A planilha modelo NÃO inclui esses clientes no Painel — eles são removidos do dataset.
       const codsExcluidos = new Set(CLIENTES_INATIVOS_30D.map(c => raNormCod(c.cod)));
       const removidos = fromFile.filter(r => codsExcluidos.has(raNormCod(r.codigo)));
-      raRows = fromFile.filter(r => !codsExcluidos.has(raNormCod(r.codigo)));
+
+      function raAno2020(dataStr) {
+        if (!dataStr) return false;
+        const s = String(dataStr).trim();
+        return /\b2020\b/.test(s);
+      }
+      const removidos2020 = fromFile.filter(r => !codsExcluidos.has(raNormCod(r.codigo)) && raAno2020(r.data));
+      raRows = fromFile.filter(r => !codsExcluidos.has(raNormCod(r.codigo)) && !raAno2020(r.data));
+      raRemovidos2020 = removidos2020;
 
       raSetP(95,'Renderizando dashboard...');
       raPreencherFiltros();
@@ -4267,7 +4520,7 @@ function raHandleFile(f){
       document.getElementById('ra-btn-export').style.display = 'inline-flex';
       document.getElementById('ra-btn-reset').style.display = 'inline-flex';
 
-      raSetP(100, 'Pronto! ' + raRows.length + ' clientes (removidos ' + removidos.length + ' inativos da lista Clientes 2020).');
+      raSetP(100, 'Pronto! ' + raRows.length + ' clientes (removidos ' + (removidos.length + removidos2020.length) + ' — ' + removidos.length + ' inativos 30d + ' + removidos2020.length + ' com último apontamento em 2020).');
       setTimeout(()=>pp.classList.add('hidden'), 1000);
     } catch(err) {
       console.error(err);
@@ -5006,7 +5259,19 @@ function raExportPainel() {
     set(ws5, A(6,r), c.promotor,      stText);
     set(ws5, A(7,r), c.regiao,        stText);
   });
-  ws5['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:CLIENTES_INATIVOS_30D.length, c:7}});
+  raRemovidos2020.forEach((c, idx) => {
+    const r = CLIENTES_INATIVOS_30D.length + idx + 1;
+    set(ws5, A(0,r), c.codigo,        stText);
+    set(ws5, A(1,r), c.fantasia,      stText);
+    set(ws5, A(2,r), c.qtde,          stTextRight);
+    set(ws5, A(3,r), c.data,          stText);
+    set(ws5, A(4,r), c.resp,          stText);
+    set(ws5, A(5,r), c.supervisor,    stText);
+    set(ws5, A(6,r), c.promotor,      stText);
+    set(ws5, A(7,r), c.regiao,        stText);
+  });
+  const totalWs5 = CLIENTES_INATIVOS_30D.length + raRemovidos2020.length;
+  ws5['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:totalWs5, c:7}});
   ws5['!cols'] = [{wch:10},{wch:46},{wch:8},{wch:12},{wch:36},{wch:36},{wch:36},{wch:28}];
   ws5['!rows'] = [{hpt: 24}];
   ws5['!freeze'] = { xSplit: 0, ySplit: 1 };
@@ -5015,6 +5280,31 @@ function raExportPainel() {
 
   const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
   XLSX.writeFile(wb, `Apontamento_Grades_${hoje}.xlsx`);
+}
+
+// ============================================================
+//  ONESIGNAL — push notifications (só para a Matriz)
+//  Substitua o appId abaixo após criar sua conta em onesignal.com
+// ============================================================
+const ONESIGNAL_APP_ID = "SEU_APP_ID_AQUI";
+
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(function(OneSignal) {
+  OneSignal.init({
+    appId: ONESIGNAL_APP_ID,
+    notifyButton: { enable: false },
+    promptOptions: { slidedown: { enabled: false } }
+  });
+});
+
+function ativarPushAdmin() {
+  if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID === "SEU_APP_ID_AQUI") return;
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.Notifications.requestPermission();
+      await OneSignal.User.addTag("role", "admin");
+    } catch(e) {}
+  });
 }
 
 </script>
