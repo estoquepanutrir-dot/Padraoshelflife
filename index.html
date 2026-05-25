@@ -570,6 +570,10 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
       <span>No Inflow, clique em opções e depois em <strong>"Exportar por validade"</strong>.</span>
     </div>
+    <div class="bn bn-i" style="margin-bottom:10px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+      <span>📍 <strong>Barueri:</strong> o formato próprio (CODIGO · VENCIMENTO · DIAS PARA VENCER · QNT UND) é reconhecido automaticamente.</span>
+    </div>
     <div class="bn bn-i">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
       <span>Os nomes dos SKUs são vinculados automaticamente — basta importar a planilha com COD.</span>
@@ -1363,6 +1367,10 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
             Exportar Painel
           </button>
+          <button class="btn btn-t" id="ra-btn-msg" onclick="raGerarMensagem()" style="font-size:12px; padding:9px 16px; border-radius:14px; display:none; background:#E8F0E0; color:#2E5A1A; border:1.5px solid #B8D89A;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Gerar Mensagem
+          </button>
           <button class="btn btn-o" id="ra-btn-reset" onclick="raReset()" style="font-size:12px; padding:9px 16px; border-radius:14px; display:none;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             Reiniciar
@@ -1579,6 +1587,62 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 <script>
 const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paezinhos Leite Panutrinha Panutrir 400g","7":"Panetone C/ Frutas Panutrir 400g","11":"Pao Integral Centeio Fitness Zero Panutrir 350g","16":"Pao Integ 7 Graos Damasco Hibisco Zero Panutrir 350g","655":"Pao Integral 12 Graos Panutrir 450g","669":"Bisnaguinha Bisnutrinhas Panutrir 300g","1224":"Pao Cast Para E Quinoa Integ Panutrir Broa 450g","2279":"Pao Pct Caseiro 500g","69251":"Pao Hot Dog Panutrir 400g","81571":"Pao Integral Surpreendente Panutrir 450g","81581":"Pao Integral 12 Graos Zero Panutrir 350g","81591":"Pao Integral Chia Macadamia Panutrir 400g","81661":"Pao Forma Plufi Nut 400g","82051":"Pao Hamburguer Gourmet Panutrir 500g","85181":"Muffato Pao Hot Dog 400g","85841":"Muffato Paezinhos De Leite 400g","86151":"Pao Integral Panutrir 450g","99161":"Pao Integral Plufi Nut 450g","121581":"Us Pao Hot Dog Unisabor 400g","121801":"Us Pao Hamburguer Gourmet Unisabor 500g","121811":"Us Paezinhos De Leite Unisabor 400g","121821":"Us Pao Integral 12 Graos Zero Unisabor 350g","121831":"Us Pao Integral 12 Graos Unisabor 450g","121841":"Us Pao Castanha Para E Quinoa Integ Unisabor 450g","121861":"Us Pao Forma Unisabor 400g","121871":"Us Pao Leite Unisabor 400g","135211":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 500g","135221":"Nossa Padaria Pao Hot Dog Emb Transp 400g","135231":"Nossa Padaria Paezinhos Leite Emb Transp 400g","135241":"Nossa Padaria Pao Forma Emb Transp 400g","141441":"Pao Sirio Tradic Panificadora Dubai 320g","141951":"Pao Sirio Tradic Panificadora Dubai 260g","145511":"Pao Nutri Del Grano Tradicional Panutrir 500g","145521":"Pao Nutri Del Grano Integral Panutrir 500g","152291":"Pao Sirio Integral Panificadora Dubai 300g","156021":"Panetone C/ Frutas Plufi Nut 300g","156051":"Panetone C/ Gotas Chocolate Plufi Nut 300g","162272":"Nossa Padaria Bisnaguinha Emb Transp 300g","162275":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 330g","162276":"Nossa Padaria Pao Integral Emb Transp 450g","162358":"Us Pao Integral Unisabor 450g","162396":"Pao Nutri Del Grano Tipo Caseiro Panutrir 500g","162767":"Muffato Pao Integral 450g","162775":"Muffato Bisnaguinhas 300g","162783":"Us Pao Artesanal Tradicional Unisabor 500g","162784":"Us Pao Artesanal Integral Unisabor 500g","162800":"Muffato Pao Forma 400g","162801":"Muffato Pao Leite 400g","162802":"Muffato Pao Hamburguer 500g","162920":"Pao Nutri Del Grano Hamburguer Artesanal Panutrir 320g","162921":"Pao Nutri Del Grano Hamburguer Brioche Panutrir 320g","162922":"Pao Nutri Del Grano Hamburguer Australiano Panutrir 320g","162923":"Pao Nutri Del Grano Hamburguer Gergelim Panutrir 320g"};
 
+// Venda diária TOTAL da CIA (soma de todos os CDs), por código de produto.
+// Usada na aba "Cobertura CIA Consolidada" do relatório consolidado.
+// Atualize manualmente quando as vendas mudarem.
+const VENDA_DIARIA_CIA = {
+  "2": 10046.8,    // PAO FORMA PANUTRIR (sistema 400g, venda 450g)
+  "5": 7013.4,     // PAO LEITE PANUTRIR (sistema 400g, venda 450g)
+  "6": 1962.6,     // PAEZINHOS LEITE PANUTRINHA PANUTRIR 400G
+  "11": 865.4,     // PAO INTEG CENTEIO FITNESS ZERO PANUTRIR 350G
+  "16": 520.4,     // PAO INTEG 7 GRAOS DAMASCO HIBISCO ZERO 350G
+  "655": 1962.8,   // PAO INTEGRAL 12 GRAOS PANUTRIR (sistema 450g, venda 500g)
+  "669": 1420.4,   // BISNAGUINHA BISNUTRINHAS PANUTRIR 300G
+  "1224": 3038,    // PAO CASTANHA PARA E QUINOA (sistema 450g, venda 500g)
+  "2279": 190,     // PAO PCT CASEIRO 500G
+  "69251": 4067,   // PAO HOT DOG PANUTRIR 400G
+  "81571": 669.4,  // PAO INTEG SURPREENDENTE (sistema 450g, venda 500g)
+  "81581": 1970.8, // PAO INTEG 12 GRAOS ZERO PANUTRIR 350G
+  "81591": 490,    // PAO INTEG CHIA MACADAMIA PANUTRIR 400G
+  "81661": 14647.2,// PAO FORMA PLUFI NUT 400G
+  "82051": 7338.4, // PAO HAMBURGUER GOURMET PANUTRIR 500G
+  "85181": 753.6,  // MUFFATO PAO HOT DOG 400G
+  "85841": 863.8,  // MUFFATO PAEZINHOS DE LEITE 400G
+  "86151": 6678.2, // PAO INTEGRAL PANUTRIR (sistema 450g, venda 500g)
+  "121581": 184.4, // US PAO HOT DOG UNISABOR 400G
+  "121801": 261.4, // US PAO HAMBURGUER GOURMET UNISABOR 500G
+  "121811": 162.4, // US PAEZINHOS DE LEITE UNISABOR 400G
+  "121821": 64.2,  // US PAO INTEG 12 GRAOS ZERO UNISABOR 350G
+  "121831": 48.4,  // US PAO 12 GRAOS 450G UNISABOR
+  "121841": 89,    // US PAO CASTANHA UNISABOR
+  "121861": 1298.8,// US PAO FORMA UNISABOR 400G
+  "121871": 436.4, // US PAO LEITE UNISABOR (sistema 400g, venda 450g)
+  "135211": 1737.6,// PAO HAMBURGUER GOURMET TRANSPARENTE 500G
+  "135221": 1821,  // PAO HOT DOG TRANSPARENTE 400G
+  "135231": 2139.2,// PAEZINHOS LEITE TRANSPARENTE 400G
+  "135241": 1435,  // PAO FORMA TRANSPARENTE (sistema 400g, venda 450g)
+  "141441": 380.8, // PAO SIRIO TRADIC PANIFICADORA DUBAI 320G
+  "141951": 30.2,  // PAO SIRIO TRADIC PANIFICADORA DUBAI 260G
+  "145511": 869.6, // PAO NUTRI DEL GRANO TRADICIONAL PANUTRIR 500G
+  "145521": 3356.2,// PAO NUTRI DEL GRANO INTEGRAL PANUTRIR 500G
+  "162272": 191.6, // BISNAGUINHA BISNUTRINHAS TRANSPARENTE 300G
+  "162275": 536.6, // PAO HAMBURGUER GOURMET TRANSPARENTE AVENIDA 330G
+  "162276": 261.6, // PAO INTEGRAL TRANSPARENTE 450G
+  "162358": 306.6, // US PAO INTEGRAL UNISABOR 450G
+  "162396": 1647.4,// PAO NUTRI DEL GRANO TIPO CASEIRO PANUTRIR 500G
+  "162767": 953.2, // MUFFATO INTEGRAL 450G
+  "162775": 127.6, // BISNAGUINHA MUFFATO 300G
+  "162783": 144.6, // US PAO ARTESANAL TRADICIONAL UNISABOR 500G
+  "162784": 170.2, // US PAO ARTESANAL INTEGRAL UNISABOR 500G
+  "162800": 2960.4,// MUFFATO PAO FORMA 400G
+  "162801": 1689,  // MUFFATO PAO LEITE 400G
+  "162802": 762.8, // MUFFATO PAO HAMBURGUER 500G
+  "162920": 528.6, // PAO NUTRI DEL GRANO HAMBURGUER ARTESANAL PANUTRIR 320G
+  "162921": 2045,  // PAO NUTRI DEL GRANO HAMBURGUER BRIOCHE PANUTRIR 320G
+  "162922": 262.4, // PAO NUTRI DEL GRANO HAMBURGUER AUSTRALIANO PANUTRIR 320G
+  "162923": 1148.4 // PAO NUTRI DEL GRANO HAMBURGUER GERGELIM PANUTRIR 320G
+};
+
 const API_URL = "https://script.google.com/macros/s/AKfycbzoGrJEwGHirIMpTg9HO6i00-a-5DzeUFbsRvlyzcUrOowtQOq8D8zUZtrB-h1gszd6/exec";
 
 let cd='',rows=[],hasW=false,wCnt=0;
@@ -1769,6 +1833,8 @@ function okLocal(){
           if (el) el.value = '';
       });
       atualizarBtnGrades();
+      // Verifica se este CD já lançou algum tipo de grades hoje (bloqueia a outra opção)
+      verificarBloqueioGradesDoDia();
   }
 
   // Aplica as regras de dia da semana (oculta abas não liberadas para o dia)
@@ -1845,23 +1911,88 @@ function handleFile(f){
       const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
       setP(80,'Vinculando SKUs...');
       const s=raw[0]||{},ks=Object.keys(s);
-      const ck=ks.find(k=>/^cod/i.test(k.trim()))||'COD';
-      const qk=ks.find(k=>/qtd/i.test(k.trim()))||'QTD_TOTAL';
-      const vk=ks.find(k=>/valid/i.test(k.trim()))||'VALIDADE';
-      const pk=ks.find(k=>/prazo/i.test(k.trim()))||'PRAZO';
-      rows=raw.filter(r=>r[ck]!==''&&r[ck]!==undefined).map(r=>{
-        const cod=String(r[ck]).trim().replace(/\.0$/,'');
-        let val=r[vk];
-        if(val instanceof Date)val=val.toLocaleDateString('pt-BR');
-        else val=String(val).trim();
-        const prazo=parseInt(r[pk])||0,qtd=parseInt(r[qk])||0;
-        return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:prazo<=22};
-      }).sort((a,b)=>a.prazo-b.prazo);
-      setP(100,'Pronto!');
+
+      // Detecta formato Barueri: cabeçalhos próprios (CODIGO + VENCIMENTO +
+      // DIAS PARA VENCER + QNT UND). O formato InFlow tem (COD + QTD_TOTAL +
+      // VALIDADE + PRAZO). A presença simultânea de VENCIMENTO e DIAS PARA
+      // VENCER identifica o formato do Barueri.
+      const temVenc       = ks.some(k => /vencimento/i.test(k.trim()));
+      const temDiasVencer = ks.some(k => /dias.*vencer/i.test(k.trim()));
+      const temQntUnd     = ks.some(k => /qnt.*und|qtd.*und|quantidade.*und/i.test(k.trim()));
+      const ehBarueri     = temVenc && temDiasVencer && temQntUnd;
+
+      if (ehBarueri) {
+        rows = parseFormatoBarueri(raw, ks);
+      } else {
+        rows = parseFormatoInflow(raw, ks);
+      }
+
+      setP(100, ehBarueri ? 'Pronto! (Formato Barueri detectado)' : 'Pronto!');
       setTimeout(()=>{pp.classList.add('hidden');render()},350);
     }catch(err){setP(0,'❌ Erro: '+err.message)}
   };
   r.readAsArrayBuffer(f);
+}
+
+// Formato InFlow (padrão dos demais CDs): COD · QTD_TOTAL · VALIDADE · PRAZO
+function parseFormatoInflow(raw, ks) {
+  const ck=ks.find(k=>/^cod/i.test(k.trim()))||'COD';
+  const qk=ks.find(k=>/qtd/i.test(k.trim()))||'QTD_TOTAL';
+  const vk=ks.find(k=>/valid/i.test(k.trim()))||'VALIDADE';
+  const pk=ks.find(k=>/prazo/i.test(k.trim()))||'PRAZO';
+  return raw.filter(r=>r[ck]!==''&&r[ck]!==undefined).map(r=>{
+    const cod=String(r[ck]).trim().replace(/\.0$/,'');
+    let val=r[vk];
+    if(val instanceof Date)val=val.toLocaleDateString('pt-BR');
+    else val=String(val).trim();
+    const prazo=parseInt(r[pk])||0,qtd=parseInt(r[qk])||0;
+    return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:prazo<=22};
+  }).sort((a,b)=>a.prazo-b.prazo);
+}
+
+// Formato Barueri: CODIGO · PRODUTO · DATA · VENCIMENTO · DIAS PARA VENCER ·
+// BASE · CAIXA · UNIDADE · QNT CX · QNT UND
+// - cod ← CODIGO
+// - validade ← VENCIMENTO (converte serial Excel ou Date para dd/mm/yyyy)
+// - prazo ← DIAS PARA VENCER (usa direto da planilha, sem recalcular)
+// - qtd ← QNT UND
+// Linhas onde CODIGO não for numérico são ignoradas (ex.: blocos de totais).
+function parseFormatoBarueri(raw, ks) {
+  const ck = ks.find(k => /^codigo$/i.test(k.trim())) || ks.find(k => /^cod/i.test(k.trim())) || 'CODIGO';
+  const vk = ks.find(k => /^vencimento$/i.test(k.trim())) || 'VENCIMENTO';
+  const pk = ks.find(k => /dias.*vencer/i.test(k.trim())) || 'DIAS PARA VENCER';
+  const qk = ks.find(k => /qnt.*und|qtd.*und|quantidade.*und/i.test(k.trim())) || 'QNT UND';
+
+  // Converte uma célula de data: aceita Date (cellDates:true), número serial Excel ou string
+  function toDataBR(v) {
+    if (v === '' || v === undefined || v === null) return '';
+    if (v instanceof Date) return v.toLocaleDateString('pt-BR');
+    if (typeof v === 'number' && isFinite(v)) {
+      // Serial Excel: dias desde 30/12/1899
+      const ms = (v - 25569) * 86400 * 1000;
+      const d  = new Date(ms);
+      if (!isNaN(d.getTime())) return d.toLocaleDateString('pt-BR');
+    }
+    return String(v).trim();
+  }
+
+  return raw
+    .filter(r => {
+      const c = r[ck];
+      if (c === '' || c === undefined || c === null) return false;
+      // Aceita só códigos numéricos (descarta linhas de "TOTAL DE CESTOS..." que
+      // podem aparecer em colunas vizinhas com texto na coluna CODIGO)
+      const n = parseInt(String(c).trim());
+      return isFinite(n) && n > 0;
+    })
+    .map(r => {
+      const cod   = String(r[ck]).trim().replace(/\.0$/, '');
+      const val   = toDataBR(r[vk]);
+      const prazo = parseInt(r[pk]) || 0;
+      const qtd   = parseInt(r[qk]) || 0;
+      return { cod, sku: SKU[cod] || null, validade: val, prazo, qtd, dir:'', motivo:'', isWarn: prazo <= 22 };
+    })
+    .sort((a, b) => a.prazo - b.prazo);
 }
 function setP(p,m){document.getElementById('pb').style.width=p+'%';document.getElementById('pl').textContent=m}
 
@@ -2090,6 +2221,9 @@ function switchTab(t){
   }
   if(t==='dashboard'&&!dashBuilt)iniciarDashboard();
   if(t==='cobertura'&&!coberturaLoaded)carregarCobertura();
+  // Ao entrar na aba de Gestão de Grades como CD (não-Matriz),
+  // reavalia o bloqueio diário (1 tipo por dia).
+  if(t==='grades' && cd && cd !== 'MATRIZ') verificarBloqueioGradesDoDia();
 }
 
 // Sub-abas dentro de "Controle de datas"
@@ -2689,6 +2823,94 @@ function onVaiRetornarChange() {
     atualizarBtnGrades();
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Bloqueio diário: 1 tipo de lançamento por dia (CDs, exceto MATRIZ).
+// Consulta os registros de grades de hoje, identifica os tipos já
+// lançados pelo CD atual (vai_retornar = 'nao' e/ou 'sim') e desabilita
+// o radio do tipo já lançado. Matriz não tem essa regra.
+// ─────────────────────────────────────────────────────────────────────
+async function verificarBloqueioGradesDoDia() {
+    if (!cd || cd === 'MATRIZ') return;
+
+    const radioNao = document.querySelector('input[name="vai_retornar"][value="nao"]');
+    const radioSim = document.querySelector('input[name="vai_retornar"][value="sim"]');
+    const lblNao   = document.getElementById('lbl-radio-nao');
+    const lblSim   = document.getElementById('lbl-radio-sim');
+    const hint     = document.getElementById('hint-grades');
+    const hintTxt  = document.getElementById('hint-grades-texto');
+    if (!radioNao || !radioSim) return;
+
+    const liberarRadio = (radio, label) => {
+        radio.disabled = false;
+        if (label) {
+            label.style.opacity = '';
+            label.style.cursor = 'pointer';
+            label.title = '';
+        }
+    };
+
+    try {
+        const today = new Date().toLocaleDateString('pt-BR');
+        const resp  = await fetch(`${API_URL}?action=grades&data=${encodeURIComponent(today)}`);
+        const data  = await resp.json();
+        const registros = Array.isArray(data) ? data : (data.grades || data.dados || []);
+
+        const cdAtualUpper = ('CD ' + cd).toUpperCase();
+        const meusRegistros = registros.filter(reg => {
+            const origem = (reg.cd_origem || '').toUpperCase().trim();
+            return origem === cdAtualUpper || origem === cd.toUpperCase();
+        });
+
+        const lancouNao = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'nao');
+        const lancouSim = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'sim');
+
+        const bloquear = (radio, label, mensagem) => {
+            radio.disabled = true;
+            radio.checked  = false;
+            if (label) {
+                label.style.opacity = '0.5';
+                label.style.cursor  = 'not-allowed';
+                label.style.borderColor = 'var(--out)';
+                label.title = mensagem;
+            }
+        };
+
+        // Regra: se já lançou "Grades no CD" hoje, bloqueia "retornando" e vice-versa.
+        if (lancouNao && !lancouSim) {
+            liberarRadio(radioNao, lblNao);
+            bloquear(radioSim, lblSim, 'Hoje você já lançou "Grades no CD". Apenas um tipo é permitido por dia.');
+            if (hint && hintTxt) {
+                hint.style.display = '';
+                hintTxt.innerHTML = '🔒 Você já lançou <strong>Grades no CD</strong> hoje. A opção <strong>Grades retornando à matriz</strong> está bloqueada até amanhã.';
+            }
+        } else if (lancouSim && !lancouNao) {
+            liberarRadio(radioSim, lblSim);
+            bloquear(radioNao, lblNao, 'Hoje você já lançou "Grades retornando à matriz". Apenas um tipo é permitido por dia.');
+            if (hint && hintTxt) {
+                hint.style.display = '';
+                hintTxt.innerHTML = '🔒 Você já lançou <strong>Grades retornando à matriz</strong> hoje. A opção <strong>Grades no CD</strong> está bloqueada até amanhã.';
+            }
+        } else if (lancouNao && lancouSim) {
+            // Caso de borda: ambos lançados (registros legados). Bloqueia os dois.
+            bloquear(radioNao, lblNao, 'Já há lançamentos de ambos os tipos para hoje.');
+            bloquear(radioSim, lblSim, 'Já há lançamentos de ambos os tipos para hoje.');
+            if (hint && hintTxt) {
+                hint.style.display = '';
+                hintTxt.innerHTML = '🔒 Já existem lançamentos para hoje. Novos lançamentos liberados amanhã.';
+            }
+        } else {
+            // Nada lançado hoje: libera ambos
+            liberarRadio(radioNao, lblNao);
+            liberarRadio(radioSim, lblSim);
+        }
+    } catch (err) {
+        console.warn('Não foi possível verificar bloqueio de grades do dia:', err);
+        // Em caso de falha de rede, libera ambos para não travar o usuário.
+        liberarRadio(radioNao, lblNao);
+        liberarRadio(radioSim, lblSim);
+    }
+}
+
 async function lancarGestaoGrades(event) {
     event.preventDefault();
 
@@ -2719,6 +2941,11 @@ async function lancarGestaoGrades(event) {
     const selecionado = document.querySelector('input[name="vai_retornar"]:checked');
     if (!selecionado) {
         alert('⚠️ Selecione o tipo de lançamento antes de enviar.');
+        return;
+    }
+    // Proteção: se o radio escolhido está bloqueado (lançamento do outro tipo já feito hoje), recusa.
+    if (selecionado.disabled) {
+        alert('⚠️ Este tipo de lançamento está bloqueado para hoje. Você já lançou o outro tipo neste dia.');
         return;
     }
     const vaiRetornar = selecionado.value;
@@ -2845,6 +3072,8 @@ async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
             const lblSim = document.getElementById('lbl-radio-sim');
             if (lblNao) lblNao.style.borderColor = 'var(--out)';
             if (lblSim) lblSim.style.borderColor = 'var(--out)';
+            // Reaplica regra de bloqueio diário (1 tipo por dia)
+            verificarBloqueioGradesDoDia();
         }
         atualizarBtnGrades();
     });
@@ -2911,36 +3140,159 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     vendasMap = vendasMap || {};
     CD_MAP = CD_MAP || {};
 
+    // ── filtro de pré-processamento ───────────────────────────────
+    // Remove linhas inválidas ou irrelevantes antes de processar:
+    //  - SKU 2279 (Pao Pct Caseiro — produto de doação, não entra no relatório)
+    //  - linhas com validade vazia/inválida ('undefined', null, '')
+    //  - linhas com quantidade <= 0
+    //  - linhas com prazo <= 0
+    //  - linhas com campos numéricos NaN ou bugados
+    const SKUS_EXCLUIDOS = new Set(['2279']);
+    function validadeValida(v) {
+        if (v === undefined || v === null) return false;
+        const s = String(v).trim().toLowerCase();
+        if (s === '' || s === 'undefined' || s === 'null' || s === 'nan' || s === '-') return false;
+        return true;
+    }
+    const dadosOriginais = Array.isArray(dados) ? dados : [];
+    dados = dadosOriginais.filter(r => {
+        if (!r) return false;
+        // Filtro SKU doação
+        const cod = String(r.codigo || '').trim();
+        if (SKUS_EXCLUIDOS.has(cod)) return false;
+        // Validade precisa ser válida (não 'undefined' nem vazio)
+        if (!validadeValida(r.validade)) return false;
+        // Quantidade > 0 (parseFloat para aceitar tanto número quanto string numérica)
+        const qtd = parseFloat(r.quantidade);
+        if (!isFinite(qtd) || qtd <= 0) return false;
+        // Prazo > 0
+        const prazo = parseFloat(r.prazo);
+        if (!isFinite(prazo) || prazo <= 0) return false;
+        return true;
+    });
+
+    if (dados.length === 0) {
+        alert('⚠️ Nenhuma linha válida para o relatório após o filtro de qualidade dos dados.');
+        return;
+    }
+
     const wb = XLSX.utils.book_new();
 
     // ── helpers de cobertura ──────────────────────────────────────
+    // Retorna a venda diária a usar para a linha:
+    // - Se CD = MATRIZ → usa VENDA_DIARIA_CIA[codigo] (venda total da CIA)
+    // - Caso contrário → usa vendasMap (venda específica daquele CD)
+    function getVendaParaLinha(r) {
+        const cdUpper = (r.cd || '').toString().toUpperCase().trim();
+        if (cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ') {
+            const cod = String(r.codigo || '').trim();
+            return parseFloat(VENDA_DIARIA_CIA[cod]) || 0;
+        }
+        const cdKey   = CD_MAP[r.cd] || ('CD ' + r.cd);
+        const prodKey = (r.produto || '').toUpperCase().trim();
+        return parseFloat(vendasMap[prodKey + '::' + cdKey]) || 0;
+    }
+
     function calcCobertura(r) {
-        const cdKey  = CD_MAP[r.cd] || ('CD ' + r.cd);
-        const prodKey = (r.produto||'').toUpperCase().trim();
-        const venda  = vendasMap[prodKey+'::'+cdKey] || 0;
-        const estoque = Math.abs(parseFloat(r.quantidade)||0);
-        if(venda <= 0) return null;
+        const venda   = getVendaParaLinha(r);
+        const estoque = Math.abs(parseFloat(r.quantidade) || 0);
+        if (venda <= 0) return null;
         return +(estoque / venda).toFixed(1);
     }
+
+    // Validade efetiva = prazo (dias até vencer) − cobertura (dias de venda em estoque).
+    // Interpretação: quantos dias de validade "sobram" depois de vender todo o estoque atual.
+    // Só faz sentido se há venda mapeada (cobertura != null) e prazo numérico.
+    function calcValidadeEfetiva(r, cob) {
+        if (cob === null) return null;
+        const prazo = parseFloat(r.prazo);
+        if (!isFinite(prazo)) return null;
+        return +(prazo - cob).toFixed(1);
+    }
+
+    // Régua de status:
+    // - MATRIZ: usa cobertura (quanto MAIOR pior). >7=URGENTE, >5=CRÍTICO, >3=ATENÇÃO, ≤3=OK.
+    // - Demais CDs: usa validade efetiva (quanto MENOR pior). ≤18=URGENTE, ≤20=CRÍTICO, ≤22=ATENÇÃO, >22=OK.
+    // Se não há venda (cob === null) → 'Sem venda' nos dois casos.
+    function statusLabel(r, cob) {
+        if (cob === null) return 'Sem venda';
+        const cdUpper = (r.cd || '').toString().toUpperCase().trim();
+        const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
+        if (ehMatriz) {
+            if (cob > 7) return 'URGENTE';
+            if (cob > 5) return 'CRÍTICO';
+            if (cob > 3) return 'ATENÇÃO';
+            return 'OK';
+        }
+        // Não-Matriz: validade efetiva
+        const ve = calcValidadeEfetiva(r, cob);
+        if (ve === null) return 'Sem venda';
+        if (ve <= 18) return 'URGENTE';
+        if (ve <= 20) return 'CRÍTICO';
+        if (ve <= 22) return 'ATENÇÃO';
+        return 'OK';
+    }
+
+    // Mantém referência por nome antigo para compatibilidade dentro deste escopo
+    // (caso algum trecho ainda chame cobLabel — não deveria, mas é defensivo).
     function cobLabel(c) {
-        if(c === null) return 'Sem venda';
-        if(c > 7) return 'URGENTE';
-        if(c > 5) return 'CRÍTICO';
-        if(c > 3) return 'ATENÇÃO';
+        if (c === null) return 'Sem venda';
+        if (c > 7) return 'URGENTE';
+        if (c > 5) return 'CRÍTICO';
+        if (c > 3) return 'ATENÇÃO';
+        return 'OK';
+    }
+
+    // Status calculado por Validade Efetiva (mesma régua dos CDs não-Matriz).
+    // Usado na aba "Cobertura CIA Consolidada" onde a métrica decisiva é a
+    // menor validade efetiva entre as linhas do código.
+    function statusPorVeMinima(veMin) {
+        if (veMin === null || veMin === undefined) return 'Sem venda';
+        if (veMin <= 18) return 'URGENTE';
+        if (veMin <= 20) return 'CRÍTICO';
+        if (veMin <= 22) return 'ATENÇÃO';
         return 'OK';
     }
 
     // ── aba CONSOLIDADO ───────────────────────────────────────────
+    // A análise por Validade Efetiva é usada internamente para definir o STATUS
+    // e a ordenação, mas a coluna em si NÃO aparece para manter a planilha limpa.
     const header = ['CD ORIGEM','CÓDIGO','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','QTD','COBERTURA (DIAS)','STATUS COBERTURA','DIRECIONAMENTO','MOTIVO','✏️ EDITADO MANUALMENTE','QTD ORIGINAL','VALIDADE ORIGINAL'];
     const wsData = [header];
 
-    dados.forEach(r => {
+    // Pré-processa e ordena por validade efetiva asc (mais grave primeiro).
+    // Matriz não tem VE (régua diferente): ordena por cobertura desc internamente.
+    // Linhas 'Sem venda' vão por último.
+    const linhasPreparadas = dados.map(r => {
         const cob = calcCobertura(r);
+        const ve  = calcValidadeEfetiva(r, cob);
+        const cdUpper = (r.cd || '').toString().toUpperCase().trim();
+        const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
+        const status = statusLabel(r, cob);
+        return { r, cob, ve, ehMatriz, status };
+    }).sort((a, b) => {
+        // 3 buckets: (1) não-Matriz com VE, (2) Matriz com cobertura, (3) Sem venda
+        const aBucket = a.status === 'Sem venda' ? 2 : (a.ehMatriz ? 1 : 0);
+        const bBucket = b.status === 'Sem venda' ? 2 : (b.ehMatriz ? 1 : 0);
+        if (aBucket !== bBucket) return aBucket - bBucket;
+        if (aBucket === 0) {
+            // Não-Matriz: menor VE primeiro
+            return (a.ve ?? 999) - (b.ve ?? 999);
+        }
+        if (aBucket === 1) {
+            // Matriz: maior cobertura primeiro
+            return (b.cob ?? -1) - (a.cob ?? -1);
+        }
+        // Sem venda: por prazo asc (mais perto de vencer primeiro)
+        return (parseFloat(a.r.prazo) || 999) - (parseFloat(b.r.prazo) || 999);
+    });
+
+    linhasPreparadas.forEach(({ r, cob, ve, ehMatriz, status }) => {
         wsData.push([
             r.cd, r.codigo, r.produto, r.validade, r.prazo,
             r.quantidade,
             cob !== null ? cob : '-',
-            cobLabel(cob),
+            status,
             r.destino, r.motivo,
             r.skuEditado ? 'SIM' : '',
             r.skuEditado ? (r.qtdOriginal ?? '') : '',
@@ -2949,9 +3301,10 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     });
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [{wch:14},{wch:10},{wch:46},{wch:12},{wch:13},{wch:10},{wch:16},{wch:16},{wch:28},{wch:36},{wch:22},{wch:14},{wch:16}];
+    ws['!cols'] = [{wch:14},{wch:10},{wch:46},{wch:12},{wch:13},{wch:10},{wch:16},{wch:18},{wch:28},{wch:36},{wch:22},{wch:14},{wch:16}];
 
-    // Cores por status na coluna STATUS COBERTURA (col H = índice 7)
+    // Cores por status na coluna STATUS COBERTURA (col H = índice 7) e
+    // pintar também COBERTURA (col G = 6).
     const fillUrgente = { patternType:'solid', fgColor:{rgb:'F0D5D5'} };
     const fillCritico = { patternType:'solid', fgColor:{rgb:'F5DDD9'} };
     const fillAtencao = { patternType:'solid', fgColor:{rgb:'F5EDD5'} };
@@ -2959,18 +3312,18 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     const fillSem     = { patternType:'solid', fgColor:{rgb:'EDEDED'} };
 
     for(let i = 1; i < wsData.length; i++) {
-        const cellRef  = XLSX.utils.encode_cell({r: i, c: 7}); // col STATUS
-        const cellRefC = XLSX.utils.encode_cell({r: i, c: 6}); // col COBERTURA
-        const cellEdit = XLSX.utils.encode_cell({r: i, c: 10}); // col EDITADO
+        const cellRefStatus = XLSX.utils.encode_cell({r: i, c: 7});  // STATUS COBERTURA
+        const cellRefCob    = XLSX.utils.encode_cell({r: i, c: 6});  // COBERTURA
+        const cellEdit      = XLSX.utils.encode_cell({r: i, c: 10}); // EDITADO MANUALMENTE
         const status   = wsData[i][7];
         let fill;
-        if(status === 'URGENTE')    fill = fillUrgente;
+        if(status === 'URGENTE')      fill = fillUrgente;
         else if(status === 'CRÍTICO') fill = fillCritico;
         else if(status === 'ATENÇÃO') fill = fillAtencao;
-        else if(status === 'OK')    fill = fillOk;
-        else                        fill = fillSem;
-        if(ws[cellRef])  ws[cellRef].s  = { fill, font:{bold: status==='URGENTE'||status==='CRÍTICO'} };
-        if(ws[cellRefC]) ws[cellRefC].s = { fill };
+        else if(status === 'OK')      fill = fillOk;
+        else                          fill = fillSem;
+        if(ws[cellRefStatus]) ws[cellRefStatus].s = { fill, font:{bold: status==='URGENTE'||status==='CRÍTICO'} };
+        if(ws[cellRefCob])    ws[cellRefCob].s    = { fill };
         if(ws[cellEdit] && wsData[i][10]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
     }
 
@@ -2982,24 +3335,210 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
 
     XLSX.utils.book_append_sheet(wb, ws, "Consolidado");
 
-    // ── aba RESUMO COBERTURA (só urgentes e críticos) ─────────────
-    const criticos = dados
-        .map(r => ({ ...r, cob: calcCobertura(r) }))
-        .filter(r => r.cob !== null && r.cob > 3)
-        .sort((a,b) => b.cob - a.cob);
+    // ── aba COBERTURA CIA CONSOLIDADA ─────────────────────────────
+    // Soma o estoque em data curta de TODOS os CDs por código de produto
+    // e calcula a cobertura usando a venda diária TOTAL da CIA.
+    // Útil para uma visão CIA-wide de quanto cada SKU dura no mercado.
+    (function gerarAbaCoberturaCIA() {
+        // Agrupa por código
+        const agrupado = {}; // cod -> { codigo, produto, estoqueTotal, cdsList: Set, qtdLinhas }
+        dados.forEach(r => {
+            const cod = String(r.codigo || '').trim();
+            if (!cod) return;
+            const qtd = Math.abs(parseFloat(r.quantidade) || 0);
+            if (!agrupado[cod]) {
+                agrupado[cod] = {
+                    codigo: cod,
+                    produto: r.produto || SKU[cod] || '',
+                    estoqueTotal: 0,
+                    cdsList: new Set(),
+                    linhas: 0,
+                    veMinima: null   // menor validade efetiva entre as linhas (não-Matriz) deste código
+                };
+            }
+            agrupado[cod].estoqueTotal += qtd;
+            if (r.cd) agrupado[cod].cdsList.add(r.cd);
+            agrupado[cod].linhas += 1;
+            // Se o nome estiver vazio mas a próxima linha trouxer, atualiza
+            if (!agrupado[cod].produto && r.produto) agrupado[cod].produto = r.produto;
 
-    if(criticos.length > 0) {
-        const hRes = ['STATUS','CD ORIGEM','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','ESTOQUE','VENDA DIÁRIA','COBERTURA (DIAS)'];
+            // Atualiza menor VE — só vale para linhas não-Matriz com cobertura calculável
+            const cdUpper = (r.cd || '').toString().toUpperCase().trim();
+            const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
+            if (!ehMatriz) {
+                const cobL = calcCobertura(r);
+                const veL  = calcValidadeEfetiva(r, cobL);
+                if (veL !== null) {
+                    if (agrupado[cod].veMinima === null || veL < agrupado[cod].veMinima) {
+                        agrupado[cod].veMinima = veL;
+                    }
+                }
+            }
+        });
+
+        // Monta linhas
+        const linhas = Object.values(agrupado).map(g => {
+            const venda = parseFloat(VENDA_DIARIA_CIA[g.codigo]) || 0;
+            const cob = venda > 0 ? +(g.estoqueTotal / venda).toFixed(1) : null;
+            // Status pela VE mínima (mesma régua dos CDs não-Matriz).
+            // Se o código só tem estoque na Matriz (veMinima === null), usa cobertura como fallback.
+            const status = (g.veMinima !== null)
+                ? statusPorVeMinima(g.veMinima)
+                : cobLabel(cob);
+            // Nome do produto preferindo SKU oficial do sistema (mais limpo que o nome de uma linha qualquer)
+            const nomeProd = SKU[g.codigo] || g.produto || '';
+            return {
+                codigo: g.codigo,
+                produto: nomeProd,
+                estoque: g.estoqueTotal,
+                venda: venda,
+                cobertura: cob,
+                veMinima: g.veMinima,
+                status: status,
+                cdsCount: g.cdsList.size,
+                cdsLista: [...g.cdsList].sort().join(', '),
+                linhasCount: g.linhas
+            };
+        });
+
+        // Ordena por MENOR validade efetiva (mais grave primeiro).
+        // Códigos sem VE (só com estoque na Matriz, sem outros CDs) → vão pro fim por cobertura desc.
+        linhas.sort((a, b) => {
+            const aTemVe = a.veMinima !== null;
+            const bTemVe = b.veMinima !== null;
+            if (aTemVe && bTemVe) return a.veMinima - b.veMinima;     // menor VE primeiro
+            if (aTemVe && !bTemVe) return -1;                          // com VE vem antes
+            if (!aTemVe && bTemVe) return 1;
+            // Ambos sem VE: cobertura desc (mais grave primeiro)
+            return (b.cobertura ?? -1) - (a.cobertura ?? -1);
+        });
+
+        const totalEstoqueCIA = linhas.reduce((s, l) => s + l.estoque, 0);
+        const totalVendaCIA   = linhas.reduce((s, l) => s + l.venda, 0);
+
+        // A análise por Validade Efetiva é usada para definir o STATUS e a
+        // ordenação, mas a coluna em si NÃO aparece para manter a planilha limpa.
+        const hCia = ['CÓDIGO', 'SKU / PRODUTO', 'ESTOQUE TOTAL CIA', 'VENDA DIÁRIA CIA', 'COBERTURA (DIAS)', 'STATUS', 'CDs COM ESTOQUE', 'QTDE CDs', 'LINHAS EM DATA CURTA'];
+        const ciaData = [hCia];
+        linhas.forEach(l => {
+            ciaData.push([
+                l.codigo,
+                l.produto,
+                l.estoque,
+                l.venda > 0 ? l.venda : '-',
+                l.cobertura !== null ? l.cobertura : '-',
+                l.status,
+                l.cdsLista,
+                l.cdsCount,
+                l.linhasCount
+            ]);
+        });
+        // Linha de totais
+        ciaData.push([]);
+        ciaData.push(['TOTAL GERAL', '', totalEstoqueCIA, totalVendaCIA > 0 ? +totalVendaCIA.toFixed(1) : '-', '', '', '', '', '']);
+
+        const wsCia = XLSX.utils.aoa_to_sheet(ciaData);
+        wsCia['!cols'] = [{wch:10},{wch:46},{wch:20},{wch:18},{wch:18},{wch:14},{wch:36},{wch:10},{wch:20}];
+
+        // Estilo do cabeçalho
+        for (let c = 0; c < hCia.length; c++) {
+            const ref = XLSX.utils.encode_cell({ r: 0, c });
+            if (wsCia[ref]) wsCia[ref].s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { patternType: 'solid', fgColor: { rgb: 'C67C2A' } } };
+        }
+        // Cores por status (col F = índice 5) e cobertura (col E = 4)
+        const fillUrgente = { patternType: 'solid', fgColor: { rgb: 'F0D5D5' } };
+        const fillCritico = { patternType: 'solid', fgColor: { rgb: 'F5DDD9' } };
+        const fillAtencao = { patternType: 'solid', fgColor: { rgb: 'F5EDD5' } };
+        const fillOk      = { patternType: 'solid', fgColor: { rgb: 'D9EDDD' } };
+        const fillSem     = { patternType: 'solid', fgColor: { rgb: 'EDEDED' } };
+        for (let i = 1; i <= linhas.length; i++) {
+            const refStatus = XLSX.utils.encode_cell({ r: i, c: 5 });
+            const refCob    = XLSX.utils.encode_cell({ r: i, c: 4 });
+            const status = ciaData[i][5];
+            let fill;
+            if (status === 'URGENTE')      fill = fillUrgente;
+            else if (status === 'CRÍTICO') fill = fillCritico;
+            else if (status === 'ATENÇÃO') fill = fillAtencao;
+            else if (status === 'OK')      fill = fillOk;
+            else                            fill = fillSem;
+            if (wsCia[refStatus]) wsCia[refStatus].s = { fill, font: { bold: status === 'URGENTE' || status === 'CRÍTICO' } };
+            if (wsCia[refCob])    wsCia[refCob].s    = { fill };
+        }
+        // Linha de total em negrito
+        const refTotalLabel = XLSX.utils.encode_cell({ r: ciaData.length - 1, c: 0 });
+        if (wsCia[refTotalLabel]) wsCia[refTotalLabel].s = { font: { bold: true }, fill: { patternType: 'solid', fgColor: { rgb: 'FFE9D1' } } };
+        for (let c = 1; c < hCia.length; c++) {
+            const ref = XLSX.utils.encode_cell({ r: ciaData.length - 1, c });
+            if (wsCia[ref]) wsCia[ref].s = { font: { bold: true }, fill: { patternType: 'solid', fgColor: { rgb: 'FFE9D1' } } };
+        }
+
+        XLSX.utils.book_append_sheet(wb, wsCia, "Cobertura CIA Consolidada");
+    })();
+
+    // ── aba ALERTAS (urgentes, críticos e atenção) ────────────────
+    // Inclui linhas onde o STATUS não seja 'OK' nem 'Sem venda'.
+    // Ordenação: por Validade Efetiva ASC (mais grave primeiro).
+    // Linhas Matriz (sem VE) vão pro fim, ordenadas por cobertura DESC.
+    const alertas = dados
+        .map(r => {
+            const cob = calcCobertura(r);
+            const ve  = calcValidadeEfetiva(r, cob);
+            const cdUpper = (r.cd || '').toString().toUpperCase().trim();
+            const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
+            return { ...r, cob, ve, ehMatriz, status: statusLabel(r, cob) };
+        })
+        .filter(r => r.status === 'URGENTE' || r.status === 'CRÍTICO' || r.status === 'ATENÇÃO')
+        .sort((a, b) => {
+            // Não-Matriz vem antes (tem VE); Matriz depois
+            if (!a.ehMatriz && b.ehMatriz) return -1;
+            if (a.ehMatriz && !b.ehMatriz) return 1;
+            if (!a.ehMatriz && !b.ehMatriz) {
+                // Ambos não-Matriz: menor VE primeiro
+                return (a.ve ?? 999) - (b.ve ?? 999);
+            }
+            // Ambos Matriz: maior cobertura primeiro (mais grave)
+            return (b.cob ?? -1) - (a.cob ?? -1);
+        });
+
+    if(alertas.length > 0) {
+        const hRes = ['STATUS','CD ORIGEM','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','ESTOQUE','VENDA DIÁRIA','COBERTURA (DIAS)','VALIDADE EFETIVA (DIAS)'];
         const resData = [hRes];
-        criticos.forEach(r => {
-            const cdKey  = CD_MAP[r.cd] || ('CD ' + r.cd);
-            const prodKey = (r.produto||'').toUpperCase().trim();
-            const venda  = vendasMap[prodKey+'::'+cdKey] || 0;
-            resData.push([cobLabel(r.cob), r.cd, r.produto, r.validade, r.prazo, r.quantidade, venda, r.cob]);
+        alertas.forEach(r => {
+            const venda = getVendaParaLinha(r);
+            const cdUpper = (r.cd || '').toString().toUpperCase().trim();
+            const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
+            resData.push([
+                r.status, r.cd, r.produto, r.validade, r.prazo,
+                r.quantidade, venda,
+                r.cob !== null ? r.cob : '-',
+                (!ehMatriz && r.ve !== null) ? r.ve : '-'
+            ]);
         });
         const wsRes = XLSX.utils.aoa_to_sheet(resData);
-        wsRes['!cols'] = [{wch:12},{wch:12},{wch:46},{wch:12},{wch:13},{wch:10},{wch:13},{wch:16}];
-        XLSX.utils.book_append_sheet(wb, wsRes, "⚠️ Alertas Cobertura");
+        wsRes['!cols'] = [{wch:12},{wch:14},{wch:46},{wch:12},{wch:13},{wch:10},{wch:13},{wch:18},{wch:22}];
+
+        // Estilo do cabeçalho
+        for(let c = 0; c < hRes.length; c++) {
+            const ref = XLSX.utils.encode_cell({r:0, c});
+            if(wsRes[ref]) wsRes[ref].s = { font:{bold:true, color:{rgb:'FFFFFF'}}, fill:{patternType:'solid', fgColor:{rgb:'C67C2A'}} };
+        }
+        // Cor por status
+        for (let i = 1; i < resData.length; i++) {
+            const refStatus = XLSX.utils.encode_cell({r: i, c: 0});
+            const refCob    = XLSX.utils.encode_cell({r: i, c: 7});
+            const refVe     = XLSX.utils.encode_cell({r: i, c: 8});
+            const status = resData[i][0];
+            let fill;
+            if (status === 'URGENTE')      fill = fillUrgente;
+            else if (status === 'CRÍTICO') fill = fillCritico;
+            else if (status === 'ATENÇÃO') fill = fillAtencao;
+            else                            fill = fillSem;
+            if (wsRes[refStatus]) wsRes[refStatus].s = { fill, font:{bold: status==='URGENTE'||status==='CRÍTICO'} };
+            if (wsRes[refCob])    wsRes[refCob].s    = { fill };
+            if (wsRes[refVe])     wsRes[refVe].s     = { fill };
+        }
+
+        XLSX.utils.book_append_sheet(wb, wsRes, "⚠️ Alertas");
     }
 
     XLSX.writeFile(wb, `Consolidado_Estoque_Geral_${dataStr.replace(/\//g,'-')}.xlsx`);
@@ -3448,13 +3987,21 @@ async function carregarResumoGrades() {
         const chegadaStr = chegada ? chegada : '—';
         const saidaStr = horarioSaida || '—';
 
-        // Texto consolidado: usa texto_matriz já formatado quando disponível
-        if (reg.texto_matriz) {
-          linhasTexto.push(reg.texto_matriz);
-        } else if (isMatriz) {
-          linhasTexto.push(`Matriz: ${vazias.toLocaleString('pt-BR')} grades com produtos e ${trocas.toLocaleString('pt-BR')} grades vazias disponíveis na Matriz`);
-        } else {
-          linhasTexto.push(`${label}: ${vazias.toLocaleString('pt-BR')} grades com produtos e ${trocas.toLocaleString('pt-BR')} grades vazias — chegada às ${chegadaStr}`);
+        // Regra: somente entram no TEXTO COPIADO os lançamentos da Matriz
+        // e os lançamentos do tipo "Grades retornando à matriz" (vai_retornar === 'sim').
+        // Lançamentos do tipo "Grades no CD" (vai_retornar === 'nao') ficam apenas nos cards.
+        const tipoRetorno = (reg.vai_retornar || '').toString().toLowerCase().trim();
+        const entraNoTextoCopiado = isMatriz || tipoRetorno === 'sim';
+
+        if (entraNoTextoCopiado) {
+          // Texto consolidado: usa texto_matriz já formatado quando disponível
+          if (reg.texto_matriz) {
+            linhasTexto.push(reg.texto_matriz);
+          } else if (isMatriz) {
+            linhasTexto.push(`Matriz: ${vazias.toLocaleString('pt-BR')} grades com produtos e ${trocas.toLocaleString('pt-BR')} grades vazias disponíveis na Matriz`);
+          } else {
+            linhasTexto.push(`${label}: ${vazias.toLocaleString('pt-BR')} grades com produtos e ${trocas.toLocaleString('pt-BR')} grades vazias — chegada às ${chegadaStr}`);
+          }
         }
 
         const iconeCD = isMatriz ? '🏭' : '🚚';
@@ -3491,10 +4038,24 @@ async function carregarResumoGrades() {
           </div>`;
       });
 
-      document.getElementById('grades-resumo-texto').textContent = linhasTexto.join('\n');
-      document.getElementById('grades-cards-grid').innerHTML = cardsHtml;
-      resumoArea.classList.remove('hidden');
-      copiarBtn.style.display = 'inline-flex';
+      // Se nenhum registro entrou no texto (ex.: só houve "Grades no CD"),
+      // mostra placeholder explicativo no bloco de texto e oculta o botão de copiar.
+      const textoArea = document.getElementById('grades-resumo-texto');
+      if (linhasTexto.length === 0) {
+        textoArea.textContent = 'Nenhum lançamento de "Grades retornando à matriz" ainda hoje. Os lançamentos do tipo "Grades no CD" aparecem nos cards abaixo, mas não entram no texto copiado.';
+        textoArea.style.fontStyle = 'italic';
+        textoArea.style.opacity = '0.75';
+        document.getElementById('grades-cards-grid').innerHTML = cardsHtml;
+        resumoArea.classList.remove('hidden');
+        copiarBtn.style.display = 'none';
+      } else {
+        textoArea.textContent = linhasTexto.join('\n');
+        textoArea.style.fontStyle = '';
+        textoArea.style.opacity = '';
+        document.getElementById('grades-cards-grid').innerHTML = cardsHtml;
+        resumoArea.classList.remove('hidden');
+        copiarBtn.style.display = 'inline-flex';
+      }
     }
   } catch(e) {
     console.error('Erro ao buscar grades:', e);
@@ -4533,6 +5094,7 @@ function raHandleFile(f){
       raRender();
       document.getElementById('ra-dash').classList.remove('hidden');
       document.getElementById('ra-btn-export').style.display = 'inline-flex';
+      document.getElementById('ra-btn-msg').style.display = 'inline-flex';
       document.getElementById('ra-btn-reset').style.display = 'inline-flex';
 
       raSetP(100, 'Pronto! ' + raRows.length + ' clientes (removidos ' + (removidos.length + removidos2020.length) + ' — ' + removidos.length + ' inativos 30d + ' + removidos2020.length + ' com último apontamento em 2020).');
@@ -4850,6 +5412,7 @@ function raReset() {
   document.getElementById('ra-pp').classList.add('hidden');
   document.getElementById('ra-dash').classList.add('hidden');
   document.getElementById('ra-btn-export').style.display = 'none';
+  document.getElementById('ra-btn-msg').style.display = 'none';
   document.getElementById('ra-btn-reset').style.display = 'none';
   document.getElementById('ra-drill-card').style.display = 'none';
   document.getElementById('ra-f-cd').value = 'TODOS';
@@ -4858,6 +5421,102 @@ function raReset() {
   document.getElementById('ra-f-busca').value = '';
   if (_raChartCDs)    { _raChartCDs.destroy();    _raChartCDs = null; }
   if (_raChartSupZer) { _raChartSupZer.destroy(); _raChartSupZer = null; }
+}
+
+function raGerarMensagem() {
+  if (!raRows.length) { alert('Importe a planilha primeiro.'); return; }
+  const dados = raFiltrados();
+
+  // ===== Mesmos cálculos usados no painel (raRenderKpis) =====
+  const totGrades   = dados.reduce((s,r) => s + r.qtde, 0);
+  const totClientes = dados.length;
+  const zerados     = dados.filter(r => r.qtde === 0).length;
+
+  // Projeção por CD (média de grades/cliente × clientes zerados) — idêntica ao KPI
+  const porCd = {};
+  dados.forEach(r => {
+    if (!porCd[r.cd]) porCd[r.cd] = {qtde:0, clientes:0, zerados:0};
+    porCd[r.cd].qtde     += r.qtde;
+    porCd[r.cd].clientes += 1;
+    if (r.qtde === 0) porCd[r.cd].zerados += 1;
+  });
+  let projecao = 0;
+  Object.values(porCd).forEach(c => {
+    if (c.clientes > 0) projecao += (c.qtde / c.clientes) * c.zerados;
+  });
+  const projInt = Math.round(projecao);
+
+  const fmt = n => Number(n).toLocaleString('pt-BR');
+
+  // Texto exato do padrão pedido — sem markdown convertido (mantém os asteriscos
+  // do WhatsApp para que ao colar lá fique em negrito)
+  const msg =
+    '• Neste momento estamos com *' + fmt(totGrades) + ' grades retidas em nossos clientes;*\n' +
+    '• *Em ' + fmt(zerados) + ' clientes o apontamento de grades está zerado*, projetando uma média de grades por cliente em cada regional, *estima-se que ' + fmt(projInt) + ' grades não estão sendo apontadas;*\n' +
+    '• No painel vocês tem a visão da dívida por cd e por supervisor;\n' +
+    '• Na planilha anexa vocês conseguem filtrar os clientes com maior saldo de grades, para tratar com os times de campo a liberação das grades para recolha;\n' +
+    '• É possível também pela planilha tratar e analisar os clientes com saldo zerado\n' +
+    '• Foi inserido uma nova coluna *Proporção do Total - Análise 80/20*, nesta coluna é possível analisar percentualmente qual supervisor tem o maior % referente aos apontamentos zerados sob o total da Cia, necessário que o supervisor trabalhe com a equipe para que este apontamento ocorra de maneira assertiva para rastrearmos as grades em clientes.';
+
+  // ===== Modal =====
+  let modal = document.getElementById('ra-msg-modal');
+  if (modal) modal.remove();
+
+  modal = document.createElement('div');
+  modal.id = 'ra-msg-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML =
+    '<div style="background:var(--sur);border-radius:var(--r12);max-width:680px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden;">' +
+      '<div style="padding:18px 22px;border-bottom:1.5px solid var(--out);display:flex;align-items:center;gap:12px;">' +
+        '<div style="font-size:22px;">💬</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:15px;font-weight:700;color:var(--tx);">Mensagem de apontamento de grades</div>' +
+          '<div style="font-size:11px;color:var(--txs);">Dados calculados conforme os filtros aplicados no painel</div>' +
+        '</div>' +
+        '<button onclick="document.getElementById(\'ra-msg-modal\').remove()" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--txs);padding:4px 10px;line-height:1;">×</button>' +
+      '</div>' +
+      '<div style="padding:18px 22px;overflow:auto;flex:1;">' +
+        '<textarea id="ra-msg-text" readonly style="width:100%;min-height:260px;font-family:\'Google Sans\',sans-serif;font-size:13.5px;line-height:1.55;padding:14px 16px;border:1.5px solid var(--out);border-radius:var(--r12);background:var(--surv);color:var(--tx);resize:vertical;outline:none;box-sizing:border-box;"></textarea>' +
+        '<div style="margin-top:10px;font-size:11px;color:var(--txs);line-height:1.5;">' +
+          'Os asteriscos (*) servem para deixar o texto em <strong>negrito</strong> ao colar no WhatsApp.' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:14px 22px;border-top:1.5px solid var(--out);display:flex;gap:10px;justify-content:flex-end;background:var(--surv);">' +
+        '<button class="btn btn-o" onclick="document.getElementById(\'ra-msg-modal\').remove()" style="font-size:12px;padding:9px 18px;border-radius:12px;">Fechar</button>' +
+        '<button class="btn btn-t" id="ra-msg-copy" onclick="raCopiarMensagem()" style="font-size:12px;padding:9px 18px;border-radius:12px;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+          'Copiar mensagem' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+  document.getElementById('ra-msg-text').value = msg;
+
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function raCopiarMensagem() {
+  const ta = document.getElementById('ra-msg-text');
+  if (!ta) return;
+  const btn = document.getElementById('ra-msg-copy');
+  const okMsg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>Copiado!';
+  const original = btn.innerHTML;
+
+  const after = () => {
+    btn.innerHTML = okMsg;
+    setTimeout(() => { btn.innerHTML = original; }, 1800);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(after).catch(() => {
+      ta.select(); ta.setSelectionRange(0, ta.value.length);
+      try { document.execCommand('copy'); after(); } catch(_) { alert('Não foi possível copiar. Selecione o texto manualmente.'); }
+    });
+  } else {
+    ta.select(); ta.setSelectionRange(0, ta.value.length);
+    try { document.execCommand('copy'); after(); } catch(_) { alert('Não foi possível copiar. Selecione o texto manualmente.'); }
+  }
 }
 
 function raExportPainel() {
