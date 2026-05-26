@@ -10,7 +10,7 @@
 //      - Ao ativar, o index escuta 'controllerchange' e dá reload()
 // =====================================================================
 
-const CACHE_VERSION = 'v4-2026-05-25';
+const CACHE_VERSION = 'v6-2026-05-25';
 const CACHE_NAME    = `shelflife-${CACHE_VERSION}`;
 
 // Recursos do próprio app (mesma origem) que valem a pena ter em cache offline.

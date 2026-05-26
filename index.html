@@ -570,7 +570,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
       <span>No Inflow, clique em opções e depois em <strong>"Exportar por validade"</strong>.</span>
     </div>
-    <div class="bn bn-i" style="margin-bottom:10px;">
+    <div class="bn bn-i" id="aviso-formato-barueri" style="margin-bottom:10px; display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
       <span>📍 <strong>Barueri:</strong> o formato próprio (CODIGO · VENCIMENTO · DIAS PARA VENCER · QNT UND) é reconhecido automaticamente.</span>
     </div>
@@ -1827,6 +1827,10 @@ function okLocal(){
   c.style.display='flex';
   document.getElementById('btn-logout').style.display='flex';
   document.getElementById('action-cd-label').textContent = v;
+
+  // Aviso sobre formato próprio só aparece para o CD Barueri
+  const avisoBarueri = document.getElementById('aviso-formato-barueri');
+  if (avisoBarueri) avisoBarueri.style.display = (v === 'BARUERI') ? '' : 'none';
   
   document.getElementById('cd_nome').value = "CD " + v;
   
@@ -1908,6 +1912,9 @@ function logout(){
   document.getElementById('tab-cobertura').style.display = 'none';
   document.getElementById('tab-rastreio').style.display = 'none';
   document.getElementById('card-editados').style.display = 'none';
+  // Reseta aviso de formato próprio do Barueri
+  const avisoBarueri = document.getElementById('aviso-formato-barueri');
+  if (avisoBarueri) avisoBarueri.style.display = 'none';
   // Reseta estados visuais
   document.getElementById('s2').classList.add('hidden');
   document.getElementById('pp').classList.add('hidden');
@@ -4746,7 +4753,9 @@ if ('serviceWorker' in navigator) {
   });
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    // updateViaCache:'none' = navegador NUNCA cacheia o sw.js (resolve o bug
+    // do "sw.js velho preso no HTTP cache do navegador").
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
       .then(reg => {
         console.log('SW registrado');
 
