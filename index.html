@@ -817,6 +817,49 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
   </div><!-- end tab-estoque-cia-content -->
 
+  <!-- ===== MODAL DE SELEÇÃO DE TIPO DE GRADES (sobreposto, abre ao entrar na aba) ===== -->
+  <div id="modal-tipo-grades" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:20px;">
+    <div style="background:var(--sur);border-radius:24px;padding:30px 28px;max-width:460px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.22);position:relative;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+        <div class="ci gn" style="font-size:22px;">📦</div>
+        <div>
+          <div style="font-family:'Google Sans Display',sans-serif;font-size:19px;font-weight:500;color:var(--tx);">O que deseja lançar hoje?</div>
+          <div style="font-size:12px;color:var(--txs);margin-top:2px;">Selecione apenas um tipo. A outra opção ficará bloqueada após o envio do relatório.</div>
+        </div>
+      </div>
+
+      <div id="modal-tipo-grades-aviso" style="display:none;margin-top:14px;padding:11px 13px;border-radius:12px;background:var(--ws);color:var(--wt);font-size:12.5px;line-height:1.5;">
+        <strong>🔒 Atenção:</strong> <span id="modal-tipo-grades-aviso-txt"></span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:22px;">
+        <button type="button" id="modal-opt-nao" onclick="selecionarTipoGradesModal('nao')"
+          style="display:flex;align-items:flex-start;gap:14px;padding:18px 18px;border:2px solid var(--out);border-radius:18px;background:var(--surv);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit;width:100%;">
+          <div style="font-size:30px;line-height:1;flex-shrink:0;">📦</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:15px;color:var(--tx);margin-bottom:4px;">Grades no CD</div>
+            <div style="font-size:12.5px;color:var(--txs);line-height:1.45;">Lançar a quantidade de grades com produtos e grades vazias que estão atualmente no CD.</div>
+          </div>
+        </button>
+
+        <button type="button" id="modal-opt-sim" onclick="selecionarTipoGradesModal('sim')"
+          style="display:flex;align-items:flex-start;gap:14px;padding:18px 18px;border:2px solid var(--out);border-radius:18px;background:var(--surv);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit;width:100%;">
+          <div style="font-size:30px;line-height:1;flex-shrink:0;">🚛</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:15px;color:var(--tx);margin-bottom:4px;">Grades retornando à matriz</div>
+            <div style="font-size:12.5px;color:var(--txs);line-height:1.45;">Lançar grades que estão saindo do CD em direção à Matriz, com horário de saída do caminhão.</div>
+          </div>
+        </button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:22px;justify-content:flex-end;">
+        <button type="button" onclick="fecharModalTipoGrades(true)" class="btn btn-o" style="font-size:13px;padding:10px 18px;border-radius:12px;">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== GRADES TAB ===== -->
   <div id="tab-grades-content" class="hidden">
     <div class="card">
@@ -1816,8 +1859,9 @@ function okLocal(){
   } else {
       document.getElementById('tab-relatorios').style.display = 'none';
       document.getElementById('painel-monitoramento').style.display = 'none';
-      // CDs: mostra só a pergunta — nenhum bloco de campos visível até o CD escolher
-      document.getElementById('bloco-retorno-pergunta').style.display = '';
+      // CDs: a escolha do tipo será feita pelo MODAL sobreposto (abre ao entrar na aba)
+      // Mantemos os radios ocultos — eles são marcados programaticamente pelo modal.
+      document.getElementById('bloco-retorno-pergunta').style.display = 'none';
       document.getElementById('bloco-grades-cd').style.display = 'none';
       document.getElementById('bloco-retorno-detalhes').style.display = 'none';
       document.getElementById('hint-grades').style.display = 'none';
@@ -2222,8 +2266,11 @@ function switchTab(t){
   if(t==='dashboard'&&!dashBuilt)iniciarDashboard();
   if(t==='cobertura'&&!coberturaLoaded)carregarCobertura();
   // Ao entrar na aba de Gestão de Grades como CD (não-Matriz),
-  // reavalia o bloqueio diário (1 tipo por dia).
-  if(t==='grades' && cd && cd !== 'MATRIZ') verificarBloqueioGradesDoDia();
+  // reavalia o bloqueio diário (1 tipo por dia) e abre o modal de seleção.
+  if(t==='grades' && cd && cd !== 'MATRIZ') {
+    verificarBloqueioGradesDoDia();
+    abrirModalTipoGrades();
+  }
 }
 
 // Sub-abas dentro de "Controle de datas"
@@ -2824,6 +2871,123 @@ function onVaiRetornarChange() {
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// MODAL DE SELEÇÃO DE TIPO DE GRADES
+// Ao entrar na aba "Gestão de Grades" como CD, abre uma janela sobreposta
+// pedindo para o usuário escolher entre "Grades no CD" e "Grades retornando à matriz".
+// Após o envio do relatório, o tipo escolhido fica bloqueado para o dia
+// (regra mantida pelo verificarBloqueioGradesDoDia / lancarGestaoGrades).
+// ─────────────────────────────────────────────────────────────────────
+async function abrirModalTipoGrades() {
+    if (!cd || cd === 'MATRIZ') return;
+
+    const modal = document.getElementById('modal-tipo-grades');
+    const btnNao = document.getElementById('modal-opt-nao');
+    const btnSim = document.getElementById('modal-opt-sim');
+    const aviso  = document.getElementById('modal-tipo-grades-aviso');
+    const avisoTxt = document.getElementById('modal-tipo-grades-aviso-txt');
+    if (!modal || !btnNao || !btnSim) return;
+
+    // Reset visual dos botões
+    const resetBtn = (btn) => {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.style.cursor = 'pointer';
+        btn.style.borderColor = 'var(--out)';
+        btn.style.background = 'var(--surv)';
+        btn.title = '';
+    };
+    resetBtn(btnNao);
+    resetBtn(btnSim);
+    if (aviso) aviso.style.display = 'none';
+
+    // Hover feedback (somente se não estiver desabilitado)
+    [btnNao, btnSim].forEach(btn => {
+        btn.onmouseover = () => { if (!btn.disabled) btn.style.borderColor = 'var(--p)'; };
+        btn.onmouseout  = () => { if (!btn.disabled) btn.style.borderColor = 'var(--out)'; };
+    });
+
+    // Consulta registros do dia para já refletir bloqueios no modal
+    try {
+        const today = new Date().toLocaleDateString('pt-BR');
+        const resp  = await fetch(`${API_URL}?action=grades&data=${encodeURIComponent(today)}`);
+        const data  = await resp.json();
+        const registros = Array.isArray(data) ? data : (data.grades || data.dados || []);
+
+        const cdAtualUpper = ('CD ' + cd).toUpperCase();
+        const meusRegistros = registros.filter(reg => {
+            const origem = (reg.cd_origem || '').toUpperCase().trim();
+            return origem === cdAtualUpper || origem === cd.toUpperCase();
+        });
+        const lancouNao = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'nao');
+        const lancouSim = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'sim');
+
+        const bloquearBtn = (btn, mensagem) => {
+            btn.disabled = true;
+            btn.style.opacity = '0.45';
+            btn.style.cursor = 'not-allowed';
+            btn.style.borderColor = 'var(--out)';
+            btn.title = mensagem;
+        };
+
+        if (lancouNao && !lancouSim) {
+            bloquearBtn(btnNao, 'Você já lançou este tipo hoje.');
+            if (aviso && avisoTxt) {
+                aviso.style.display = '';
+                avisoTxt.innerHTML = 'Você já lançou <strong>Grades no CD</strong> hoje. Só é possível registrar <strong>Grades retornando à matriz</strong>.';
+            }
+        } else if (lancouSim && !lancouNao) {
+            bloquearBtn(btnSim, 'Você já lançou este tipo hoje.');
+            if (aviso && avisoTxt) {
+                aviso.style.display = '';
+                avisoTxt.innerHTML = 'Você já lançou <strong>Grades retornando à matriz</strong> hoje. Só é possível registrar <strong>Grades no CD</strong>.';
+            }
+        } else if (lancouNao && lancouSim) {
+            bloquearBtn(btnNao, 'Já há lançamentos para hoje.');
+            bloquearBtn(btnSim, 'Já há lançamentos para hoje.');
+            if (aviso && avisoTxt) {
+                aviso.style.display = '';
+                avisoTxt.innerHTML = 'Já existem lançamentos de ambos os tipos para hoje. Novos lançamentos liberados amanhã.';
+            }
+        }
+    } catch (err) {
+        console.warn('Não foi possível consultar bloqueios do dia para o modal:', err);
+        // Em caso de falha de rede, deixa ambos liberados — o backend faz a checagem final.
+    }
+
+    modal.style.display = 'flex';
+}
+
+// Quando o usuário clica em uma das opções do modal
+function selecionarTipoGradesModal(valor) {
+    if (valor !== 'nao' && valor !== 'sim') return;
+
+    // Marca o radio correspondente e dispara a lógica padrão de exibição dos campos
+    const radio = document.querySelector(`input[name="vai_retornar"][value="${valor}"]`);
+    if (!radio || radio.disabled) return;
+    radio.checked = true;
+    onVaiRetornarChange();
+
+    // Fecha o modal
+    fecharModalTipoGrades(false);
+}
+
+// Fecha o modal. Se forçar=true (cancelar) e nenhuma escolha foi feita,
+// volta o usuário para a aba anterior (Controle de datas) para evitar
+// que ele fique numa tela vazia.
+function fecharModalTipoGrades(usuarioCancelou) {
+    const modal = document.getElementById('modal-tipo-grades');
+    if (modal) modal.style.display = 'none';
+
+    if (usuarioCancelou) {
+        const algumMarcado = document.querySelector('input[name="vai_retornar"]:checked');
+        if (!algumMarcado) {
+            // Sem escolha — volta para a aba de Controle de datas
+            try { switchTab('controle'); } catch(e){}
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // Bloqueio diário: 1 tipo de lançamento por dia (CDs, exceto MATRIZ).
 // Consulta os registros de grades de hoje, identifica os tipos já
 // lançados pelo CD atual (vai_retornar = 'nao' e/ou 'sim') e desabilita
@@ -3211,35 +3375,41 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     }
 
     // Régua de status:
-    // - MATRIZ: usa cobertura (quanto MAIOR pior). >7=URGENTE, >5=CRÍTICO, >3=ATENÇÃO, ≤3=OK.
-    // - Demais CDs: usa validade efetiva (quanto MENOR pior). ≤18=URGENTE, ≤20=CRÍTICO, ≤22=ATENÇÃO, >22=OK.
-    // Se não há venda (cob === null) → 'Sem venda' nos dois casos.
+    // 1. Para TODOS os CDs: se o prazo real < 18 → URGENTE, ≤20 → CRÍTICO, ≤22 → ATENÇÃO (prevalece sobre cobertura).
+    // 2. Se prazo OK (>22) ou ausente → MATRIZ usa cobertura; demais CDs retornam OK.
     function statusLabel(r, cob) {
-        if (cob === null) return 'Sem venda';
         const cdUpper = (r.cd || '').toString().toUpperCase().trim();
         const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
+
+        // Prazo real prevalece para todos os CDs
+        const prazo = parseFloat(r.prazo);
+        if (isFinite(prazo)) {
+            if (prazo < 18)  return 'URGENTE';
+            if (prazo <= 20) return 'CRÍTICO';
+            if (prazo <= 22) return 'ATENÇÃO';
+        }
+
+        // Prazo > 22 ou ausente: MATRIZ usa cobertura para detectar excesso de estoque
         if (ehMatriz) {
-            if (cob > 7) return 'URGENTE';
-            if (cob > 5) return 'CRÍTICO';
-            if (cob > 3) return 'ATENÇÃO';
+            if (cob === null) return 'Sem venda';
+            if (cob >= 7) return 'URGENTE';
+            if (cob >= 5) return 'CRÍTICO';
+            if (cob >= 3) return 'ATENÇÃO';
             return 'OK';
         }
-        // Não-Matriz: validade efetiva
-        const ve = calcValidadeEfetiva(r, cob);
-        if (ve === null) return 'Sem venda';
-        if (ve <= 18) return 'URGENTE';
-        if (ve <= 20) return 'CRÍTICO';
-        if (ve <= 22) return 'ATENÇÃO';
-        return 'OK';
+
+        // Demais CDs com prazo > 22: OK (estoque dentro do prazo)
+        return !isFinite(prazo) ? (cob === null ? 'Sem venda' : 'OK') : 'OK';
     }
 
     // Mantém referência por nome antigo para compatibilidade dentro deste escopo
-    // (caso algum trecho ainda chame cobLabel — não deveria, mas é defensivo).
+    // Régua de cobertura para pães (Cobertura CIA Consolidada):
+    // ≥7 dias = URGENTE | ≥5 dias = CRÍTICO | ≥3 dias = ATENÇÃO | <3 = OK
     function cobLabel(c) {
         if (c === null) return 'Sem venda';
-        if (c > 7) return 'URGENTE';
-        if (c > 5) return 'CRÍTICO';
-        if (c > 3) return 'ATENÇÃO';
+        if (c >= 7) return 'URGENTE';
+        if (c >= 5) return 'CRÍTICO';
+        if (c >= 3) return 'ATENÇÃO';
         return 'OK';
     }
 
@@ -3248,7 +3418,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     // menor validade efetiva entre as linhas do código.
     function statusPorVeMinima(veMin) {
         if (veMin === null || veMin === undefined) return 'Sem venda';
-        if (veMin <= 18) return 'URGENTE';
+        if (veMin < 18)  return 'URGENTE';
         if (veMin <= 20) return 'CRÍTICO';
         if (veMin <= 22) return 'ATENÇÃO';
         return 'OK';
@@ -3260,9 +3430,8 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     const header = ['CD ORIGEM','CÓDIGO','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','QTD','COBERTURA (DIAS)','STATUS COBERTURA','DIRECIONAMENTO','MOTIVO','✏️ EDITADO MANUALMENTE','QTD ORIGINAL','VALIDADE ORIGINAL'];
     const wsData = [header];
 
-    // Pré-processa e ordena por validade efetiva asc (mais grave primeiro).
-    // Matriz não tem VE (régua diferente): ordena por cobertura desc internamente.
-    // Linhas 'Sem venda' vão por último.
+    // Pré-processa e ordena por prazo crescente (menos dias primeiro = mais urgente no topo).
+    // Linhas sem prazo válido vão ao final.
     const linhasPreparadas = dados.map(r => {
         const cob = calcCobertura(r);
         const ve  = calcValidadeEfetiva(r, cob);
@@ -3271,20 +3440,11 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         const status = statusLabel(r, cob);
         return { r, cob, ve, ehMatriz, status };
     }).sort((a, b) => {
-        // 3 buckets: (1) não-Matriz com VE, (2) Matriz com cobertura, (3) Sem venda
-        const aBucket = a.status === 'Sem venda' ? 2 : (a.ehMatriz ? 1 : 0);
-        const bBucket = b.status === 'Sem venda' ? 2 : (b.ehMatriz ? 1 : 0);
-        if (aBucket !== bBucket) return aBucket - bBucket;
-        if (aBucket === 0) {
-            // Não-Matriz: menor VE primeiro
-            return (a.ve ?? 999) - (b.ve ?? 999);
-        }
-        if (aBucket === 1) {
-            // Matriz: maior cobertura primeiro
-            return (b.cob ?? -1) - (a.cob ?? -1);
-        }
-        // Sem venda: por prazo asc (mais perto de vencer primeiro)
-        return (parseFloat(a.r.prazo) || 999) - (parseFloat(b.r.prazo) || 999);
+        const pA = parseFloat(a.r.prazo);
+        const pB = parseFloat(b.r.prazo);
+        const aVal = isFinite(pA) ? pA : 99999;
+        const bVal = isFinite(pB) ? pB : 99999;
+        return aVal - bVal; // menor prazo (mais urgente) primeiro
     });
 
     linhasPreparadas.forEach(({ r, cob, ve, ehMatriz, status }) => {
@@ -3380,11 +3540,8 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         const linhas = Object.values(agrupado).map(g => {
             const venda = parseFloat(VENDA_DIARIA_CIA[g.codigo]) || 0;
             const cob = venda > 0 ? +(g.estoqueTotal / venda).toFixed(1) : null;
-            // Status pela VE mínima (mesma régua dos CDs não-Matriz).
-            // Se o código só tem estoque na Matriz (veMinima === null), usa cobertura como fallback.
-            const status = (g.veMinima !== null)
-                ? statusPorVeMinima(g.veMinima)
-                : cobLabel(cob);
+            // Nesta aba os pães são sempre julgados pela cobertura (>=7=URGENTE, >=5=CRITICO, >=3=ATENCAO).
+            const status = cobLabel(cob);
             // Nome do produto preferindo SKU oficial do sistema (mais limpo que o nome de uma linha qualquer)
             const nomeProd = SKU[g.codigo] || g.produto || '';
             return {
@@ -3401,16 +3558,12 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             };
         });
 
-        // Ordena por MENOR validade efetiva (mais grave primeiro).
-        // Códigos sem VE (só com estoque na Matriz, sem outros CDs) → vão pro fim por cobertura desc.
+        // Ordena da MAIOR cobertura para a menor (mais dias de estoque = maior risco de vencimento).
+        // Produtos sem venda calculável vão ao fim.
         linhas.sort((a, b) => {
-            const aTemVe = a.veMinima !== null;
-            const bTemVe = b.veMinima !== null;
-            if (aTemVe && bTemVe) return a.veMinima - b.veMinima;     // menor VE primeiro
-            if (aTemVe && !bTemVe) return -1;                          // com VE vem antes
-            if (!aTemVe && bTemVe) return 1;
-            // Ambos sem VE: cobertura desc (mais grave primeiro)
-            return (b.cobertura ?? -1) - (a.cobertura ?? -1);
+            const aVal = a.cobertura !== null ? a.cobertura : -1;
+            const bVal = b.cobertura !== null ? b.cobertura : -1;
+            return bVal - aVal; // decrescente: maior cobertura primeiro
         });
 
         const totalEstoqueCIA = linhas.reduce((s, l) => s + l.estoque, 0);
@@ -4581,9 +4734,46 @@ function destruirCharts() {
 
 <script>
 if ('serviceWorker' in navigator) {
+  let _swReloadDone = false;
+
+  // Quando o SW novo assume controle, recarrega a página automaticamente
+  // (assim o usuário sempre vê a versão mais recente sem precisar dar F5/Ctrl+Shift+R).
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (_swReloadDone) return;
+    _swReloadDone = true;
+    console.log('[SW] Nova versão ativada — recarregando...');
+    window.location.reload();
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('SW registrado'))
+      .then(reg => {
+        console.log('SW registrado');
+
+        // Verifica imediatamente se há atualização disponível
+        reg.update().catch(()=>{});
+
+        // Verifica a cada 60s se há um sw.js novo no servidor
+        setInterval(() => reg.update().catch(()=>{}), 60 * 1000);
+
+        // Se o usuário voltar para a aba, também verifica
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') reg.update().catch(()=>{});
+        });
+
+        // Quando um SW novo for encontrado, espera ele instalar e pede para ativar já
+        reg.addEventListener('updatefound', () => {
+          const novo = reg.installing;
+          if (!novo) return;
+          novo.addEventListener('statechange', () => {
+            if (novo.state === 'installed' && navigator.serviceWorker.controller) {
+              // Já existe SW antigo controlando: manda o novo pular a espera
+              console.log('[SW] Nova versão instalada — ativando...');
+              novo.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
+      })
       .catch(e => console.log('SW erro:', e));
   });
 }

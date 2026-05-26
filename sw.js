@@ -1,125 +1,121 @@
-// ============================================================
-// Service Worker — Sistema Panutrir
-// Estratégia: Cache First para assets locais,
-//             Network First para navegação,
-//             Stale-While-Revalidate para CDNs externos.
-// ============================================================
+// =====================================================================
+// SERVICE WORKER — SHELFLIFE
+// =====================================================================
+// Como forçar atualização do app nos clientes:
+//   1) Altere o valor de CACHE_VERSION abaixo (ex: 'v3' -> 'v4')
+//   2) Faça o deploy do novo index.html + sw.js
+//   3) Os usuários abertos recebem a nova versão automaticamente:
+//      - O index registra um update() periódico e ao voltar para a aba
+//      - Quando detecta novo SW, manda skipWaiting()
+//      - Ao ativar, o index escuta 'controllerchange' e dá reload()
+// =====================================================================
 
-const CACHE_NAME   = 'panutrir-v1';
-const CDN_CACHE    = 'panutrir-cdn-v1';
-const FONT_CACHE   = 'panutrir-fonts-v1';
+const CACHE_VERSION = 'v4-2026-05-25';
+const CACHE_NAME    = `shelflife-${CACHE_VERSION}`;
 
-// Assets locais que devem ser cacheados imediatamente no install
-const PRECACHE_ASSETS = [
+// Recursos do próprio app (mesma origem) que valem a pena ter em cache offline.
+// NÃO inclua APIs externas (Apps Script, Sheets) — elas devem sempre ir à rede.
+const APP_SHELL = [
   './',
   './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './logo_nova.jpg',
+  './manifest.json'
 ];
 
-// URLs de CDN (JavaScript)
-const CDN_URLS = [
-  'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
-];
-
-// ── INSTALL ─────────────────────────────────────────────────
+// ---------------------------------------------------------------------
+// INSTALL — baixa o app shell e força o novo SW a entrar em "waiting"
+// ---------------------------------------------------------------------
 self.addEventListener('install', event => {
   event.waitUntil(
-    Promise.all([
-      // Pré-cacheia assets locais
-      caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_ASSETS)),
-      // Pré-cacheia libs de CDN
-      caches.open(CDN_CACHE).then(cache => cache.addAll(CDN_URLS)),
-    ])
-    .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL).catch(err => {
+        // Se algum recurso falhar, não trava a instalação
+        console.warn('[SW] Falha ao pré-cachear parte do app shell:', err);
+      }))
   );
 });
 
-// ── ACTIVATE ────────────────────────────────────────────────
+// ---------------------------------------------------------------------
+// ACTIVATE — limpa caches antigos e assume controle das abas abertas
+// ---------------------------------------------------------------------
 self.addEventListener('activate', event => {
-  const VALID_CACHES = [CACHE_NAME, CDN_CACHE, FONT_CACHE];
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => !VALID_CACHES.includes(k)).map(k => caches.delete(k))
-      )
-    )
-    .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const nomes = await caches.keys();
+    await Promise.all(
+      nomes
+        .filter(n => n.startsWith('shelflife-') && n !== CACHE_NAME)
+        .map(n => {
+          console.log('[SW] Removendo cache antigo:', n);
+          return caches.delete(n);
+        })
+    );
+    await self.clients.claim();
+  })());
 });
 
-// ── FETCH ───────────────────────────────────────────────────
+// ---------------------------------------------------------------------
+// MESSAGE — recebe pedido do index para ativar imediatamente
+// ---------------------------------------------------------------------
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// ---------------------------------------------------------------------
+// FETCH — estratégia por tipo de requisição
+//   - APIs externas (Apps Script, etc): network-only, nunca cacheia
+//   - Navegação (HTML): network-first com fallback ao cache (offline)
+//   - Outros recursos da própria origem: stale-while-revalidate leve
+// ---------------------------------------------------------------------
 self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const req = event.request;
 
-  // Ignora requisições não-GET
-  if (request.method !== 'GET') return;
+  // Só intercepta GET; POST/PUT/DELETE passam direto
+  if (req.method !== 'GET') return;
 
-  // ── Fontes do Google: Cache First (fontes não mudam)
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(cacheFirst(request, FONT_CACHE));
+  const url = new URL(req.url);
+  const mesmaOrigem = url.origin === self.location.origin;
+
+  // 1) Requisições para serviços externos (Google Apps Script, Sheets, CDNs de API)
+  //    -> sempre rede, sem cache. Evita servir dados velhos.
+  if (!mesmaOrigem) {
+    return; // deixa o navegador tratar normalmente
+  }
+
+  // 2) Navegação de página (HTML) -> network-first
+  const ehNavegacao =
+    req.mode === 'navigate' ||
+    (req.headers.get('accept') || '').includes('text/html');
+
+  if (ehNavegacao) {
+    event.respondWith((async () => {
+      try {
+        const resposta = await fetch(req, { cache: 'no-store' });
+        // Atualiza o cache com a nova versão do HTML
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, resposta.clone()).catch(()=>{});
+        return resposta;
+      } catch (err) {
+        // Offline: tenta o cache (a página que o usuário viu por último)
+        const cacheada = await caches.match(req) || await caches.match('./index.html');
+        if (cacheada) return cacheada;
+        throw err;
+      }
+    })());
     return;
   }
 
-  // ── CDN (xlsx, Chart.js): Cache First (versões fixas)
-  if (
-    url.hostname === 'cdn.jsdelivr.net' ||
-    url.hostname === 'cdnjs.cloudflare.com'
-  ) {
-    event.respondWith(cacheFirst(request, CDN_CACHE));
-    return;
-  }
-
-  // ── Assets locais (HTML, imagens, manifest): Stale-While-Revalidate
-  if (url.origin === self.location.origin) {
-    event.respondWith(staleWhileRevalidate(request, CACHE_NAME));
-    return;
-  }
-
-  // ── Demais requests externos: só rede
-  event.respondWith(fetch(request));
+  // 3) Outros recursos da própria origem (manifest, ícones, etc.)
+  //    -> stale-while-revalidate: serve do cache rapidinho e atualiza em background
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const cacheada = await cache.match(req);
+    const fetchPromise = fetch(req).then(resposta => {
+      if (resposta && resposta.status === 200 && resposta.type === 'basic') {
+        cache.put(req, resposta.clone()).catch(()=>{});
+      }
+      return resposta;
+    }).catch(() => cacheada);
+    return cacheada || fetchPromise;
+  })());
 });
-
-// ── Estratégias de cache ─────────────────────────────────────
-
-/**
- * Cache First: retorna do cache; se não tiver, busca na rede e salva.
- */
-async function cacheFirst(request, cacheName) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    return new Response('Offline — recurso não disponível no cache.', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
-  }
-}
-
-/**
- * Stale-While-Revalidate: entrega do cache enquanto atualiza em background.
- */
-async function staleWhileRevalidate(request, cacheName) {
-  const cache  = await caches.open(cacheName);
-  const cached = await cache.match(request);
-
-  const networkFetch = fetch(request).then(response => {
-    if (response.ok) cache.put(request, response.clone());
-    return response;
-  }).catch(() => null);
-
-  return cached || await networkFetch || new Response('Offline', {
-    status: 503,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  });
-}
