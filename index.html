@@ -1686,7 +1686,7 @@ const VENDA_DIARIA_CIA = {
   "162923": 1148.4 // PAO NUTRI DEL GRANO HAMBURGUER GERGELIM PANUTRIR 320G
 };
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzoGrJEwGHirIMpTg9HO6i00-a-5DzeUFbsRvlyzcUrOowtQOq8D8zUZtrB-h1gszd6/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzBmKVbtKmX6-z4g25UDFKN5M5NhpiXt3K3tyn9gzOC7I1I1uvwGNGhhgTTbSrfYaxf/exec";
 
 let cd='',rows=[],hasW=false,wCnt=0;
 let _activeTab = 'import';
@@ -3234,7 +3234,7 @@ async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
         return;
     }
 
-    fetch(API_URL, { method: 'POST', body: JSON.stringify(payloadDaAPI) })
+    fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payloadDaAPI) })
     .then(response => response.json())
     .then(() => {
         const msg = cd === 'MATRIZ'
@@ -4136,6 +4136,7 @@ async function carregarResumoGrades() {
     const today = new Date().toLocaleDateString('pt-BR');
     const url = `${API_URL}?action=grades&data=${encodeURIComponent(today)}`;
     const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
 
     // Aceita tanto { grades: [...] } quanto array direto
@@ -4397,9 +4398,11 @@ async function buscarGradesPorPeriodo(datas) {
     const resultados = await Promise.all(chunk.map(async data => {
       try {
         const res = await fetch(`${API_URL}?action=grades&data=${encodeURIComponent(data)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
-        if (Array.isArray(json.grades)) {
-          return json.grades.map(r => ({...r, _data: data}));
+        const registros = Array.isArray(json) ? json : (json.grades || json.dados || []);
+        if (registros.length > 0) {
+          return registros.map(r => ({...r, _data: data}));
         }
       } catch(e) {}
       return [];
