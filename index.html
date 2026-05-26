@@ -2913,55 +2913,80 @@ async function abrirModalTipoGrades() {
         btn.onmouseout  = () => { if (!btn.disabled) btn.style.borderColor = 'var(--out)'; };
     });
 
-    // Consulta registros do dia para já refletir bloqueios no modal
-    try {
-        const today = new Date().toLocaleDateString('pt-BR');
-        const resp  = await fetch(`${API_URL}?action=grades&data=${encodeURIComponent(today)}`);
-        const data  = await resp.json();
-        const registros = Array.isArray(data) ? data : (data.grades || data.dados || []);
+    // ✅ Exibe o modal IMEDIATAMENTE — não esperamos a API responder.
+    // A consulta de bloqueio roda em background e atualiza os botões depois.
+    modal.style.display = 'flex';
 
-        const cdAtualUpper = ('CD ' + cd).toUpperCase();
-        const meusRegistros = registros.filter(reg => {
-            const origem = (reg.cd_origem || '').toUpperCase().trim();
-            return origem === cdAtualUpper || origem === cd.toUpperCase();
-        });
-        const lancouNao = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'nao');
-        const lancouSim = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'sim');
-
-        const bloquearBtn = (btn, mensagem) => {
-            btn.disabled = true;
-            btn.style.opacity = '0.45';
-            btn.style.cursor = 'not-allowed';
-            btn.style.borderColor = 'var(--out)';
-            btn.title = mensagem;
-        };
-
-        if (lancouNao && !lancouSim) {
-            bloquearBtn(btnNao, 'Você já lançou este tipo hoje.');
-            if (aviso && avisoTxt) {
-                aviso.style.display = '';
-                avisoTxt.innerHTML = 'Você já lançou <strong>Grades no CD</strong> hoje. Só é possível registrar <strong>Grades retornando à matriz</strong>.';
-            }
-        } else if (lancouSim && !lancouNao) {
-            bloquearBtn(btnSim, 'Você já lançou este tipo hoje.');
-            if (aviso && avisoTxt) {
-                aviso.style.display = '';
-                avisoTxt.innerHTML = 'Você já lançou <strong>Grades retornando à matriz</strong> hoje. Só é possível registrar <strong>Grades no CD</strong>.';
-            }
-        } else if (lancouNao && lancouSim) {
-            bloquearBtn(btnNao, 'Já há lançamentos para hoje.');
-            bloquearBtn(btnSim, 'Já há lançamentos para hoje.');
-            if (aviso && avisoTxt) {
-                aviso.style.display = '';
-                avisoTxt.innerHTML = 'Já existem lançamentos de ambos os tipos para hoje. Novos lançamentos liberados amanhã.';
-            }
-        }
-    } catch (err) {
-        console.warn('Não foi possível consultar bloqueios do dia para o modal:', err);
-        // Em caso de falha de rede, deixa ambos liberados — o backend faz a checagem final.
+    // Indicador sutil de "verificando" enquanto a API responde
+    if (aviso && avisoTxt) {
+        aviso.style.display = '';
+        aviso.style.background = 'var(--surv)';
+        aviso.style.color = 'var(--txs)';
+        avisoTxt.innerHTML = '<span style="opacity:.8;">⏳ Verificando lançamentos de hoje...</span>';
     }
 
-    modal.style.display = 'flex';
+    // Consulta registros do dia em background e reflete bloqueios sem travar a UI
+    (async () => {
+        try {
+            const today = new Date().toLocaleDateString('pt-BR');
+            const resp  = await fetch(`${API_URL}?action=grades&data=${encodeURIComponent(today)}`);
+            const data  = await resp.json();
+            const registros = Array.isArray(data) ? data : (data.grades || data.dados || []);
+
+            // Se o usuário já fechou o modal nesse meio tempo, não faz nada
+            if (modal.style.display === 'none') return;
+
+            const cdAtualUpper = ('CD ' + cd).toUpperCase();
+            const meusRegistros = registros.filter(reg => {
+                const origem = (reg.cd_origem || '').toUpperCase().trim();
+                return origem === cdAtualUpper || origem === cd.toUpperCase();
+            });
+            const lancouNao = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'nao');
+            const lancouSim = meusRegistros.some(r => (r.vai_retornar || '').toString().toLowerCase().trim() === 'sim');
+
+            const bloquearBtn = (btn, mensagem) => {
+                btn.disabled = true;
+                btn.style.opacity = '0.45';
+                btn.style.cursor = 'not-allowed';
+                btn.style.borderColor = 'var(--out)';
+                btn.title = mensagem;
+            };
+
+            // Restaura visual do aviso (cor amarela padrão de warning)
+            if (aviso) {
+                aviso.style.background = 'var(--ws)';
+                aviso.style.color = 'var(--wt)';
+            }
+
+            if (lancouNao && !lancouSim) {
+                bloquearBtn(btnNao, 'Você já lançou este tipo hoje.');
+                if (aviso && avisoTxt) {
+                    aviso.style.display = '';
+                    avisoTxt.innerHTML = 'Você já lançou <strong>Grades no CD</strong> hoje. Só é possível registrar <strong>Grades retornando à matriz</strong>.';
+                }
+            } else if (lancouSim && !lancouNao) {
+                bloquearBtn(btnSim, 'Você já lançou este tipo hoje.');
+                if (aviso && avisoTxt) {
+                    aviso.style.display = '';
+                    avisoTxt.innerHTML = 'Você já lançou <strong>Grades retornando à matriz</strong> hoje. Só é possível registrar <strong>Grades no CD</strong>.';
+                }
+            } else if (lancouNao && lancouSim) {
+                bloquearBtn(btnNao, 'Já há lançamentos para hoje.');
+                bloquearBtn(btnSim, 'Já há lançamentos para hoje.');
+                if (aviso && avisoTxt) {
+                    aviso.style.display = '';
+                    avisoTxt.innerHTML = 'Já existem lançamentos de ambos os tipos para hoje. Novos lançamentos liberados amanhã.';
+                }
+            } else {
+                // Nada lançado: esconde o aviso de "verificando" e libera tudo
+                if (aviso) aviso.style.display = 'none';
+            }
+        } catch (err) {
+            console.warn('Não foi possível consultar bloqueios do dia para o modal:', err);
+            // Em caso de falha de rede, esconde o indicador — o backend faz a checagem final.
+            if (aviso) aviso.style.display = 'none';
+        }
+    })();
 }
 
 // Quando o usuário clica em uma das opções do modal
