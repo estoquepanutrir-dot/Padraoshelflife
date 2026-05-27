@@ -1921,6 +1921,14 @@ function logout(){
   document.getElementById('bulk').classList.add('hidden');
   document.getElementById('wb2').classList.add('hidden');
   document.getElementById('fpill').classList.add('hidden');
+  // Reseta estado da inserção manual (Controle de datas)
+  meBuilt = false;
+  meProcessed = [];
+  meHasW = false;
+  meWCnt = 0;
+  // Reseta sub-abas para evitar estado herdado entre CDs
+  _subControle = 'import';
+  _subEstoqueCia = 'import';
   // Volta para a aba controle como padrão
   switchTab('controle');
   switchSubControle('import');
@@ -2243,7 +2251,14 @@ function dlXlsx(){
 }
 
 function switchTab(t){
-  _activeTab=t;
+  // Respeita a sub-aba ativa para não sobrescrever _activeTab e quebrar o envio manual
+  if(t === 'controle') {
+    _activeTab = _subControle === 'manual' ? 'manual' : 'import';
+  } else if(t === 'estoque-cia') {
+    _activeTab = _subEstoqueCia === 'manual' ? 'estoque-cia-manual' : 'estoque-cia';
+  } else {
+    _activeTab = t;
+  }
   document.getElementById('action-section').style.display='none'; 
   
   // Abas mestras
