@@ -3382,6 +3382,28 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         return true;
     });
 
+    // ── deduplicação ──────────────────────────────────────────────
+    // A base pode retornar a MESMA linha mais de uma vez (ex.: o CD lançou
+    // o estoque duas vezes no dia, ou a API devolve registros repetidos).
+    // Isso fazia o consolidado mostrar linhas idênticas duplicadas.
+    // Aqui removemos duplicatas exatas usando uma chave composta pelos
+    // campos que identificam unicamente o item: CD + código + validade +
+    // prazo + quantidade + destino + motivo.
+    (function deduplicarDados() {
+        const vistos = new Set();
+        const norm = v => String(v ?? '').trim().toLowerCase();
+        dados = dados.filter(r => {
+            const chave = [
+                norm(r.cd), norm(r.codigo), norm(r.validade),
+                norm(r.prazo), norm(r.quantidade),
+                norm(r.destino), norm(r.motivo)
+            ].join('|');
+            if (vistos.has(chave)) return false;
+            vistos.add(chave);
+            return true;
+        });
+    })();
+
     if (dados.length === 0) {
         alert('⚠️ Nenhuma linha válida para o relatório após o filtro de qualidade dos dados.');
         return;
@@ -4205,16 +4227,32 @@ async function carregarResumoGrades() {
           }
         }
 
-        const iconeCD = isMatriz ? '🏭' : '🚚';
-        const subtituloCard = isMatriz ? 'Grades na Matriz' : 'Retorno ao CD';
+        // Distingue o tipo de lançamento do CD:
+        //  - vai_retornar === 'sim'  → grades RETORNANDO à matriz (em rota, com saída/chegada)
+        //  - vai_retornar === 'nao'  → grades que ESTÃO no CD (não retornam; ficam no próprio CD)
+        // Antes o card sempre dizia "Retorno ao CD" para qualquer CD não-Matriz,
+        // mostrando rota/chegada indevidamente para grades que nem vão sair.
+        const ehRetorno = tipoRetorno === 'sim';
+
+        const iconeCD = isMatriz ? '🏭' : (ehRetorno ? '🚚' : '📦');
+        const subtituloCard = isMatriz
+          ? 'Grades na Matriz'
+          : (ehRetorno ? 'Retornando à Matriz' : 'Grades no CD');
         const labelVazias = isMatriz ? 'Grades c/ Produtos' : 'Com Produtos';
-        const labelTrocas = isMatriz ? 'Grades Vazias' : 'Grades Vazias';
-        const rodapeCard = isMatriz
-          ? `<div style="font-size:12px; color:var(--ot); border-top:1px solid var(--outv); padding-top:10px; text-align:center;">📍 Grades já disponíveis na Matriz</div>`
-          : `<div style="display:flex; justify-content:space-between; font-size:12px; color:var(--txs); border-top:1px solid var(--outv); padding-top:10px;">
+        const labelTrocas = 'Grades Vazias';
+
+        let rodapeCard;
+        if (isMatriz) {
+          rodapeCard = `<div style="font-size:12px; color:var(--ot); border-top:1px solid var(--outv); padding-top:10px; text-align:center;">📍 Grades já disponíveis na Matriz</div>`;
+        } else if (ehRetorno) {
+          rodapeCard = `<div style="display:flex; justify-content:space-between; font-size:12px; color:var(--txs); border-top:1px solid var(--outv); padding-top:10px;">
                <span>🕐 Saída: <strong style="color:var(--tx);">${saidaStr}</strong></span>
                <span>🏁 Chegada: <strong style="color:var(--p);">${chegadaStr}</strong></span>
              </div>`;
+        } else {
+          // Grades no CD: permanecem no próprio CD, sem rota/horários.
+          rodapeCard = `<div style="font-size:12px; color:var(--txs); border-top:1px solid var(--outv); padding-top:10px; text-align:center;">📍 Grades disponíveis no próprio CD</div>`;
+        }
 
         cardsHtml += `
           <div style="background:var(--sur1); border:1px solid var(--outv); border-radius:var(--r16); padding:16px 18px;">
