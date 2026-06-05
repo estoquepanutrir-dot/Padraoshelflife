@@ -441,10 +441,11 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   <div class="modal">
     <img src="./logo_nova.jpg" class="logo-round" alt="Logo Panutrir" style="width:72px;height:72px;border-radius:24px;margin:0 auto 18px;display:block;">
     <h2>Autenticação</h2>
-    <p>Informe o nome e a senha do <strong>Centro de Distribuição</strong> antes de continuar.</p>
+    <p>Informe o usuário ou o centro de distribuição antes de continuar.</p>
     <div class="f">
       <select id="li" class="modern-select" style="width:100%; border:1px solid var(--out); margin-top:10px;" onchange="onSelectUnidade(this)">
         <option value="" disabled selected>Escolha a sua Unidade...</option>
+        <option value="BRUNO">BRUNO RAMANAUSKAS</option>
         <option value="MATRIZ">MATRIZ</option>
         <option value="BAURU">BAURU</option>
         <option value="CURITIBA">CURITIBA</option>
@@ -1802,6 +1803,7 @@ function aplicarRegrasDeDia() {
 function okLocal(){
   const senhas = {
     "MATRIZ": "445566@Edu",
+    "BRUNO": "123rom",
     "BAURU": "bru1234",
     "CURITIBA": "cwb1234",
     "LONDRINA": "lon1234",
@@ -1820,19 +1822,24 @@ function okLocal(){
     return;
   }
 
-  cd = v;
+  // Bruno Ramanauskas: usuário com todas as permissões da Matriz.
+  // Após validar a senha própria, opera internamente como MATRIZ.
+  let unidade = v;
+  if (v === 'BRUNO') unidade = 'MATRIZ';
+
+  cd = unidade;
   document.getElementById('mo').style.display='none';
   const c = document.getElementById('chip');
-  document.getElementById('chip-txt').textContent = v;
+  document.getElementById('chip-txt').textContent = unidade;
   c.style.display='flex';
   document.getElementById('btn-logout').style.display='flex';
-  document.getElementById('action-cd-label').textContent = v;
+  document.getElementById('action-cd-label').textContent = unidade;
 
   // Aviso sobre formato próprio só aparece para o CD Barueri
   const avisoBarueri = document.getElementById('aviso-formato-barueri');
-  if (avisoBarueri) avisoBarueri.style.display = (v === 'BARUERI') ? '' : 'none';
+  if (avisoBarueri) avisoBarueri.style.display = (unidade === 'BARUERI') ? '' : 'none';
   
-  document.getElementById('cd_nome').value = "CD " + v;
+  document.getElementById('cd_nome').value = "CD " + unidade;
   
   // SE FOR A MATRIZ, ATIVA PUSH E MOSTRA A ABA DE RELATÓRIOS E MONITORAMENTO
   if (cd === "MATRIZ") {
