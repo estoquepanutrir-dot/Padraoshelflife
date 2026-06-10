@@ -1043,44 +1043,6 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       </button>
     </div>
 
-    <!-- CARD 3: ITENS EDITADOS MANUALMENTE (SÓ MATRIZ) -->
-    <div class="card" id="card-editados" style="display:none;">
-      <div class="ch">
-        <div class="ci am">✏️</div>
-        <div>
-          <div class="ct">SKUs com Qtd/Data Editados Manualmente pelos CDs</div>
-          <div class="cs">Itens cuja quantidade ou data de validade foram corrigidos pelo CD antes do envio</div>
-        </div>
-        <div style="margin-left:auto;">
-          <button class="btn btn-t" onclick="carregarEditados()" style="font-size:12px;padding:8px 16px;border-radius:14px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            Atualizar
-          </button>
-        </div>
-      </div>
-      <div class="f" style="max-width:300px; margin-bottom:14px;">
-        <label for="data_editados">Data do relatório</label>
-        <input type="date" id="data_editados">
-      </div>
-      <div id="editados-loading" class="hidden" style="text-align:center;font-size:13px;color:var(--txs);"><div class="spinner"></div>Buscando dados...</div>
-      <div id="editados-vazio" class="hidden">
-        <div class="bn" style="background:var(--surv);border:1px solid var(--out);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-          <span style="color:var(--txs);">Nenhum SKU foi editado manualmente nesta data.</span>
-        </div>
-      </div>
-      <div id="editados-tabela-wrap" class="hidden">
-        <div class="tw">
-          <table>
-            <thead><tr>
-              <th>CD</th><th>Código</th><th>SKU / Produto</th><th style="text-align:right">Qtd Enviada</th><th style="text-align:right">Qtd Original</th><th>Validade Enviada</th><th>Validade Original</th>
-            </tr></thead>
-            <tbody id="editados-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </div><!-- end tab-relatorios-content -->
 
   <!-- ===== DASHBOARD TAB (SÓ MATRIZ) ===== -->
@@ -1584,6 +1546,23 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 <script>
 const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paezinhos Leite Panutrinha Panutrir 400g","7":"Panetone C/ Frutas Panutrir 400g","11":"Pao Integral Centeio Fitness Zero Panutrir 350g","16":"Pao Integ 7 Graos Damasco Hibisco Zero Panutrir 350g","655":"Pao Integral 12 Graos Panutrir 450g","669":"Bisnaguinha Bisnutrinhas Panutrir 300g","1224":"Pao Cast Para E Quinoa Integ Panutrir Broa 450g","2279":"Pao Pct Caseiro 500g","69251":"Pao Hot Dog Panutrir 400g","81571":"Pao Integral Surpreendente Panutrir 450g","81581":"Pao Integral 12 Graos Zero Panutrir 350g","81591":"Pao Integral Chia Macadamia Panutrir 400g","81661":"Pao Forma Plufi Nut 400g","82051":"Pao Hamburguer Gourmet Panutrir 500g","85181":"Muffato Pao Hot Dog 400g","85841":"Muffato Paezinhos De Leite 400g","86151":"Pao Integral Panutrir 450g","99161":"Pao Integral Plufi Nut 450g","121581":"Us Pao Hot Dog Unisabor 400g","121801":"Us Pao Hamburguer Gourmet Unisabor 500g","121811":"Us Paezinhos De Leite Unisabor 400g","121821":"Us Pao Integral 12 Graos Zero Unisabor 350g","121831":"Us Pao Integral 12 Graos Unisabor 450g","121841":"Us Pao Castanha Para E Quinoa Integ Unisabor 450g","121861":"Us Pao Forma Unisabor 400g","121871":"Us Pao Leite Unisabor 400g","135211":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 500g","135221":"Nossa Padaria Pao Hot Dog Emb Transp 400g","135231":"Nossa Padaria Paezinhos Leite Emb Transp 400g","135241":"Nossa Padaria Pao Forma Emb Transp 400g","141441":"Pao Sirio Tradic Panificadora Dubai 320g","141951":"Pao Sirio Tradic Panificadora Dubai 260g","145511":"Pao Nutri Del Grano Tradicional Panutrir 500g","145521":"Pao Nutri Del Grano Integral Panutrir 500g","152291":"Pao Sirio Integral Panificadora Dubai 300g","156021":"Panetone C/ Frutas Plufi Nut 300g","156051":"Panetone C/ Gotas Chocolate Plufi Nut 300g","162272":"Nossa Padaria Bisnaguinha Emb Transp 300g","162275":"Nossa Padaria Pao Hamburguer Gourmet Emb Trans 330g","162276":"Nossa Padaria Pao Integral Emb Transp 450g","162358":"Us Pao Integral Unisabor 450g","162396":"Pao Nutri Del Grano Tipo Caseiro Panutrir 500g","162767":"Muffato Pao Integral 450g","162775":"Muffato Bisnaguinhas 300g","162783":"Us Pao Artesanal Tradicional Unisabor 500g","162784":"Us Pao Artesanal Integral Unisabor 500g","162800":"Muffato Pao Forma 400g","162801":"Muffato Pao Leite 400g","162802":"Muffato Pao Hamburguer 500g","162920":"Pao Nutri Del Grano Hamburguer Artesanal Panutrir 320g","162921":"Pao Nutri Del Grano Hamburguer Brioche Panutrir 320g","162922":"Pao Nutri Del Grano Hamburguer Australiano Panutrir 320g","162923":"Pao Nutri Del Grano Hamburguer Gergelim Panutrir 320g"};
 
+// Família e PPG (pães por grade) por código de produto.
+// Extraídos da aba "TOTAL" da planilha modelo Estoque_Total_CIA.
+// Usados na aba "Total CIA" do relatório consolidado. Mapeamento por código individual.
+const FAMILIA_PROD = {"2":"Forma","5":"Forma","81591":"Especiais","121811":"Paezinhos de Leite","11":"Especiais","16":"Especiais","669":"Bisnaguinhas","135221":"Hot Dog","2279":"Del Grano 500g","69251":"Hot Dog","141441":"Sirio","121801":"Hamburguer com 6","6":"Paezinhos de Leite","81661":"Forma","82051":"Hamburguer com 6","85181":"Hot Dog","85841":"Paezinhos de Leite","86151":"Forma","121581":"Hot Dog","81571":"Broa","135211":"Hamburguer com 6","121871":"Forma","121821":"Especiais","121831":"Broa","121841":"Broa","121861":"Forma","162920":"Hamburguer com 4","162922":"Hamburguer com 4","1224":"Broa","135241":"Forma","162275":"Hamburguer com 4","141951":"Sirio","145511":"Del Grano 500g","145521":"Del Grano 500g","81581":"Especiais","162272":"Bisnaguinhas","162276":"Forma","162358":"Forma","162396":"Del Grano 500g","162767":"Forma","162775":"Bisnaguinhas","162783":"Del Grano 500g","162784":"Del Grano 500g","162800":"Forma","162801":"Forma","135231":"Paezinhos de Leite","655":"Broa","162921":"Hamburguer com 4","162802":"Hamburguer com 6","162923":"Hamburguer com 4"};
+const PPG_PROD = {"2":12,"5":12,"81591":15,"121811":10,"11":15,"16":15,"669":12,"135221":8,"2279":10,"69251":8,"141441":20,"121801":8,"6":10,"81661":12,"82051":8,"85181":8,"85841":10,"86151":10,"121581":8,"81571":10,"135211":8,"121871":10,"121821":15,"121831":10,"121841":10,"121861":12,"162920":10,"162922":10,"1224":10,"135241":12,"162275":10,"141951":20,"145511":9,"145521":9,"81581":15,"162272":12,"162276":10,"162358":10,"162396":9,"162767":10,"162775":12,"162783":9,"162784":9,"162800":12,"162801":12,"135231":10,"655":10,"162921":10,"162802":8,"162923":10};
+
+// Ordem das colunas de CD na aba "Total CIA" (rótulo exibido + chaves aceitas na base).
+const TOTAL_CIA_CDS = [
+  {label:'CD BARUERI 12',    keys:['BARUERI','CD BARUERI']},
+  {label:'CD BAURU 3',       keys:['BAURU','CD BAURU']},
+  {label:'CD CURITIBA 4',    keys:['CURITIBA','CD CURITIBA']},
+  {label:'CD LONDRINA 5',    keys:['LONDRINA','CD LONDRINA']},
+  {label:'CD MATRIZ 1',      keys:['MATRIZ','CD MATRIZ','SAPOPEMA']},
+  {label:'CD RANCHARIA 8',   keys:['RANCHARIA','CD RANCHARIA']},
+  {label:'CD SJ RIO PRETO 6',keys:['SJRP','SJ RIO PRETO','CD SJ RIO PRETO','CD SJRP']}
+];
+
 // Venda diária TOTAL da CIA (soma de todos os CDs), por código de produto.
 // Usada na aba "Cobertura CIA Consolidada" do relatório consolidado.
 // Atualize manualmente quando as vendas mudarem.
@@ -1790,10 +1769,7 @@ function okLocal(){
       document.getElementById('painel-monitoramento').style.display = 'block';
       document.getElementById('tab-dashboard').style.display = 'inline-block';
       document.getElementById('tab-rastreio').style.display = 'inline-block';
-      document.getElementById('card-editados').style.display = '';
-      // Preenche a data do card de editados com hoje
       const hoje = new Date().toISOString().split('T')[0];
-      document.getElementById('data_editados').value = hoje;
       document.getElementById('data_relatorio').value = hoje;
       // MATRIZ: oculta a pergunta Sim/Não e mostra os campos diretamente
       document.getElementById('bloco-retorno-pergunta').style.display = 'none';
@@ -1858,7 +1834,6 @@ function logout(){
   document.getElementById('painel-monitoramento').style.display = 'none';
   document.getElementById('tab-dashboard').style.display = 'none';
   document.getElementById('tab-rastreio').style.display = 'none';
-  document.getElementById('card-editados').style.display = 'none';
   // Reseta aviso de formato próprio do Barueri
   const avisoBarueri = document.getElementById('aviso-formato-barueri');
   if (avisoBarueri) avisoBarueri.style.display = 'none';
@@ -1969,15 +1944,24 @@ function parseFormatoBarueri(raw, ks) {
   const pk = ks.find(k => /dias.*vencer/i.test(k.trim())) || 'DIAS PARA VENCER';
   const qk = ks.find(k => /qnt.*und|qtd.*und|quantidade.*und/i.test(k.trim())) || 'QNT UND';
 
-  // Converte uma célula de data: aceita Date (cellDates:true), número serial Excel ou string
+  // Converte uma célula de data: aceita Date (cellDates:true), número serial Excel ou string.
+  // IMPORTANTE: usa componentes UTC para formatar. Com cellDates:true o XLSX cria a Date
+  // na meia-noite UTC; formatar em horário local (UTC-3, Brasil) recuava o dia em 1
+  // (ex.: 21/06 virava 20/06). Lendo os componentes em UTC a data fica exata.
+  function fmtDataUTC(d) {
+    const dia = String(d.getUTCDate()).padStart(2, '0');
+    const mes = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const ano = d.getUTCFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
   function toDataBR(v) {
     if (v === '' || v === undefined || v === null) return '';
-    if (v instanceof Date) return v.toLocaleDateString('pt-BR');
+    if (v instanceof Date) return fmtDataUTC(v);
     if (typeof v === 'number' && isFinite(v)) {
       // Serial Excel: dias desde 30/12/1899
       const ms = (v - 25569) * 86400 * 1000;
       const d  = new Date(ms);
-      if (!isNaN(d.getTime())) return d.toLocaleDateString('pt-BR');
+      if (!isNaN(d.getTime())) return fmtDataUTC(d);
     }
     return String(v).trim();
   }
@@ -2251,6 +2235,9 @@ function switchSubControle(sub){
   // _activeTab passa a refletir a sub-aba ativa, pois várias funções legadas dependem de 'import'/'manual'
   _activeTab = sub;
   if(sub==='manual' && !meBuilt) meBuild();
+  // Ao voltar para a sub-aba de importação com base já carregada, restaura a
+  // barra de ação (espelha o comportamento de switchSubEstoqueCia com ecRows).
+  if(sub==='import' && rows.length > 0) chkDL();
 }
 
 // Sub-abas dentro de "Estoque da CIA"
@@ -2618,7 +2605,14 @@ function ecHandleFile(f){
       ecRows = raw.filter(r=>r[ck]!==''&&r[ck]!==undefined).map(r=>{
         const cod = String(r[ck]).trim().replace(/\.0$/,'');
         let dataEst = r[dk];
-        if(dataEst instanceof Date) dataEst = dataEst.toLocaleString('pt-BR');
+        if(dataEst instanceof Date){
+          // Formata em UTC para não recuar o dia em fusos negativos (Brasil UTC-3).
+          const dd = String(dataEst.getUTCDate()).padStart(2,'0');
+          const mm = String(dataEst.getUTCMonth()+1).padStart(2,'0');
+          const yy = dataEst.getUTCFullYear();
+          const hh = dataEst.getUTCHours(), mi = dataEst.getUTCMinutes();
+          dataEst = (hh||mi) ? `${dd}/${mm}/${yy} ${String(hh).padStart(2,'0')}:${String(mi).padStart(2,'0')}` : `${dd}/${mm}/${yy}`;
+        }
         else dataEst = String(dataEst || '').trim();
         const qtd = parseInt(r[qk]) || 0;
         const produtoOriginal = String(r[pk] || '').trim();
@@ -3456,6 +3450,142 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         return avaliarStatus(r.prazo, cob).nivel;
     }
 
+    // ── aba TOTAL CIA (primeira aba) ──────────────────────────────
+    // Espelha a aba "TOTAL" da planilha modelo Estoque_Total_CIA:
+    //   Cod · produto · Familia · uma coluna por CD · Total Geral ·
+    //   Venda/dia · Cobertura · PPG · GRADES, com rodapé "Total Geral".
+    // Lógica de negócio (definida com o usuário):
+    //   - Soma TODAS as linhas de cada código, distribuídas por CD;
+    //   - Venda/dia = VENDA_DIARIA_CIA[cod] (venda total da CIA);
+    //   - Cobertura = Total Geral / Venda/dia;
+    //   - Entra na aba SOMENTE se Cobertura > 4 dias (alta cobertura);
+    //   - GRADES = Total Geral / PPG;
+    //   - Família e PPG vêm do mapa por código; código sem mapa é excluído.
+    (function gerarAbaTotalCIA() {
+        const CDS = TOTAL_CIA_CDS;
+        // Resolve a coluna de CD (índice) a partir do r.cd da base
+        function indiceCD(cdRaw) {
+            const u = (cdRaw || '').toString().toUpperCase().trim();
+            for (let i = 0; i < CDS.length; i++) {
+                if (CDS[i].keys.some(k => k.toUpperCase() === u)) return i;
+            }
+            return -1;
+        }
+
+        // Agrupa por código somando quantidade por CD
+        const agrupado = {}; // cod -> { porCD:[], total }
+        dados.forEach(r => {
+            const cod = String(r.codigo || '').trim();
+            if (!cod) return;
+            // Só códigos com Família E PPG mapeados entram
+            if (!(cod in FAMILIA_PROD) || !(cod in PPG_PROD)) return;
+            const qtd = Math.abs(parseFloat(r.quantidade) || 0);
+            if (!agrupado[cod]) agrupado[cod] = { porCD: CDS.map(() => 0), total: 0 };
+            const idx = indiceCD(r.cd);
+            if (idx >= 0) agrupado[cod].porCD[idx] += qtd;
+            agrupado[cod].total += qtd; // total inclui mesmo CD não mapeado, para fidelidade
+        });
+
+        // Monta linhas, aplicando o corte de cobertura > 4
+        const linhas = [];
+        Object.keys(agrupado).forEach(cod => {
+            const g = agrupado[cod];
+            const venda = parseFloat(VENDA_DIARIA_CIA[cod]) || 0;
+            if (venda <= 0) return;                         // sem venda → fora
+            const cobertura = g.total / venda;
+            if (!(cobertura > 3)) return;                   // só alta cobertura (acima de 3 dias)
+            const ppg = parseFloat(PPG_PROD[cod]) || 0;
+            const grades = ppg > 0 ? g.total / ppg : null;
+            linhas.push({
+                cod, produto: (SKU[cod] || '').toUpperCase(), familia: FAMILIA_PROD[cod] || '',
+                porCD: g.porCD, total: g.total, venda,
+                cobertura: +cobertura.toFixed(1),
+                ppg, grades: grades !== null ? Math.round(grades) : '-'
+            });
+        });
+
+        if (linhas.length === 0) {
+            // Sem itens em alta cobertura: cria aba mínima informativa
+            const vazia = XLSX.utils.aoa_to_sheet([
+                ['Cod','produto','Familia',...CDS.map(c => c.label),'Total Geral','Venda/dia','Cobertura','PPG','GRADES'].map(h => h.toUpperCase()),
+                ['—','NENHUM ITEM COM COBERTURA ACIMA DE 3 DIAS','', ...CDS.map(()=>''),'','','','','']
+            ]);
+            XLSX.utils.book_append_sheet(wb, vazia, 'Alta Cobertura');
+            return;
+        }
+
+        // Ordena por cobertura decrescente (maior risco no topo)
+        linhas.sort((a, b) => b.cobertura - a.cobertura);
+
+        const headerTotal = ['Cod','produto','Familia',...CDS.map(c => c.label),'Total Geral','Venda/dia','Cobertura','PPG','GRADES'].map(h => h.toUpperCase());
+        const totalData = [headerTotal];
+        linhas.forEach(l => {
+            totalData.push([
+                isNaN(+l.cod) ? l.cod : +l.cod,
+                l.produto, l.familia,
+                ...l.porCD,
+                l.total,
+                +l.venda.toFixed(1),
+                l.cobertura,
+                l.ppg,
+                l.grades
+            ]);
+        });
+
+        // Rodapé "Total Geral": soma das colunas numéricas (por CD + Total Geral + GRADES).
+        // Layout (15 colunas): Cod, produto, Familia, [7 CDs], Total Geral, Venda/dia,
+        // Cobertura, PPG, GRADES. As 3 colunas Venda/dia, Cobertura e PPG ficam vazias
+        // no rodapé; GRADES recebe a soma. (Antes havia 1 vazio a mais, jogando o total
+        // de GRADES para fora da tabela.)
+        const somaCD = CDS.map((_, i) => linhas.reduce((s, l) => s + l.porCD[i], 0));
+        const somaTotal  = linhas.reduce((s, l) => s + l.total, 0);
+        const somaGrades = linhas.reduce((s, l) => s + (typeof l.grades === 'number' ? l.grades : 0), 0);
+        totalData.push([
+            'Total Geral','','',
+            ...somaCD,
+            somaTotal,
+            '','','',      // Venda/dia, Cobertura, PPG (vazios)
+            somaGrades     // GRADES
+        ]);
+
+        const wsT = XLSX.utils.aoa_to_sheet(totalData);
+        wsT['!cols'] = headerTotal.map((_, i) => ({ wch: i === 1 ? 18 : 9 }));
+        // Altura maior na linha do cabeçalho p/ acomodar as 2 linhas de texto.
+        wsT['!rows'] = [{ hpt: 30 }];
+
+        const nCols = headerTotal.length;
+        // Cabeçalho estilizado (texto em 2 linhas: wrapText + centralizado)
+        for (let c = 0; c < nCols; c++) {
+            const ref = XLSX.utils.encode_cell({ r: 0, c });
+            if (wsT[ref]) wsT[ref].s = {
+                font:{bold:true, color:{rgb:'FFFFFF'}},
+                fill:{patternType:'solid', fgColor:{rgb:'C67C2A'}},
+                alignment:{wrapText:true, horizontal:'center', vertical:'center'}
+            };
+        }
+        // Rodapé Total Geral em negrito
+        const rFoot = totalData.length - 1;
+        for (let c = 0; c < nCols; c++) {
+            const ref = XLSX.utils.encode_cell({ r: rFoot, c });
+            if (wsT[ref]) wsT[ref].s = { font:{bold:true}, fill:{patternType:'solid', fgColor:{rgb:'FFE9D1'}} };
+        }
+        // Destaque na coluna Cobertura (índice = 3 + nCDs + 2):
+        // cobertura acima de 3 → fonte vermelha e negrito.
+        const colCob = 3 + CDS.length + 2;
+        for (let i = 1; i <= linhas.length; i++) {
+            const ref = XLSX.utils.encode_cell({ r: i, c: colCob });
+            const cob = linhas[i - 1].cobertura;
+            let fg = 'F5EDD5';                 // >3 atenção
+            if (cob > 5) fg = 'F0D5D5';        // >5 urgente
+            if (wsT[ref]) wsT[ref].s = {
+                fill:{patternType:'solid', fgColor:{rgb:fg}},
+                font: cob > 3 ? {bold:true, color:{rgb:'C0392B'}} : {}
+            };
+        }
+
+        XLSX.utils.book_append_sheet(wb, wsT, 'Alta Cobertura');
+    })();
+
     // ── aba CONSOLIDADO ───────────────────────────────────────────
     // A análise por Validade Efetiva é usada internamente para definir o STATUS
     // e a ordenação, mas a coluna em si NÃO aparece para manter a planilha limpa.
@@ -3473,11 +3603,16 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         const nivel  = statusNivel(r, cob);
         return { r, cob, ve, ehMatriz, status, nivel };
     }).sort((a, b) => {
+        // Linhas com ALERTA combinado (data curta + alta cobertura) sobem ao topo.
+        const aAlerta = a.status === 'ALERTA - ALTA COBERTURA E DATA CURTA';
+        const bAlerta = b.status === 'ALERTA - ALTA COBERTURA E DATA CURTA';
+        if (aAlerta !== bAlerta) return aAlerta ? -1 : 1;
+        // Dentro do mesmo grupo: menor prazo (mais urgente) primeiro.
         const pA = parseFloat(a.r.prazo);
         const pB = parseFloat(b.r.prazo);
         const aVal = isFinite(pA) ? pA : 99999;
         const bVal = isFinite(pB) ? pB : 99999;
-        return aVal - bVal; // menor prazo (mais urgente) primeiro
+        return aVal - bVal;
     });
 
     const niveisConsolidado = []; // nível canônico por linha (alinha com wsData a partir do índice 1)
@@ -3505,26 +3640,29 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     const fillAtencao = { patternType:'solid', fgColor:{rgb:'F5EDD5'} };
     const fillOk      = { patternType:'solid', fgColor:{rgb:'D9EDDD'} };
     const fillSem     = { patternType:'solid', fgColor:{rgb:'EDEDED'} };
-    const fillAlerta  = { patternType:'solid', fgColor:{rgb:'C0392B'} }; // alerta combinado: vermelho forte
 
+    const nColsCons = header.length;
     for(let i = 1; i < wsData.length; i++) {
         const cellRefStatus = XLSX.utils.encode_cell({r: i, c: 7});  // STATUS COBERTURA
         const cellRefCob    = XLSX.utils.encode_cell({r: i, c: 6});  // COBERTURA
         const cellEdit      = XLSX.utils.encode_cell({r: i, c: 10}); // EDITADO MANUALMENTE
-        const label  = wsData[i][7];
         const nivel  = niveisConsolidado[i - 1];
-        const ehAlerta = label === 'ALERTA - ALTA COBERTURA E DATA CURTA';
+        const cobVal = parseFloat(wsData[i][6]);
+
+        // Obs.: linhas de ALERTA combinado continuam agrupadas no topo (ver sort),
+        // mas seguem o mesmo padrão de cor das demais — sem pintar a linha inteira.
         let fill;
-        if(ehAlerta)                  fill = fillAlerta;
-        else if(nivel === 'URGENTE')  fill = fillUrgente;
+        if(nivel === 'URGENTE')       fill = fillUrgente;
         else if(nivel === 'CRÍTICO')  fill = fillCritico;
         else if(nivel === 'ATENÇÃO')  fill = fillAtencao;
         else if(nivel === 'OK')       fill = fillOk;
         else                          fill = fillSem;
-        if(ws[cellRefStatus]) ws[cellRefStatus].s = ehAlerta
-            ? { fill, font:{bold:true, color:{rgb:'FFFFFF'}} }
-            : { fill, font:{bold: nivel==='URGENTE'||nivel==='CRÍTICO'} };
-        if(ws[cellRefCob])    ws[cellRefCob].s    = { fill: ehAlerta ? fillUrgente : fill };
+        if(ws[cellRefStatus]) ws[cellRefStatus].s = { fill, font:{bold: nivel==='URGENTE'||nivel==='CRÍTICO'} };
+        // Coluna COBERTURA: acima de 3 dias → fonte vermelha e negrito.
+        if(ws[cellRefCob]) ws[cellRefCob].s = {
+            fill,
+            font: (isFinite(cobVal) && cobVal > 3) ? {bold:true, color:{rgb:'C0392B'}} : {}
+        };
         if(ws[cellEdit] && wsData[i][10]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
     }
 
@@ -3680,7 +3818,12 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             if (wsCia[refStatus]) wsCia[refStatus].s = ehAlerta
                 ? { fill, font: { bold: true, color: { rgb: 'FFFFFF' } } }
                 : { fill, font: { bold: nivel === 'URGENTE' || nivel === 'CRÍTICO' } };
-            if (wsCia[refCob])    wsCia[refCob].s    = { fill: ehAlerta ? fillUrgente : fill };
+            // Coluna COBERTURA: acima de 3 dias → fonte vermelha e negrito.
+            const cobVal = parseFloat(ciaData[i][4]);
+            if (wsCia[refCob]) wsCia[refCob].s = {
+                fill: ehAlerta ? fillUrgente : fill,
+                font: (isFinite(cobVal) && cobVal > 3) ? { bold: true, color: { rgb: 'C0392B' } } : {}
+            };
         }
         // Linha de total em negrito
         const refTotalLabel = XLSX.utils.encode_cell({ r: ciaData.length - 1, c: 0 });
@@ -3690,7 +3833,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             if (wsCia[ref]) wsCia[ref].s = { font: { bold: true }, fill: { patternType: 'solid', fgColor: { rgb: 'FFE9D1' } } };
         }
 
-        XLSX.utils.book_append_sheet(wb, wsCia, "Cobertura CIA Consolidada");
+        XLSX.utils.book_append_sheet(wb, wsCia, "Ranking de cobertura");
     })();
 
     // ── aba ALERTAS (urgentes, críticos e atenção) ────────────────
@@ -3708,6 +3851,10 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         })
         .filter(r => r.nivel === 'URGENTE' || r.nivel === 'CRÍTICO' || r.nivel === 'ATENÇÃO')
         .sort((a, b) => {
+            // ALERTA combinado (data curta + alta cobertura) sobe ao topo.
+            const aAlerta = a.status === 'ALERTA - ALTA COBERTURA E DATA CURTA';
+            const bAlerta = b.status === 'ALERTA - ALTA COBERTURA E DATA CURTA';
+            if (aAlerta !== bAlerta) return aAlerta ? -1 : 1;
             // Não-Matriz vem antes (tem VE); Matriz depois
             if (!a.ehMatriz && b.ehMatriz) return -1;
             if (a.ehMatriz && !b.ehMatriz) return 1;
@@ -3720,21 +3867,21 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         });
 
     if(alertas.length > 0) {
-        const hRes = ['STATUS','CD ORIGEM','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','ESTOQUE','VENDA DIÁRIA','COBERTURA (DIAS)','VALIDADE EFETIVA (DIAS)'];
+        const hRes = ['STATUS','CD ORIGEM','CÓDIGO','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','ESTOQUE','VENDA DIÁRIA','COBERTURA (DIAS)','VALIDADE EFETIVA (DIAS)'];
         const resData = [hRes];
         alertas.forEach(r => {
             const venda = getVendaParaLinha(r);
             const cdUpper = (r.cd || '').toString().toUpperCase().trim();
             const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
             resData.push([
-                r.status, r.cd, r.produto, r.validade, r.prazo,
+                r.status, r.cd, r.codigo, r.produto, r.validade, r.prazo,
                 r.quantidade, venda,
                 r.cob !== null ? r.cob : '-',
                 (!ehMatriz && r.ve !== null) ? r.ve : '-'
             ]);
         });
         const wsRes = XLSX.utils.aoa_to_sheet(resData);
-        wsRes['!cols'] = [{wch:40},{wch:14},{wch:46},{wch:12},{wch:13},{wch:10},{wch:13},{wch:18},{wch:22}];
+        wsRes['!cols'] = [{wch:40},{wch:14},{wch:10},{wch:46},{wch:12},{wch:13},{wch:10},{wch:13},{wch:18},{wch:22}];
 
         // Estilo do cabeçalho
         for(let c = 0; c < hRes.length; c++) {
@@ -3743,24 +3890,37 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         }
         // Cor por status
         const fillAlertaA = { patternType:'solid', fgColor:{rgb:'C0392B'} }; // alerta combinado
+        const nColsAlertas = hRes.length;
         for (let i = 1; i < resData.length; i++) {
-            const refStatus = XLSX.utils.encode_cell({r: i, c: 0});
-            const refCob    = XLSX.utils.encode_cell({r: i, c: 7});
-            const refVe     = XLSX.utils.encode_cell({r: i, c: 8});
+            const refCob    = XLSX.utils.encode_cell({r: i, c: 8});
+            const refVe     = XLSX.utils.encode_cell({r: i, c: 9});
             const label = resData[i][0];
             const nivel = alertas[i - 1].nivel;
             const ehAlerta = label === 'ALERTA - ALTA COBERTURA E DATA CURTA';
+
+            if (ehAlerta) {
+                // Linha INTEIRA preenchida de vermelho, fonte branca em negrito.
+                for (let c = 0; c < nColsAlertas; c++) {
+                    const ref = XLSX.utils.encode_cell({r: i, c});
+                    if (wsRes[ref]) wsRes[ref].s = { fill: fillAlertaA, font:{bold:true, color:{rgb:'FFFFFF'}} };
+                }
+                continue;
+            }
+
+            const refStatus = XLSX.utils.encode_cell({r: i, c: 0});
             let fill;
-            if (ehAlerta)                  fill = fillAlertaA;
-            else if (nivel === 'URGENTE')  fill = fillUrgente;
+            if (nivel === 'URGENTE')       fill = fillUrgente;
             else if (nivel === 'CRÍTICO')  fill = fillCritico;
             else if (nivel === 'ATENÇÃO')  fill = fillAtencao;
             else                            fill = fillSem;
-            if (wsRes[refStatus]) wsRes[refStatus].s = ehAlerta
-                ? { fill, font:{bold:true, color:{rgb:'FFFFFF'}} }
-                : { fill, font:{bold: nivel==='URGENTE'||nivel==='CRÍTICO'} };
-            if (wsRes[refCob])    wsRes[refCob].s    = { fill: ehAlerta ? fillUrgente : fill };
-            if (wsRes[refVe])     wsRes[refVe].s     = { fill: ehAlerta ? fillUrgente : fill };
+            if (wsRes[refStatus]) wsRes[refStatus].s = { fill, font:{bold: nivel==='URGENTE'||nivel==='CRÍTICO'} };
+            // Coluna COBERTURA: acima de 3 dias → fonte vermelha e negrito.
+            const cobVal = parseFloat(resData[i][8]);
+            if (wsRes[refCob]) wsRes[refCob].s = {
+                fill,
+                font: (isFinite(cobVal) && cobVal > 3) ? {bold:true, color:{rgb:'C0392B'}} : {}
+            };
+            if (wsRes[refVe]) wsRes[refVe].s = { fill };
         }
 
         XLSX.utils.book_append_sheet(wb, wsRes, "⚠️ Alertas");
@@ -3812,51 +3972,6 @@ function ecDlXlsx(){
 // -------------------------------------------------
 // FUNÇÃO: CARREGAR ITENS EDITADOS MANUALMENTE (MATRIZ)
 // -------------------------------------------------
-async function carregarEditados() {
-  const dataInput = document.getElementById('data_editados').value;
-  if (!dataInput) { alert('Selecione uma data.'); return; }
-  const partes = dataInput.split('-');
-  const dataFmt = `${partes[2]}/${partes[1]}/${partes[0]}`;
-
-  document.getElementById('editados-loading').classList.remove('hidden');
-  document.getElementById('editados-vazio').classList.add('hidden');
-  document.getElementById('editados-tabela-wrap').classList.add('hidden');
-
-  try {
-    const res = await fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(dataFmt)}`);
-    const data = await res.json();
-    document.getElementById('editados-loading').classList.add('hidden');
-
-    if (data.status !== 'sucesso' || !data.dados.length) {
-      document.getElementById('editados-vazio').classList.remove('hidden');
-      return;
-    }
-
-    const editados = data.dados.filter(r => r.skuEditado === true || r.skuEditado === 'true' || r.skuEditado === 1);
-    if (!editados.length) {
-      document.getElementById('editados-vazio').classList.remove('hidden');
-      return;
-    }
-
-    const tbody = document.getElementById('editados-tbody');
-    tbody.innerHTML = editados.map(r => `
-      <tr>
-        <td><span style="background:var(--p);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;">${r.cd}</span></td>
-        <td><span class="codn">${r.codigo}</span></td>
-        <td><span class="skun">${r.produto}</span> <span class="sku-edited-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>editado</span></td>
-        <td style="text-align:right;font-weight:600;">${(parseInt(r.quantidade)||0).toLocaleString('pt-BR')}</td>
-        <td style="text-align:right;color:var(--txs);font-size:12px;">${r.qtdOriginal !== '' && r.qtdOriginal !== undefined ? Number(r.qtdOriginal).toLocaleString('pt-BR') : '—'}</td>
-        <td style="font-family:'Roboto Mono',monospace;font-size:12px;">${r.validade}</td>
-        <td style="font-family:'Roboto Mono',monospace;font-size:12px;color:var(--txs);">${r.validadeOriginal || '—'}</td>
-      </tr>`).join('');
-
-    document.getElementById('editados-tabela-wrap').classList.remove('hidden');
-  } catch(e) {
-    document.getElementById('editados-loading').classList.add('hidden');
-    document.getElementById('editados-vazio').classList.remove('hidden');
-  }
-}
-
 async function processarEnvioNuvem() {
     const cdSelected = cd;
 
