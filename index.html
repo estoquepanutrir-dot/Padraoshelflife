@@ -236,6 +236,29 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .status-missing { background: var(--cs); color: var(--ct); border: 1px solid #f1a9a5; }
 .loading-api { font-size: 12px; color: var(--txs); font-style: italic; }
 
+/* Cadeado de desbloqueio no badge do monitor (Matriz) */
+.cd-status-badge { position: relative; }
+.badge-lock-btn{
+  position:absolute; top:5px; right:5px;
+  width:24px; height:24px; border-radius:6px;
+  border:1px solid rgba(0,0,0,.12); background:rgba(255,255,255,.75);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; padding:0; line-height:1; font-size:13px;
+  transition:background .15s, transform .15s;
+}
+.badge-lock-btn:hover{ background:#fff; transform:scale(1.08); }
+.badge-lock-btn:disabled{ opacity:.45; cursor:default; transform:none; }
+.badge-lock-btn.liberado{ background:#fff4d6; border-color:#e0b94a; }
+
+/* Aviso de "relatório já enviado" (CDs) */
+.aviso-enviado{
+  margin:14px 0; padding:16px 18px; border-radius:var(--r12);
+  background:var(--os); border:1px solid var(--ob); color:var(--ot);
+  font-size:14px; line-height:1.5; display:flex; gap:12px; align-items:flex-start;
+}
+.aviso-enviado .ae-ico{ font-size:22px; line-height:1; flex-shrink:0; }
+.aviso-enviado strong{ display:block; margin-bottom:3px; font-size:15px; }
+
 /* Spinner de carregamento */
 .spinner{width:32px;height:32px;border:3px solid var(--outv);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -481,6 +504,13 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     </div>
     <div class="f" id="senha-field" style="display:none;">
       <input type="password" id="senha_cd" class="modern-select" style="width:100%; border:1px solid var(--out); margin-top:5px;" placeholder="Digite a senha...">
+      <label id="manter-login-wrap" style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:13px; color:var(--txs); cursor:pointer;">
+        <input type="checkbox" id="manter-login" style="width:16px; height:16px; accent-color:var(--p); cursor:pointer;">
+        Manter conectado neste dispositivo
+      </label>
+      <div style="font-size:11px; color:var(--txs); margin-top:4px; line-height:1.4;">
+        Não use esta opção em computadores compartilhados — qualquer pessoa com acesso a este aparelho entrará sem senha.
+      </div>
     </div>
     <button class="btn btn-f" id="btn-acessar" onclick="okLocal()" style="display:none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -583,6 +613,15 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
   <!-- ===== ABA MESTRA: CONTROLE DE DATAS ===== -->
   <div id="tab-controle-content">
+
+  <!-- Aviso exibido quando o CD já enviou o controle de datas hoje -->
+  <div id="aviso-enviado-controle" class="aviso-enviado" style="display:none;">
+    <span class="ae-ico">✅</span>
+    <div>
+      <strong>Relatório de validade já enviado à Matriz.</strong>
+      Para evitar duplicidade, novos lançamentos deste CD estão bloqueados por hoje. Caso precise corrigir alguma informação, entre em contato com o responsável na Matriz para liberar um novo envio.
+    </div>
+  </div>
 
   <!-- Sub-tabs internas -->
   <div class="subtab-bar">
@@ -890,6 +929,14 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
   <!-- ===== GRADES TAB ===== -->
   <div id="tab-grades-content" class="hidden">
+    <!-- Aviso exibido quando o CD já enviou as grades hoje -->
+    <div id="aviso-enviado-grades" class="aviso-enviado" style="display:none;">
+      <span class="ae-ico">✅</span>
+      <div>
+        <strong>Lançamento de grades já enviado à Matriz.</strong>
+        Para evitar duplicidade, novos lançamentos deste CD estão bloqueados por hoje. Caso precise corrigir alguma informação, entre em contato com o responsável na Matriz para liberar um novo envio.
+      </div>
+    </div>
     <div class="card">
       <div class="ch">
         <div class="ci gn">📦</div>
@@ -1732,7 +1779,34 @@ function aplicarRegrasDeDia() {
   }
 }
 
-function okLocal(){
+// ─────────────────────────────────────────────────────────────────────
+// MANTER LOGIN — guarda apenas a UNIDADE escolhida (nunca a senha) no
+// localStorage. Em auto-login, a senha é dispensada porque o usuário
+// optou explicitamente por confiar neste dispositivo.
+// ─────────────────────────────────────────────────────────────────────
+const _LOGIN_KEY = 'panutrir_login_unidade';
+
+function salvarLoginSalvo(v){
+  try { localStorage.setItem(_LOGIN_KEY, v); } catch(e) {}
+}
+function limparLoginSalvo(){
+  try { localStorage.removeItem(_LOGIN_KEY); } catch(e) {}
+}
+function lerLoginSalvo(){
+  try { return localStorage.getItem(_LOGIN_KEY) || ''; } catch(e) { return ''; }
+}
+
+// Tenta entrar automaticamente se houver login salvo neste dispositivo.
+function tentarAutoLogin(){
+  const v = lerLoginSalvo();
+  if (!v) return;
+  // Reflete a escolha no select (caso o usuário faça logout depois)
+  const sel = document.getElementById('li');
+  if (sel) { try { sel.value = v; } catch(e) {} }
+  okLocal(v);
+}
+
+function okLocal(autoV){
   const senhas = {
     "MATRIZ": "445566@Edu",
     "BRUNO": "123rom",
@@ -1744,14 +1818,27 @@ function okLocal(){
     "BARUERI": "bar1234"
   };
 
-  const v = document.getElementById('li').value.trim().toUpperCase();
-  const s = document.getElementById('senha_cd').value.trim();
+  // Modo auto-login: a unidade vem do armazenamento, sem digitar senha.
+  const ehAuto = typeof autoV === 'string' && autoV;
 
-  if(!v){document.getElementById('li').style.borderColor='#B3261E';return;}
-  
-  if(!s || senhas[v] !== s) {
-    alert("Senha incorreta para a unidade " + v + "!");
-    return;
+  const v = ehAuto ? autoV.trim().toUpperCase()
+                   : document.getElementById('li').value.trim().toUpperCase();
+  const s = ehAuto ? '' : document.getElementById('senha_cd').value.trim();
+
+  if(!v){ if(!ehAuto) document.getElementById('li').style.borderColor='#B3261E'; return; }
+
+  // Valida senha só no login manual. No auto-login, a unidade precisa existir.
+  if (ehAuto) {
+    if (!senhas.hasOwnProperty(v)) { limparLoginSalvo(); return; }
+  } else {
+    if(!s || senhas[v] !== s) {
+      alert("Senha incorreta para a unidade " + v + "!");
+      return;
+    }
+    // Salva (ou limpa) a preferência de "manter conectado"
+    const manter = document.getElementById('manter-login');
+    if (manter && manter.checked) salvarLoginSalvo(v);
+    else limparLoginSalvo();
   }
 
   // Bruno Ramanauskas: usuário com todas as permissões da Matriz.
@@ -1818,6 +1905,8 @@ function okLocal(){
       atualizarBtnGrades();
       // Verifica se este CD já lançou algum tipo de grades hoje (bloqueia a outra opção)
       verificarBloqueioGradesDoDia();
+      // Verifica se este CD já ENVIOU o relatório hoje (bloqueia novo envio)
+      aplicarBloqueioEnvios();
   }
 
   // Aplica as regras de dia da semana (oculta abas não liberadas para o dia)
@@ -1828,6 +1917,8 @@ function okLocal(){
 }
 
 function logout(){
+  // Ao sair, encerra também o "manter conectado" deste dispositivo.
+  limparLoginSalvo();
   cd = '';
   rows = [];
   hasW = false;
@@ -1840,6 +1931,8 @@ function logout(){
   document.getElementById('senha_cd').value = '';
   document.getElementById('senha-field').style.display = 'none';
   document.getElementById('btn-acessar').style.display = 'none';
+  const manterChk = document.getElementById('manter-login');
+  if (manterChk) manterChk.checked = false;
   // Oculta abas exclusivas da matriz
   document.getElementById('tab-relatorios').style.display = 'none';
   document.getElementById('painel-monitoramento').style.display = 'none';
@@ -2166,6 +2259,7 @@ function showDL(){
   document.getElementById('action-cd-label').textContent=cd;
   document.getElementById('action-section').style.display='flex';
   _activeTab='import';
+  if (typeof aplicarBloqueioBotaoEstoque === 'function') aplicarBloqueioBotaoEstoque();
 }
 function hideDL(){document.getElementById('action-section').style.display='none'}
 
@@ -2231,6 +2325,10 @@ function switchTab(t){
   if(t==='grades' && cd && cd !== 'MATRIZ') {
     verificarBloqueioGradesDoDia();
     abrirModalTipoGrades();
+    aplicarBloqueioEnvios();
+  }
+  if(t==='controle' && cd && cd !== 'MATRIZ') {
+    aplicarBloqueioEnvios();
   }
 }
 
@@ -2511,6 +2609,7 @@ function meShowDL(){
   document.getElementById('action-cd-label').textContent=cd;
   document.getElementById('action-section').style.display='flex';
   _activeTab='manual';
+  if (typeof aplicarBloqueioBotaoEstoque === 'function') aplicarBloqueioBotaoEstoque();
 }
 function meHideDL(){document.getElementById('action-section').style.display='none'}
 
@@ -3071,8 +3170,89 @@ async function verificarBloqueioGradesDoDia() {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// BLOQUEIO DE ENVIO (CDs): após enviar o relatório à Matriz, o CD não
+// pode reenviar no mesmo dia, a menos que a Matriz libere pelo cadeado.
+// Fonte da verdade = backend (action=status): enviadosEstoque,
+// enviadosGrades, liberadosEstoque, liberadosGrades. Persiste após F5.
+// ─────────────────────────────────────────────────────────────────────
+
+// Estado local do bloqueio do CD logado (para o dia de hoje)
+let _bloqueioEnvio = { estoque: false, grades: false };
+
+// Aplica o bloqueio do botão "ENVIAR ESTOQUE PARA MATRIZ" (shelflife)
+// Só bloqueia quando a aba ativa é o Controle de Datas (import/manual);
+// a aba Estoque da CIA continua liberada (envio em append).
+function aplicarBloqueioBotaoEstoque() {
+    const aviso = document.getElementById('aviso-enviado-controle');
+    const btn   = document.querySelector('.btn-save-cloud');
+    const ehControle = (_activeTab === 'import' || _activeTab === 'manual');
+    const bloqueado = _bloqueioEnvio.estoque && ehControle;
+    if (aviso) aviso.style.display = (_bloqueioEnvio.estoque && ehControle) ? 'flex' : 'none';
+    if (btn) {
+        btn.disabled = bloqueado;
+        btn.style.opacity = bloqueado ? '0.5' : '';
+        btn.style.cursor  = bloqueado ? 'not-allowed' : '';
+        btn.title = bloqueado
+            ? 'Relatório já enviado hoje. Contate a Matriz para liberar um novo envio.'
+            : '';
+    }
+}
+
+// Aplica o bloqueio do formulário de grades
+function aplicarBloqueioFormGrades() {
+    const aviso = document.getElementById('aviso-enviado-grades');
+    const form  = document.getElementById('form-gestao-grades');
+    const btn   = document.getElementById('btn-envia-grades');
+    const bloqueado = _bloqueioEnvio.grades;
+    if (aviso) aviso.style.display = bloqueado ? 'flex' : 'none';
+    if (form) {
+        form.style.opacity = bloqueado ? '0.5' : '';
+        form.style.pointerEvents = bloqueado ? 'none' : '';
+    }
+    if (btn) btn.disabled = bloqueado ? true : btn.disabled;
+}
+
+// Consulta o backend e define o estado de bloqueio do CD logado.
+// Bloqueia se já enviou hoje E não há desbloqueio ativo da Matriz.
+async function aplicarBloqueioEnvios() {
+    if (!cd || cd === 'MATRIZ') {
+        _bloqueioEnvio = { estoque: false, grades: false };
+        aplicarBloqueioBotaoEstoque();
+        aplicarBloqueioFormGrades();
+        return;
+    }
+    try {
+        const hoje = new Date().toLocaleDateString('pt-BR');
+        const resp = await fetch(`${API_URL}?action=status&data=${encodeURIComponent(hoje)}`);
+        const data = await resp.json();
+
+        const norm = arr => Array.isArray(arr) ? arr.map(s => s.toUpperCase().trim()) : [];
+        const enviouEstoque  = norm(data.enviadosEstoque).includes(cd.toUpperCase());
+        const enviouGrades   = norm(data.enviadosGrades).includes(cd.toUpperCase());
+        const liberadoEstoque = norm(data.liberadosEstoque).includes(cd.toUpperCase());
+        const liberadoGrades  = norm(data.liberadosGrades).includes(cd.toUpperCase());
+
+        _bloqueioEnvio.estoque = enviouEstoque && !liberadoEstoque;
+        _bloqueioEnvio.grades  = enviouGrades  && !liberadoGrades;
+    } catch (err) {
+        console.warn('Não foi possível verificar bloqueio de envios:', err);
+        // Falha de rede: não bloqueia, para não travar o operador.
+        _bloqueioEnvio = { estoque: false, grades: false };
+    }
+    aplicarBloqueioBotaoEstoque();
+    aplicarBloqueioFormGrades();
+}
+
 async function lancarGestaoGrades(event) {
     event.preventDefault();
+
+    // Bloqueio: este CD já enviou grades hoje e a Matriz não liberou novo envio.
+    if (cd && cd !== 'MATRIZ' && _bloqueioEnvio.grades) {
+        alert("🔒 O lançamento de grades deste CD já foi enviado à Matriz hoje.\n\nPara corrigir alguma informação, contate o responsável na Matriz para liberar um novo envio.");
+        aplicarBloqueioFormGrades();
+        return;
+    }
 
     let cdNome = document.getElementById('cd_nome').value;
     if (!cdNome && cd) cdNome = "CD " + cd;
@@ -3179,9 +3359,9 @@ async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
                 const cdSigla = cdNome.replace(/^CD\s*/i,'').toUpperCase();
                 if (gradesEnviadas.includes(cdSigla)) {
                     const ok = confirm(
-                        `⚠️ Lançamento de grades já registrado para ${cdNome} hoje.\n\n` +
-                        `Deseja registrar um novo lançamento?\n\n` +
-                        `(Múltiplos lançamentos no mesmo dia são permitidos.)`
+                        `⚠️ Já existe um lançamento de grades para ${cdNome} hoje.\n\n` +
+                        `Ao continuar, o lançamento anterior será SUBSTITUÍDO por este novo.\n\n` +
+                        `Deseja continuar?`
                     );
                     resolve(ok);
                 } else {
@@ -3207,6 +3387,10 @@ async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
         alert(msg);
         document.getElementById('texto_gerado').innerText = textoFinal;
         document.getElementById('resultado_gestao').classList.remove('hidden');
+        if (cd !== 'MATRIZ') {
+            _bloqueioEnvio.grades = true;
+            aplicarBloqueioFormGrades();
+        }
         atualizarStatusMonitor();
     })
     .catch(error => {
@@ -3236,6 +3420,8 @@ async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
             verificarBloqueioGradesDoDia();
         }
         atualizarBtnGrades();
+        // Reaplica o bloqueio de envio (se acabou de enviar, trava o form)
+        if (cd !== 'MATRIZ') aplicarBloqueioFormGrades();
     });
 }
 
@@ -4048,6 +4234,12 @@ async function processarEnvioNuvem() {
     }
 
     // === Caso padrão: aba de controle de datas (import ou manual) ===
+    // Bloqueio: este CD já enviou hoje e a Matriz não liberou novo envio.
+    if (cdSelected !== 'MATRIZ' && _bloqueioEnvio.estoque) {
+        alert("🔒 O relatório de validade deste CD já foi enviado à Matriz hoje.\n\nPara corrigir alguma informação, contate o responsável na Matriz para liberar um novo envio.");
+        aplicarBloqueioBotaoEstoque();
+        return;
+    }
     const fonte = _activeTab === 'manual' ? meProcessed : rows;
 
     if (!fonte || fonte.length === 0) {
@@ -4093,6 +4285,10 @@ async function processarEnvioNuvem() {
 
         if (result.status === "sucesso") {
             alert("✅ SUCESSO! Dados enviados e unificados com sucesso.");
+            if (cdSelected !== 'MATRIZ') {
+                _bloqueioEnvio.estoque = true;
+                aplicarBloqueioBotaoEstoque();
+            }
             setTimeout(()=>atualizarStatusMonitor(), 1000);
         } else {
             alert("❌ Erro no servidor: " + result.message);
@@ -4173,6 +4369,12 @@ async function atualizarStatusMonitor() {
         const enviadosControle  = Array.isArray(data.enviadosEstoque)    ? data.enviadosEstoque.map(s => s.toUpperCase().trim())    : [];
         const enviadosEstoqueCia = Array.isArray(data.enviadosEstoqueCia) ? data.enviadosEstoqueCia.map(s => s.toUpperCase().trim()) : [];
         const enviadosGrades    = Array.isArray(data.enviadosGrades)    ? data.enviadosGrades.map(s => s.toUpperCase().trim())    : [];
+        const liberadosControle = Array.isArray(data.liberadosEstoque)  ? data.liberadosEstoque.map(s => s.toUpperCase().trim())  : [];
+        const liberadosGrades   = Array.isArray(data.liberadosGrades)   ? data.liberadosGrades.map(s => s.toUpperCase().trim())   : [];
+
+        // Cadeado só permite liberar a data de HOJE (reenvio do dia corrente)
+        const hojeStr = new Date().toLocaleDateString('pt-BR');
+        const ehHoje  = (_monitorData === hojeStr);
 
         // Calcula quais lançamentos eram esperados para a data exibida no monitor.
         // _monitorData está em "dd/mm/yyyy" — converte para Date para descobrir o dia da semana
@@ -4220,6 +4422,28 @@ async function atualizarStatusMonitor() {
                   ${linhas.join('')}
                 </div>
             `;
+
+            // Cadeado de desbloqueio (Matriz): aparece quando o CD JÁ enviou
+            // e a data exibida é hoje. Permite liberar um novo lançamento.
+            if (ehHoje && un !== 'MATRIZ' && (enviouControle || enviouGrades)) {
+                const tipos = [];
+                if (enviouControle) tipos.push({ alvo: 'estoque', rotulo: 'Controle de Datas', liberado: liberadosControle.includes(un) });
+                if (enviouGrades)   tipos.push({ alvo: 'grades',  rotulo: 'Grades',            liberado: liberadosGrades.includes(un) });
+
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'position:absolute;top:5px;right:5px;display:flex;gap:4px;';
+                tipos.forEach(t => {
+                    const b = document.createElement('button');
+                    b.className = 'badge-lock-btn' + (t.liberado ? ' liberado' : '');
+                    b.textContent = t.liberado ? '🔓' : '🔒';
+                    b.title = t.liberado
+                        ? `${un} — ${t.rotulo}: novo envio LIBERADO. Aguardando reenvio do CD.`
+                        : `${un} — ${t.rotulo}: clique para liberar um novo envio deste CD.`;
+                    b.onclick = (ev) => { ev.stopPropagation(); liberarLancamentoCD(un, t.alvo, t.rotulo, t.liberado); };
+                    wrap.appendChild(b);
+                });
+                badge.appendChild(wrap);
+            }
         });
 
         const resumoEl = document.getElementById('mon-data-label');
@@ -4236,6 +4460,45 @@ async function atualizarStatusMonitor() {
 }
 
 window.addEventListener('load', atualizarStatusMonitor);
+// Auto-login se o usuário optou por "manter conectado" neste dispositivo.
+window.addEventListener('load', tentarAutoLogin);
+
+// ─────────────────────────────────────────────────────────────────────
+// MATRIZ — libera um novo lançamento para um CD (cadeado do monitor).
+// Grava um desbloqueio no backend. O CD, ao reenviar, sobrescreve o
+// envio anterior e o desbloqueio é consumido (volta a bloquear depois).
+// ─────────────────────────────────────────────────────────────────────
+async function liberarLancamentoCD(un, alvo, rotulo, jaLiberado) {
+    if (jaLiberado) {
+        alert(`🔓 ${un} — ${rotulo} já está liberado para um novo envio.\n\nO bloqueio voltará automaticamente assim que o CD reenviar.`);
+        return;
+    }
+    const ok = confirm(
+        `Liberar um NOVO lançamento de "${rotulo}" para o CD ${un}?\n\n` +
+        `O CD poderá reenviar e o envio anterior será SUBSTITUÍDO (sem duplicar).\n` +
+        `O bloqueio volta sozinho após o reenvio.`
+    );
+    if (!ok) return;
+
+    const payload = { tipo: 'liberar', cd: un, alvo: alvo, data: _monitorData };
+    try {
+        const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (res.status === 'sucesso') {
+            alert(`✅ ${un} — ${rotulo} liberado. Avise o CD para reenviar.`);
+            atualizarStatusMonitor();
+        } else {
+            alert('❌ Erro ao liberar: ' + (res.message || 'sem detalhes'));
+        }
+    } catch (e) {
+        console.error('Erro ao liberar lançamento:', e);
+        alert('❌ Falha na conexão ao liberar o lançamento.');
+    }
+}
 
 // ========================
 // RESUMO DE GRADES — MATRIZ
