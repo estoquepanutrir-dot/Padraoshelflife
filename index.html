@@ -1916,9 +1916,10 @@ function okLocal(autoV){
       atualizarBtnGrades();
       // Verifica se este CD já lançou algum tipo de grades hoje (bloqueia a outra opção)
       verificarBloqueioGradesDoDia();
-      // Verifica se este CD já ENVIOU o relatório hoje (bloqueia novo envio)
-      aplicarBloqueioEnvios();
   }
+
+  // Verifica se esta unidade (CD ou Matriz) já ENVIOU hoje (bloqueia novo envio)
+  aplicarBloqueioEnvios();
 
   // Aplica as regras de dia da semana (oculta abas não liberadas para o dia)
   aplicarRegrasDeDia();
@@ -2336,9 +2337,9 @@ function switchTab(t){
   if(t==='grades' && cd && cd !== 'MATRIZ') {
     verificarBloqueioGradesDoDia();
     abrirModalTipoGrades();
-    aplicarBloqueioEnvios();
   }
-  if(t==='controle' && cd && cd !== 'MATRIZ') {
+  // Reavalia o bloqueio de envio (CD ou Matriz) ao entrar em grades/controle
+  if((t==='grades' || t==='controle') && cd) {
     aplicarBloqueioEnvios();
   }
 }
@@ -3244,30 +3245,82 @@ function aplicarBloqueioFormGrades() {
 
 // Consulta o backend e define o estado de bloqueio do CD logado.
 // Bloqueia se já enviou hoje E não há desbloqueio ativo da Matriz.
+// ─────────────────────────────────────────────────────────────────────
+// MÁSCARA LOCAL DE BLOQUEIO
+// O bloqueio precisa aparecer IMEDIATAMENTE (ao enviar ou ao reabrir),
+// sem esperar o servidor. Guardamos no localStorage uma marca por
+// CD + tipo + DATA (a data na chave faz a marca "expirar" sozinha na
+// virada do dia). O DESBLOQUEIO só acontece quando o servidor confirma
+// que a Matriz liberou — por isso pode demorar a propagar, e tudo bem.
+// ─────────────────────────────────────────────────────────────────────
+function _chaveBloqueio(tipo, unidade, dataStr) {
+    return `panutrir_bloq_${tipo}_${unidade}_${dataStr}`;
+}
+function marcarBloqueioLocal(tipo) {
+    if (!cd) return;
+    try {
+        const hoje = new Date().toLocaleDateString('pt-BR');
+        localStorage.setItem(_chaveBloqueio(tipo, cd.toUpperCase(), hoje), '1');
+    } catch(e) {}
+}
+function lerBloqueioLocal(tipo) {
+    if (!cd) return false;
+    try {
+        const hoje = new Date().toLocaleDateString('pt-BR');
+        return localStorage.getItem(_chaveBloqueio(tipo, cd.toUpperCase(), hoje)) === '1';
+    } catch(e) { return false; }
+}
+function limparBloqueioLocal(tipo) {
+    if (!cd) return;
+    try {
+        const hoje = new Date().toLocaleDateString('pt-BR');
+        localStorage.removeItem(_chaveBloqueio(tipo, cd.toUpperCase(), hoje));
+    } catch(e) {}
+}
+
 async function aplicarBloqueioEnvios() {
-    if (!cd || cd === 'MATRIZ') {
+    if (!cd) {
         _bloqueioEnvio = { estoque: false, grades: false };
         aplicarBloqueioBotaoEstoque();
         aplicarBloqueioFormGrades();
         return;
     }
+
+    // 1) MÁSCARA LOCAL — aplica o bloqueio NA HORA, sem esperar o servidor.
+    _bloqueioEnvio.estoque = lerBloqueioLocal('estoque');
+    _bloqueioEnvio.grades  = lerBloqueioLocal('grades');
+    aplicarBloqueioBotaoEstoque();
+    aplicarBloqueioFormGrades();
+
+    // 2) SERVIDOR (em segundo plano) — confirma envios e processa liberações.
     try {
         const hoje = new Date().toLocaleDateString('pt-BR');
         const resp = await fetch(`${API_URL}?action=status&data=${encodeURIComponent(hoje)}`);
         const data = await resp.json();
 
         const norm = arr => Array.isArray(arr) ? arr.map(s => s.toUpperCase().trim()) : [];
-        const enviouEstoque  = norm(data.enviadosEstoque).includes(cd.toUpperCase());
-        const enviouGrades   = norm(data.enviadosGrades).includes(cd.toUpperCase());
-        const liberadoEstoque = norm(data.liberadosEstoque).includes(cd.toUpperCase());
-        const liberadoGrades  = norm(data.liberadosGrades).includes(cd.toUpperCase());
+        const eu = cd.toUpperCase();
+        const enviouEstoque   = norm(data.enviadosEstoque).includes(eu);
+        const enviouGrades    = norm(data.enviadosGrades).includes(eu);
+        const liberadoEstoque = norm(data.liberadosEstoque).includes(eu);
+        const liberadoGrades  = norm(data.liberadosGrades).includes(eu);
 
-        _bloqueioEnvio.estoque = enviouEstoque && !liberadoEstoque;
-        _bloqueioEnvio.grades  = enviouGrades  && !liberadoGrades;
+        // Bloqueia se (máscara local OU servidor confirmou envio) E a Matriz
+        // NÃO liberou. A liberação do servidor é o único caminho para destravar.
+        const localEstoque = lerBloqueioLocal('estoque');
+        const localGrades  = lerBloqueioLocal('grades');
+
+        _bloqueioEnvio.estoque = (localEstoque || enviouEstoque) && !liberadoEstoque;
+        _bloqueioEnvio.grades  = (localGrades  || enviouGrades)  && !liberadoGrades;
+
+        // Se a Matriz liberou, descarta a máscara local para não voltar a travar.
+        if (liberadoEstoque) limparBloqueioLocal('estoque');
+        if (liberadoGrades)  limparBloqueioLocal('grades');
     } catch (err) {
-        console.warn('Não foi possível verificar bloqueio de envios:', err);
-        // Falha de rede: não bloqueia, para não travar o operador.
-        _bloqueioEnvio = { estoque: false, grades: false };
+        console.warn('Não foi possível confirmar bloqueio no servidor:', err);
+        // Falha de rede: mantém o que a máscara local indicar (não destrava no escuro).
+        _bloqueioEnvio.estoque = lerBloqueioLocal('estoque');
+        _bloqueioEnvio.grades  = lerBloqueioLocal('grades');
     }
     aplicarBloqueioBotaoEstoque();
     aplicarBloqueioFormGrades();
@@ -3276,9 +3329,12 @@ async function aplicarBloqueioEnvios() {
 async function lancarGestaoGrades(event) {
     event.preventDefault();
 
-    // Bloqueio: este CD já enviou grades hoje e a Matriz não liberou novo envio.
-    if (cd && cd !== 'MATRIZ' && _bloqueioEnvio.grades) {
-        alert("🔒 O lançamento de grades deste CD já foi enviado à Matriz hoje.\n\nPara corrigir alguma informação, contate o responsável na Matriz para liberar um novo envio.");
+    // Bloqueio: esta unidade já enviou grades hoje e não há liberação ativa.
+    if (cd && _bloqueioEnvio.grades) {
+        const ondeLiberar = (cd === 'MATRIZ')
+            ? "Use o cadeado no painel de monitoramento para liberar um novo envio."
+            : "Para corrigir alguma informação, contate o responsável na Matriz para liberar um novo envio.";
+        alert("🔒 O lançamento de grades já foi enviado hoje.\n\n" + ondeLiberar);
         aplicarBloqueioFormGrades();
         return;
     }
@@ -3416,8 +3472,9 @@ async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
         alert(msg);
         document.getElementById('texto_gerado').innerText = textoFinal;
         document.getElementById('resultado_gestao').classList.remove('hidden');
-        if (cd !== 'MATRIZ') {
+        if (cd) {
             _bloqueioEnvio.grades = true;
+            marcarBloqueioLocal('grades');
             aplicarBloqueioFormGrades();
         }
         atualizarStatusMonitor();
@@ -3450,7 +3507,7 @@ async function _enviarGrades(payloadDaAPI, textoFinal, cdNome) {
         }
         atualizarBtnGrades();
         // Reaplica o bloqueio de envio (se acabou de enviar, trava o form)
-        if (cd !== 'MATRIZ') aplicarBloqueioFormGrades();
+        if (cd) aplicarBloqueioFormGrades();
     });
 }
 
@@ -4263,9 +4320,12 @@ async function processarEnvioNuvem() {
     }
 
     // === Caso padrão: aba de controle de datas (import ou manual) ===
-    // Bloqueio: este CD já enviou hoje e a Matriz não liberou novo envio.
-    if (cdSelected !== 'MATRIZ' && _bloqueioEnvio.estoque) {
-        alert("🔒 O relatório de validade deste CD já foi enviado à Matriz hoje.\n\nPara corrigir alguma informação, contate o responsável na Matriz para liberar um novo envio.");
+    // Bloqueio: esta unidade já enviou hoje e não há liberação ativa.
+    if (_bloqueioEnvio.estoque) {
+        const ondeLiberar = (cdSelected === 'MATRIZ')
+            ? "Use o cadeado no painel de monitoramento para liberar um novo envio."
+            : "Para corrigir alguma informação, contate o responsável na Matriz para liberar um novo envio.";
+        alert("🔒 O relatório de validade já foi enviado hoje.\n\n" + ondeLiberar);
         aplicarBloqueioBotaoEstoque();
         return;
     }
@@ -4314,10 +4374,9 @@ async function processarEnvioNuvem() {
 
         if (result.status === "sucesso") {
             alert("✅ SUCESSO! Dados enviados e unificados com sucesso.");
-            if (cdSelected !== 'MATRIZ') {
-                _bloqueioEnvio.estoque = true;
-                aplicarBloqueioBotaoEstoque();
-            }
+            _bloqueioEnvio.estoque = true;
+            marcarBloqueioLocal('estoque');
+            aplicarBloqueioBotaoEstoque();
             setTimeout(()=>atualizarStatusMonitor(), 1000);
         } else {
             alert("❌ Erro no servidor: " + result.message);
@@ -4452,26 +4511,31 @@ async function atualizarStatusMonitor() {
                 </div>
             `;
 
-            // Cadeado de desbloqueio (Matriz): aparece quando o CD JÁ enviou
-            // e a data exibida é hoje. Permite liberar um novo lançamento.
-            if (ehHoje && un !== 'MATRIZ' && (enviouControle || enviouGrades)) {
-                const tipos = [];
-                if (enviouControle) tipos.push({ alvo: 'estoque', rotulo: 'Controle de Datas', liberado: liberadosControle.includes(un) });
-                if (enviouGrades)   tipos.push({ alvo: 'grades',  rotulo: 'Grades',            liberado: liberadosGrades.includes(un) });
+            // Cadeado de desbloqueio (Matriz): um ÚNICO cadeado por CD que
+            // libera AMBOS os lançamentos (controle de datas + grades) de uma
+            // vez. Aparece quando o CD/Matriz já enviou qualquer um dos dois e
+            // a data exibida é hoje.
+            if (ehHoje && (enviouControle || enviouGrades)) {
+                // Tipos efetivamente enviados (são os que serão liberados)
+                const alvos = [];
+                if (enviouControle) alvos.push('estoque');
+                if (enviouGrades)   alvos.push('grades');
 
-                const wrap = document.createElement('div');
-                wrap.style.cssText = 'position:absolute;top:5px;right:5px;display:flex;gap:4px;';
-                tipos.forEach(t => {
-                    const b = document.createElement('button');
-                    b.className = 'badge-lock-btn' + (t.liberado ? ' liberado' : '');
-                    b.textContent = t.liberado ? '🔓' : '🔒';
-                    b.title = t.liberado
-                        ? `${un} — ${t.rotulo}: novo envio LIBERADO. Aguardando reenvio do CD.`
-                        : `${un} — ${t.rotulo}: clique para liberar um novo envio deste CD.`;
-                    b.onclick = (ev) => { ev.stopPropagation(); liberarLancamentoCD(un, t.alvo, t.rotulo, t.liberado); };
-                    wrap.appendChild(b);
-                });
-                badge.appendChild(wrap);
+                // "Tudo liberado" = todo tipo enviado já está com liberação ativa
+                const tudoLiberado =
+                    (!enviouControle || liberadosControle.includes(un)) &&
+                    (!enviouGrades   || liberadosGrades.includes(un)) &&
+                    (liberadosControle.includes(un) || liberadosGrades.includes(un));
+
+                const b = document.createElement('button');
+                b.className = 'badge-lock-btn' + (tudoLiberado ? ' liberado' : '');
+                b.textContent = tudoLiberado ? '🔓' : '🔒';
+                b.style.cssText = 'position:absolute;top:5px;right:5px;';
+                b.title = tudoLiberado
+                    ? `${un}: novos envios LIBERADOS. Aguardando reenvio.`
+                    : `${un}: clique para liberar novos lançamentos (controle de datas e grades).`;
+                b.onclick = (ev) => { ev.stopPropagation(); liberarLancamentoCD(un, alvos, tudoLiberado); };
+                badge.appendChild(b);
             }
         });
 
@@ -4497,32 +4561,38 @@ window.addEventListener('load', tentarAutoLogin);
 // Grava um desbloqueio no backend. O CD, ao reenviar, sobrescreve o
 // envio anterior e o desbloqueio é consumido (volta a bloquear depois).
 // ─────────────────────────────────────────────────────────────────────
-async function liberarLancamentoCD(un, alvo, rotulo, jaLiberado) {
+async function liberarLancamentoCD(un, alvos, jaLiberado) {
     if (jaLiberado) {
-        alert(`🔓 ${un} — ${rotulo} já está liberado para um novo envio.\n\nO bloqueio voltará automaticamente assim que o CD reenviar.`);
+        alert(`🔓 ${un}: já está liberado para um novo envio.\n\nO bloqueio voltará automaticamente assim que ${un} reenviar.`);
         return;
     }
+    if (!Array.isArray(alvos) || alvos.length === 0) return;
+
     const ok = confirm(
-        `Liberar um NOVO lançamento de "${rotulo}" para o CD ${un}?\n\n` +
-        `O CD poderá reenviar e o envio anterior será SUBSTITUÍDO (sem duplicar).\n` +
+        `Liberar um NOVO lançamento para ${un}?\n\n` +
+        `Isso libera o reenvio de TODOS os relatórios já enviados hoje (controle de datas e grades).\n` +
+        `Os envios anteriores serão SUBSTITUÍDOS (sem duplicar).\n` +
         `O bloqueio volta sozinho após o reenvio.`
     );
     if (!ok) return;
 
-    const payload = { tipo: 'liberar', cd: un, alvo: alvo, data: _monitorData };
     try {
-        const resp = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
-        });
-        const res = await resp.json();
-        if (res.status === 'sucesso') {
-            alert(`✅ ${un} — ${rotulo} liberado. Avise o CD para reenviar.`);
-            atualizarStatusMonitor();
+        // Libera cada tipo efetivamente enviado (uma chamada por tipo).
+        const resultados = await Promise.all(alvos.map(alvo =>
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ tipo: 'liberar', cd: un, alvo: alvo, data: _monitorData })
+            }).then(r => r.json()).catch(() => ({ status: 'erro' })))
+        );
+
+        const falhou = resultados.some(r => !r || r.status !== 'sucesso');
+        if (falhou) {
+            alert('⚠️ Não foi possível liberar todos os relatórios. Tente novamente.');
         } else {
-            alert('❌ Erro ao liberar: ' + (res.message || 'sem detalhes'));
+            alert(`✅ ${un}: novos lançamentos liberados. Avise a unidade para reenviar.`);
         }
+        atualizarStatusMonitor();
     } catch (e) {
         console.error('Erro ao liberar lançamento:', e);
         alert('❌ Falha na conexão ao liberar o lançamento.');
