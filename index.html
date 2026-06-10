@@ -259,6 +259,17 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .aviso-enviado .ae-ico{ font-size:22px; line-height:1; flex-shrink:0; }
 .aviso-enviado strong{ display:block; margin-bottom:3px; font-size:15px; }
 
+/* Área travada (importação / inserção manual) quando o envio já foi feito.
+   O container mantém o ponteiro (para exibir o cursor "proibido"),
+   mas os filhos não recebem cliques/foco. */
+.area-travada{
+  opacity:.45;
+  cursor:not-allowed;
+  filter:grayscale(.3);
+  user-select:none;
+}
+.area-travada > *{ pointer-events:none; }
+
 /* Spinner de carregamento */
 .spinner{width:32px;height:32px;border:3px solid var(--outv);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -3187,8 +3198,13 @@ function aplicarBloqueioBotaoEstoque() {
     const aviso = document.getElementById('aviso-enviado-controle');
     const btn   = document.querySelector('.btn-save-cloud');
     const ehControle = (_activeTab === 'import' || _activeTab === 'manual');
-    const bloqueado = _bloqueioEnvio.estoque && ehControle;
-    if (aviso) aviso.style.display = (_bloqueioEnvio.estoque && ehControle) ? 'flex' : 'none';
+    const enviado   = _bloqueioEnvio.estoque;          // CD já enviou o controle hoje
+    const bloqueado = enviado && ehControle;           // trava do botão (compartilhado c/ estoque-cia)
+
+    // Aviso aparece sempre que o controle já foi enviado (ambas as sub-abas)
+    if (aviso) aviso.style.display = enviado ? 'flex' : 'none';
+
+    // Botão de envio
     if (btn) {
         btn.disabled = bloqueado;
         btn.style.opacity = bloqueado ? '0.5' : '';
@@ -3197,6 +3213,19 @@ function aplicarBloqueioBotaoEstoque() {
             ? 'Relatório já enviado hoje. Contate a Matriz para liberar um novo envio.'
             : '';
     }
+
+    // Trava as áreas de Importação e Inserção Manual (opacas + cursor "proibido").
+    // A barra de sub-abas fica livre para o usuário ver que ambas estão travadas.
+    const areas = [
+        document.getElementById('tab-import-content'),
+        document.getElementById('tab-manual-content')
+    ];
+    areas.forEach(el => {
+        if (!el) return;
+        el.classList.toggle('area-travada', enviado);
+        if (enviado) el.title = 'Relatório de validade já enviado hoje. Contate a Matriz para liberar um novo envio.';
+        else el.removeAttribute('title');
+    });
 }
 
 // Aplica o bloqueio do formulário de grades
