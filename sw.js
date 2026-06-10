@@ -1,5 +1,5 @@
 // Mude esta versão sempre que subir alterações no GitHub (ex: v2, v3, v4)
-const CACHE_VERSION = 'panutrir-force-update-v2';
+const CACHE_VERSION = 'panutrir-force-update-v3';
 
 // 1. Instalação: Força o novo Service Worker a pular a fila
 self.addEventListener('install', (event) => {
