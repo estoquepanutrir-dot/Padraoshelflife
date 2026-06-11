@@ -3791,36 +3791,36 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             agrupado[cod].total += qtd; // total inclui mesmo CD não mapeado, para fidelidade
         });
 
-        // Monta linhas, aplicando o corte de cobertura > 4
+        // Monta linhas — TODOS os SKUs (sem corte de cobertura).
+        // Itens sem venda diária cadastrada entram com cobertura null → exibida como "-".
         const linhas = [];
         Object.keys(agrupado).forEach(cod => {
             const g = agrupado[cod];
             const venda = parseFloat(VENDA_DIARIA_CIA[cod]) || 0;
-            if (venda <= 0) return;                         // sem venda → fora
-            const cobertura = g.total / venda;
-            if (!(cobertura > 3)) return;                   // só alta cobertura (acima de 3 dias)
+            const temVenda = venda > 0;
+            const cobertura = temVenda ? g.total / venda : null;
             const ppg = parseFloat(PPG_PROD[cod]) || 0;
             const grades = ppg > 0 ? g.total / ppg : null;
             linhas.push({
                 cod, produto: (SKU[cod] || '').toUpperCase(), familia: FAMILIA_PROD[cod] || '',
                 porCD: g.porCD, total: g.total, venda,
-                cobertura: +cobertura.toFixed(1),
+                cobertura: cobertura !== null ? +cobertura.toFixed(1) : null,
                 ppg, grades: grades !== null ? Math.round(grades) : '-'
             });
         });
 
         if (linhas.length === 0) {
-            // Sem itens em alta cobertura: cria aba mínima informativa
+            // Sem itens: cria aba mínima informativa
             const vazia = XLSX.utils.aoa_to_sheet([
                 ['Cod','produto','Familia',...CDS.map(c => c.label),'Total Geral','Venda/dia','Cobertura','PPG','GRADES'].map(h => h.toUpperCase()),
-                ['—','NENHUM ITEM COM COBERTURA ACIMA DE 3 DIAS','', ...CDS.map(()=>''),'','','','','']
+                ['—','NENHUM ITEM ENCONTRADO','', ...CDS.map(()=>''),'','','','','']
             ]);
-            XLSX.utils.book_append_sheet(wb, vazia, 'Alta Cobertura');
+            XLSX.utils.book_append_sheet(wb, vazia, 'Cobertura CIA');
             return;
         }
 
-        // Ordena por cobertura decrescente (maior risco no topo)
-        linhas.sort((a, b) => b.cobertura - a.cobertura);
+        // Ordena por cobertura decrescente (maior risco no topo); itens sem venda ("-") ao final
+        linhas.sort((a, b) => (b.cobertura ?? -1) - (a.cobertura ?? -1));
 
         const headerTotal = ['Cod','produto','Familia',...CDS.map(c => c.label),'Total Geral','Venda/dia','Cobertura','PPG','GRADES'].map(h => h.toUpperCase());
         const totalData = [headerTotal];
@@ -3830,8 +3830,8 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
                 l.produto, l.familia,
                 ...l.porCD,
                 l.total,
-                +l.venda.toFixed(1),
-                l.cobertura,
+                l.cobertura !== null ? +l.venda.toFixed(1) : '-',
+                l.cobertura !== null ? l.cobertura : '-',
                 l.ppg,
                 l.grades
             ]);
@@ -3853,6 +3853,10 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             somaGrades     // GRADES
         ]);
 
+        // Legenda explicativa, abaixo da tabela principal
+        totalData.push([]); // linha em branco separadora
+        totalData.push(['Itens com cobertura marcada com "-" não possuem informações de vendas diárias']);
+
         const wsT = XLSX.utils.aoa_to_sheet(totalData);
         wsT['!cols'] = headerTotal.map((_, i) => ({ wch: i === 1 ? 18 : 9 }));
         // Altura maior na linha do cabeçalho p/ acomodar as 2 linhas de texto.
@@ -3868,18 +3872,24 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
                 alignment:{wrapText:true, horizontal:'center', vertical:'center'}
             };
         }
-        // Rodapé Total Geral em negrito
-        const rFoot = totalData.length - 1;
+        // Rodapé Total Geral em negrito.
+        // (totalData agora tem 2 linhas extras: branca + legenda → Total Geral está 2 acima do fim.)
+        const rFoot = totalData.length - 3;
         for (let c = 0; c < nCols; c++) {
             const ref = XLSX.utils.encode_cell({ r: rFoot, c });
             if (wsT[ref]) wsT[ref].s = { font:{bold:true}, fill:{patternType:'solid', fgColor:{rgb:'FFE9D1'}} };
         }
+        // Legenda em itálico/cinza (última linha)
+        const rLeg = totalData.length - 1;
+        const refLeg = XLSX.utils.encode_cell({ r: rLeg, c: 0 });
+        if (wsT[refLeg]) wsT[refLeg].s = { font:{ italic:true, sz:9, color:{rgb:'7A7A7A'} } };
         // Destaque na coluna Cobertura (índice = 3 + nCDs + 2):
-        // cobertura acima de 3 → fonte vermelha e negrito.
+        // cobertura acima de 3 → fonte vermelha e negrito. Itens sem venda ("-") não recebem destaque.
         const colCob = 3 + CDS.length + 2;
         for (let i = 1; i <= linhas.length; i++) {
             const ref = XLSX.utils.encode_cell({ r: i, c: colCob });
             const cob = linhas[i - 1].cobertura;
+            if (cob === null) continue;        // sem venda → sem destaque
             let fg = 'F5EDD5';                 // >3 atenção
             if (cob > 5) fg = 'F0D5D5';        // >5 urgente
             if (wsT[ref]) wsT[ref].s = {
@@ -3888,7 +3898,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             };
         }
 
-        XLSX.utils.book_append_sheet(wb, wsT, 'Alta Cobertura');
+        XLSX.utils.book_append_sheet(wb, wsT, 'Cobertura CIA');
     })();
 
     // ── aba CONSOLIDADO ───────────────────────────────────────────
