@@ -563,6 +563,37 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   </div>
 </div>
 
+<!-- Aviso (modal) exibido ao importar estoque com itens em data curta -->
+<div id="aviso-data-curta" style="display:none; position:fixed; inset:0; z-index:620; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+  <div style="background:var(--sur); border-radius:28px; padding:36px 40px; max-width:480px; width:90%; text-align:center; box-shadow:0 12px 48px rgba(0,0,0,.25); position:relative; overflow:hidden;">
+    <div style="position:absolute; top:0; left:0; right:0; height:6px; background:var(--wt,#b26a00);"></div>
+
+    <div style="font-size:46px; margin-bottom:12px; line-height:1;">📌</div>
+
+    <div style="font-size:12px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; opacity:.6;">Gestão de Itens em Data Curta</div>
+
+    <h2 style="font-family:'Google Sans Display',sans-serif; font-size:20px; font-weight:600; line-height:1.3; margin:0 0 10px; color:var(--tx);">
+      Atenção — registro de motivos
+    </h2>
+
+    <p style="font-size:14px; color:var(--txs); line-height:1.65; margin:0 0 14px;">
+      Foram identificados <strong id="adc-qtd">0</strong> item(ns) em <strong>data curta</strong> nesta importação.
+    </p>
+
+    <div style="background:var(--surv); border:1px solid var(--out); border-radius:14px; padding:14px 18px; font-size:13.5px; color:var(--txs); line-height:1.65; margin-bottom:26px; text-align:left;">
+      Para assegurar a rastreabilidade e o giro adequado do estoque, é de extrema importância
+      registrar, para cada item em data curta, o <strong>motivo</strong> da ocorrência e a
+      <strong>rota de destino</strong> pela qual o produto será escoado. Esse registro orienta a
+      tomada de decisão e fortalece o controle das datas de validade.
+    </div>
+
+    <button onclick="fecharAvisoDataCurta()"
+      style="width:100%; padding:14px; border:none; border-radius:14px; font-family:'Google Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; color:#fff; background:var(--wt,#b26a00); transition:opacity .15s;">
+      Entendido, vou registrar ✓
+    </button>
+  </div>
+</div>
+
 <header class="bar">
   <img src="./logo_nova.jpg" class="logo-round" alt="Logo Panutrir" style="height: 48px; width: 48px; object-fit: cover;">
   <div style="min-width:0;flex:1;"><div class="bar-title">Sistema de Padronização de Relatórios</div><div class="bar-sub">Painel Corporativo de Gestão — Panutrir</div></div>
@@ -707,7 +738,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
     <div class="bn bn-w hidden" id="wb2">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span>Há pães com validade ≤ 22 dias. Preencha <strong>Direcionamento</strong> e <strong>Motivo</strong> para todos eles.</span>
+      <span>Há pães com validade ≤ 22 dias. Recomenda-se fortemente informar o <strong>Direcionamento</strong> (rota) e o <strong>Motivo</strong> de cada item em data curta.</span>
     </div>
 
     <div class="fpill" id="fpill">
@@ -784,7 +815,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
     <div class="bn bn-w hidden" id="me-wb">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span>Há SKUs com validade ≤ 22 dias. Preencha <strong>Direcionamento</strong> e <strong>Motivo</strong> para todos eles antes de exportar.</span>
+      <span>Há SKUs com validade ≤ 22 dias. Recomenda-se fortemente informar o <strong>Direcionamento</strong> (rota) e o <strong>Motivo</strong> de cada item em data curta.</span>
     </div>
 
     <div class="fpill hidden" id="me-fpill">
@@ -2040,13 +2071,26 @@ function handleFile(f){
       const temQntUnd     = ks.some(k => /qnt.*und|qtd.*und|quantidade.*und/i.test(k.trim()));
       const ehBarueri     = temVenc && temDiasVencer && temQntUnd;
 
-      if (ehBarueri) {
+      // Formato SHELFLIFE (re-importação da própria planilha exportada, JÁ COM OS
+      // MOTIVOS preenchidos): identificado pela presença de uma coluna MOTIVO.
+      // Pode vir com STATUS, COBERTURA, VENDA DIÁRIA e DIRECIONAMENTO. Ao importar,
+      // os motivos (e o direcionamento, quando houver) são lidos e já preenchidos
+      // automaticamente nos campos da tabela.
+      const temMotivo = ks.some(k => /^motivo$/i.test(k.trim()));
+      const ehShelflife = temMotivo && !ehBarueri;
+
+      let fmtMsg = 'Pronto!';
+      if (ehShelflife) {
+        rows = parseFormatoShelflife(raw, ks);
+        fmtMsg = 'Pronto! (SHELFLIFE com motivos detectado)';
+      } else if (ehBarueri) {
         rows = parseFormatoBarueri(raw, ks);
+        fmtMsg = 'Pronto! (Formato Barueri detectado)';
       } else {
         rows = parseFormatoInflow(raw, ks);
       }
 
-      setP(100, ehBarueri ? 'Pronto! (Formato Barueri detectado)' : 'Pronto!');
+      setP(100, fmtMsg);
       setTimeout(()=>{pp.classList.add('hidden');render()},350);
     }catch(err){setP(0,'❌ Erro: '+err.message)}
   };
@@ -2122,6 +2166,85 @@ function parseFormatoBarueri(raw, ks) {
     })
     .sort((a, b) => a.prazo - b.prazo);
 }
+
+// Formato SHELFLIFE (planilha exportada pelo próprio sistema, reimportada já com os
+// motivos preenchidos). Cabeçalhos típicos:
+//   COD · PRODUTO · QTD · VENDA DIÁRIA · VALIDADE · DIAS · COBERTURA (dias) ·
+//   VALIDADE EFETIVA (dias) · STATUS · MOTIVO
+// Também aceita o layout do export interno (CÓDIGO · SKU / PRODUTO · PRAZO (DIAS) ·
+// STATUS COBERTURA · DIRECIONAMENTO · MOTIVO).
+// - cod      ← COD / CÓDIGO
+// - sku      ← vínculo por COD; se não mapeado, usa PRODUTO da planilha
+// - validade ← VALIDADE (Date, serial Excel ou texto → dd/mm/yyyy)
+// - prazo    ← DIAS / PRAZO (DIAS); se ausente, calcula a partir da validade
+// - qtd      ← QTD
+// - dir      ← DIRECIONAMENTO (quando existir)
+// - motivo   ← MOTIVO (já preenchido na planilha)
+function parseFormatoShelflife(raw, ks) {
+  const ck = ks.find(k => /^cod/i.test(k.trim())) || 'COD';
+  const pkProd = ks.find(k => /produto|^sku/i.test(k.trim()));
+  const vk = ks.find(k => /valid/i.test(k.trim())) || 'VALIDADE';
+  const dk = ks.find(k => /^dias$|^prazo/i.test(k.trim()));
+  const qk = ks.find(k => /^qtd$|qtd_total|quantidade|^qnt/i.test(k.trim())) || 'QTD';
+  const dirk = ks.find(k => /direcionamento|destino/i.test(k.trim()));
+  const mk = ks.find(k => /^motivo$/i.test(k.trim())) || 'MOTIVO';
+
+  function fmtDataUTC(d) {
+    const dia = String(d.getUTCDate()).padStart(2, '0');
+    const mes = String(d.getUTCMonth() + 1).padStart(2, '0');
+    return `${dia}/${mes}/${d.getUTCFullYear()}`;
+  }
+  function toDataBR(v) {
+    if (v === '' || v === undefined || v === null) return '';
+    if (v instanceof Date) return fmtDataUTC(v);
+    if (typeof v === 'number' && isFinite(v)) {
+      const d = new Date((v - 25569) * 86400 * 1000);
+      if (!isNaN(d.getTime())) return fmtDataUTC(d);
+    }
+    return String(v).trim();
+  }
+  // Calcula dias até a validade (dd/mm/yyyy) a partir de hoje, caso a coluna DIAS falte.
+  function prazoDaValidade(valBR) {
+    const p = valBR.split('/');
+    if (p.length !== 3) return 0;
+    const dt = new Date(`${p[2]}-${p[1]}-${p[0]}T00:00:00`);
+    if (isNaN(dt.getTime())) return 0;
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    return Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
+  }
+
+  return raw
+    .filter(r => {
+      const c = r[ck];
+      if (c === '' || c === undefined || c === null) return false;
+      const n = parseInt(String(c).trim());
+      return isFinite(n) && n > 0;
+    })
+    .map(r => {
+      const cod = String(r[ck]).trim().replace(/\.0$/, '');
+      const val = toDataBR(r[vk]);
+      let prazo = dk !== undefined ? parseInt(r[dk]) : NaN;
+      if (isNaN(prazo)) prazo = prazoDaValidade(val);
+      const qtd = parseInt(r[qk]) || 0;
+      const produtoOriginal = pkProd ? String(r[pkProd] || '').trim() : '';
+      // Motivo/direcionamento que já vêm na planilha (descarta marcadores "—").
+      let motivo = String((mk && r[mk]) || '').trim();
+      if (motivo === '—') motivo = '';
+      let dir = dirk ? String(r[dirk] || '').trim() : '';
+      if (dir === '—') dir = '';
+      return {
+        cod,
+        sku: SKU[cod] || produtoOriginal || null,
+        validade: val,
+        prazo,
+        qtd,
+        dir,
+        motivo,
+        isWarn: prazo <= 22
+      };
+    })
+    .sort((a, b) => a.prazo - b.prazo);
+}
 function setP(p,m){document.getElementById('pb').style.width=p+'%';document.getElementById('pl').textContent=m}
 
 function render(){
@@ -2164,15 +2287,21 @@ function render(){
     let ex='';
     if(hasW){
       if(row.isWarn){
+        // Pré-preenche destino/motivo quando a planilha já trouxe esses dados
+        // (re-importação do SHELFLIFE com os motivos inclusos).
+        const dirPre  = row.dir || '';
+        const ehRota  = dirPre === 'SAIRÁ EM ROTA';
+        const ehOutro = dirPre && !ehRota;
+        const escAttr = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         ex=`<td style="min-width:190px">
           <select class="rf" id="rd${i}" onchange="onRD(${i},this)">
-            <option value="">— Selecione —</option>
-            <option value="SAIRÁ EM ROTA">🚛 Sairá em Rota</option>
-            <option value="OUTRO">✏️ Outro destino...</option>
+            <option value=""${dirPre?'':' selected'}>— Selecione —</option>
+            <option value="SAIRÁ EM ROTA"${ehRota?' selected':''}>🚛 Sairá em Rota</option>
+            <option value="OUTRO"${ehOutro?' selected':''}>✏️ Outro destino...</option>
           </select>
-          <div class="rcd" id="rc${i}"><input type="text" class="rf" style="margin-top:5px" placeholder="Digite o destino" oninput="onRC(${i},this)"></div>
+          <div class="rcd" id="rc${i}" style="display:${ehOutro?'block':'none'}"><input type="text" class="rf" style="margin-top:5px" placeholder="Digite o destino" value="${ehOutro?escAttr(dirPre):''}" oninput="onRC(${i},this)"></div>
         </td>
-        <td style="min-width:180px"><input type="text" class="rf" id="rm${i}" placeholder="Digite o motivo..." oninput="onRM(${i},this)"></td>`;
+        <td style="min-width:180px"><input type="text" class="rf" id="rm${i}" placeholder="Digite o motivo..." value="${escAttr(row.motivo||'')}" oninput="onRM(${i},this)"></td>`;
       }else{
         ex=`<td style="color:var(--txs);font-size:11px">—</td><td style="color:var(--txs);font-size:11px">—</td>`;
       }
@@ -2186,6 +2315,22 @@ function render(){
       ${ex}`;
     tb.appendChild(tr);
   });
+  // Download sempre liberado (preencher destino/motivo não é mais obrigatório).
+  chkDL();
+  // Ao aparecer itens em data curta na importação, exibe o aviso corporativo.
+  if(hasW)mostrarAvisoDataCurta(wCnt);
+}
+
+function mostrarAvisoDataCurta(qtd){
+  const ov=document.getElementById('aviso-data-curta');
+  if(!ov)return;
+  const q=document.getElementById('adc-qtd');
+  if(q)q.textContent=(qtd||0).toLocaleString('pt-BR');
+  ov.style.display='flex';
+}
+function fecharAvisoDataCurta(){
+  const ov=document.getElementById('aviso-data-curta');
+  if(ov)ov.style.display='none';
 }
 
 function openSkuEdit(i){
@@ -2286,8 +2431,10 @@ function updFill(){
   document.getElementById('fd').textContent=d;
 }
 function chkDL(){
-  if(!hasW){showDL();return}
-  rows.filter(r=>r.isWarn).every(r=>r.dir.length>0&&r.motivo.length>0)?showDL():hideDL();
+  // Preencher destino/motivo deixou de ser obrigatório para liberar o envio/download.
+  // O download fica sempre disponível assim que há dados importados; a importância de
+  // informar motivo e rota é comunicada por um aviso (modal) no momento da importação.
+  showDL();
 }
 function showDL(){
   document.getElementById('action-cd-label').textContent=cd;
@@ -2636,8 +2783,8 @@ function meUpdFill(){
   document.getElementById('me-fd').textContent=d;
 }
 function meChkDL(){
-  if(!meHasW){meShowDL();return}
-  meProcessed.filter(r=>r.isWarn).every(r=>r.dir.length>0&&r.motivo.length>0)?meShowDL():meHideDL();
+  // Preencher destino/motivo não é mais obrigatório — envio/download sempre liberado.
+  meShowDL();
 }
 function meShowDL(){
   document.getElementById('action-cd-label').textContent=cd;
