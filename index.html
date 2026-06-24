@@ -647,6 +647,8 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         <div id="status-grid" class="monitor-grid" style="margin-top:12px;">
             <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="spinner"></div><span style="font-size:12px;color:var(--txs);font-style:italic;">Carregando status das unidades...</span></div>
         </div>
+        <!-- Indicadores da CIA — só aparecem quando TODOS os CDs lançaram o estoque do dia -->
+        <div id="mon-kpi-cia" style="display:none; margin-top:18px; border-top:1px solid var(--out); padding-top:16px;"></div>
     </div>
   </div>
 
@@ -1674,58 +1676,58 @@ const TOTAL_CIA_CDS = [
 
 // Venda diária por CD e por código de produto (inclui a coluna CD MATRIZ).
 // É a fonte única de venda: o total da CIA (VENDA_DIARIA_CIA, abaixo) é a soma destes CDs.
-// Fonte: planilha "Vendas Produto Supervisor" (15/Jun/2026). Atualizar manualmente quando as vendas mudarem.
+// Fonte: planilha "Vendas Produto Supervisor" (20/Jun/2026, base "Venda Dia Junho" = mês ÷ 15 dias úteis). Atualizar manualmente quando as vendas mudarem.
 const VENDA_DIARIA_CD = {
-  "2": { "CANAL INDIRETO":1283.7, "CD BARUERI":889.6, "CD BAURU":514.6, "CD CURITIBA":2164.9, "CD LONDRINA":998.3, "CD MATRIZ":3491.1, "CD PAGUE MENOS":0, "CD RANCHARIA":444.3, "CD SJ RIO PRETO":522.3 },   // PAO FORMA PANUTRIR 400G
-  "5": { "CANAL INDIRETO":496.6, "CD BARUERI":1721.2, "CD BAURU":221, "CD CURITIBA":640.3, "CD LONDRINA":860, "CD MATRIZ":3576.3, "CD PAGUE MENOS":0, "CD RANCHARIA":276.8, "CD SJ RIO PRETO":248.7 },   // PAO LEITE PANUTRIR 400G
-  "6": { "CANAL INDIRETO":154, "CD BARUERI":962.3, "CD BAURU":118.1, "CD CURITIBA":118.6, "CD LONDRINA":226.6, "CD MATRIZ":668, "CD PAGUE MENOS":0, "CD RANCHARIA":86, "CD SJ RIO PRETO":63.6 },   // PAEZINHOS LEITE PANUTRINHA PANUTRIR 400G
-  "11": { "CANAL INDIRETO":62.2, "CD BARUERI":84.1, "CD BAURU":20.9, "CD CURITIBA":225.2, "CD LONDRINA":130.5, "CD MATRIZ":293.6, "CD PAGUE MENOS":0, "CD RANCHARIA":48.6, "CD SJ RIO PRETO":73.1 },   // PAO INTEGRAL CENTEIO FITNESS ZERO PANUTRIR 350G
-  "16": { "CANAL INDIRETO":42.6, "CD BARUERI":55.7, "CD BAURU":24.6, "CD CURITIBA":153.8, "CD LONDRINA":74, "CD MATRIZ":180.3, "CD PAGUE MENOS":0, "CD RANCHARIA":2.9, "CD SJ RIO PRETO":29.8 },   // PAO INTEG 7 GRAOS DAMASCO HIBISCO ZERO PANUTRIR 350G
-  "655": { "CANAL INDIRETO":128.5, "CD BARUERI":588.1, "CD BAURU":24.7, "CD CURITIBA":288.5, "CD LONDRINA":264.1, "CD MATRIZ":602.6, "CD PAGUE MENOS":0, "CD RANCHARIA":61.6, "CD SJ RIO PRETO":99.2 },   // PAO INTEGRAL 12 GRAOS PANUTRIR 450G
-  "669": { "CANAL INDIRETO":2.7, "CD BARUERI":8.5, "CD BAURU":77.9, "CD CURITIBA":39.8, "CD LONDRINA":65.6, "CD MATRIZ":579, "CD PAGUE MENOS":0, "CD RANCHARIA":44.4, "CD SJ RIO PRETO":28.4 },   // BISNAGUINHA BISNUTRINHAS PANUTRIR 300G
-  "1224": { "CANAL INDIRETO":209.1, "CD BARUERI":1359.1, "CD BAURU":49.8, "CD CURITIBA":476.3, "CD LONDRINA":301.5, "CD MATRIZ":742.7, "CD PAGUE MENOS":0, "CD RANCHARIA":77.4, "CD SJ RIO PRETO":113.9 },   // PAO CAST PARA E QUINOA INTEG PANUTRIR BROA 450G
-  "2279": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":0, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":269, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0 },   // PAO PCT CASEIRO 500G
-  "69251": { "CANAL INDIRETO":333.2, "CD BARUERI":2479.5, "CD BAURU":211.3, "CD CURITIBA":257.1, "CD LONDRINA":446.5, "CD MATRIZ":1115.2, "CD PAGUE MENOS":0, "CD RANCHARIA":182.9, "CD SJ RIO PRETO":137.7 },   // PAO HOT DOG PANUTRIR 400G
-  "81571": { "CANAL INDIRETO":47.1, "CD BARUERI":61.7, "CD BAURU":17.9, "CD CURITIBA":113.9, "CD LONDRINA":58.6, "CD MATRIZ":166.1, "CD PAGUE MENOS":0, "CD RANCHARIA":8.3, "CD SJ RIO PRETO":12.6 },   // PAO INTEGRAL SURPREENDENTE PANUTRIR 450G
-  "81581": { "CANAL INDIRETO":71.4, "CD BARUERI":321.6, "CD BAURU":16.1, "CD CURITIBA":213.2, "CD LONDRINA":137.6, "CD MATRIZ":144.5, "CD PAGUE MENOS":0, "CD RANCHARIA":60.6, "CD SJ RIO PRETO":48 },   // PAO INTEGRAL 12 GRAOS ZERO PANUTRIR 350G
-  "81591": { "CANAL INDIRETO":80, "CD BARUERI":57.1, "CD BAURU":23.9, "CD CURITIBA":24.8, "CD LONDRINA":16, "CD MATRIZ":202, "CD PAGUE MENOS":0, "CD RANCHARIA":3.2, "CD SJ RIO PRETO":20.7 },   // PAO INTEGRAL CHIA MACADAMIA PANUTRIR 400G
-  "81661": { "CANAL INDIRETO":237.1, "CD BARUERI":7115.8, "CD BAURU":464.5, "CD CURITIBA":1149.6, "CD LONDRINA":1163.1, "CD MATRIZ":3643.8, "CD PAGUE MENOS":0, "CD RANCHARIA":317.5, "CD SJ RIO PRETO":746 },   // PAO FORMA PLUFI NUT 400G
-  "82051": { "CANAL INDIRETO":334, "CD BARUERI":6487.3, "CD BAURU":260.2, "CD CURITIBA":536.5, "CD LONDRINA":413.7, "CD MATRIZ":1331.8, "CD PAGUE MENOS":0, "CD RANCHARIA":242, "CD SJ RIO PRETO":171.6 },   // PAO HAMBURGUER GOURMET PANUTRIR 500G
-  "85181": { "CANAL INDIRETO":0, "CD BARUERI":114.7, "CD BAURU":0, "CD CURITIBA":125.2, "CD LONDRINA":0, "CD MATRIZ":276, "CD PAGUE MENOS":0, "CD RANCHARIA":111.8, "CD SJ RIO PRETO":95.8 },   // MUFFATO PAO HOT DOG 400G
-  "85841": { "CANAL INDIRETO":0, "CD BARUERI":239.8, "CD BAURU":5, "CD CURITIBA":77.1, "CD LONDRINA":3, "CD MATRIZ":207.4, "CD PAGUE MENOS":0, "CD RANCHARIA":165.7, "CD SJ RIO PRETO":171.8 },   // MUFFATO PAEZINHOS DE LEITE 400G
-  "86151": { "CANAL INDIRETO":541.6, "CD BARUERI":1987.7, "CD BAURU":149, "CD CURITIBA":1486.6, "CD LONDRINA":654.4, "CD MATRIZ":1485.7, "CD PAGUE MENOS":0, "CD RANCHARIA":168.3, "CD SJ RIO PRETO":320.9 },   // PAO INTEGRAL PANUTRIR 450G
-  "121581": { "CANAL INDIRETO":0, "CD BARUERI":35.8, "CD BAURU":129.2, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":6.8, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":11 },   // US PAO HOT DOG UNISABOR 400G
-  "121801": { "CANAL INDIRETO":0, "CD BARUERI":29.7, "CD BAURU":138.7, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":6.8, "CD PAGUE MENOS":0, "CD RANCHARIA":0.8, "CD SJ RIO PRETO":19.6 },   // US PAO HAMBURGUER GOURMET UNISABOR 500G
-  "121811": { "CANAL INDIRETO":0, "CD BARUERI":25.5, "CD BAURU":106.7, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":5.6, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":2 },   // US PAEZINHOS DE LEITE UNISABOR 400G
-  "121821": { "CANAL INDIRETO":0, "CD BARUERI":11.6, "CD BAURU":38.8, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":0.2, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":22 },   // US PAO INTEGRAL 12 GRAOS ZERO UNISABOR 350G
-  "121831": { "CANAL INDIRETO":0, "CD BARUERI":7.6, "CD BAURU":32.7, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":0, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0.2 },   // US PAO INTEGRAL 12 GRAOS UNISABOR 450G
-  "121841": { "CANAL INDIRETO":0, "CD BARUERI":10.4, "CD BAURU":45.4, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":0, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0.2 },   // US PAO CASTANHA PARA E QUINOA INTEG UNISABOR 450G
-  "121861": { "CANAL INDIRETO":0, "CD BARUERI":85.2, "CD BAURU":590.2, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":12, "CD PAGUE MENOS":0, "CD RANCHARIA":14.4, "CD SJ RIO PRETO":224.7 },   // US PAO FORMA UNISABOR 400G
-  "121871": { "CANAL INDIRETO":0, "CD BARUERI":71.2, "CD BAURU":287.4, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":7, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":92.4 },   // US PAO LEITE UNISABOR 450G
-  "135211": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":8.1, "CD CURITIBA":2.4, "CD LONDRINA":5.6, "CD MATRIZ":17.4, "CD PAGUE MENOS":1367.2, "CD RANCHARIA":17.6, "CD SJ RIO PRETO":523.2 },   // NOSSA PADARIA PAO HAMBURGUER GOURMET EMB TRANS 500G
-  "135221": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":41.2, "CD CURITIBA":3.3, "CD LONDRINA":5.6, "CD MATRIZ":80.3, "CD PAGUE MENOS":1165.6, "CD RANCHARIA":292.4, "CD SJ RIO PRETO":527 },   // NOSSA PADARIA PAO HOT DOG EMB TRANSP 400G
-  "135231": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":32, "CD CURITIBA":5.6, "CD LONDRINA":14, "CD MATRIZ":87, "CD PAGUE MENOS":1300, "CD RANCHARIA":298.3, "CD SJ RIO PRETO":691 },   // NOSSA PADARIA PAEZINHOS LEITE EMB TRANSP 400G
-  "135241": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":18.6, "CD CURITIBA":4.8, "CD LONDRINA":26.4, "CD MATRIZ":58.8, "CD PAGUE MENOS":427.2, "CD RANCHARIA":230, "CD SJ RIO PRETO":518.1 },   // NOSSA PADARIA PAO FORMA EMB TRANSP 400G
-  "141441": { "CANAL INDIRETO":50, "CD BARUERI":15, "CD BAURU":3, "CD CURITIBA":240, "CD LONDRINA":161.2, "CD MATRIZ":36.1, "CD PAGUE MENOS":0, "CD RANCHARIA":22.8, "CD SJ RIO PRETO":26.9 },   // PAO SIRIO TRADIC PANIFICADORA DUBAI 320G EAN 7898585460028
-  "141951": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":0, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":37.5, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0 },   // PAO SIRIO TRADIC PANIFICADORA DUBAI 260G  EAN 7893590194951
-  "145511": { "CANAL INDIRETO":96, "CD BARUERI":135.2, "CD BAURU":26.5, "CD CURITIBA":78.3, "CD LONDRINA":156.7, "CD MATRIZ":252.6, "CD PAGUE MENOS":0, "CD RANCHARIA":55.7, "CD SJ RIO PRETO":170.4 },   // PAO NUTRI DEL GRANO TRADICIONAL PANUTRIR 500G
-  "145521": { "CANAL INDIRETO":202.6, "CD BARUERI":1010.9, "CD BAURU":58.3, "CD CURITIBA":505.3, "CD LONDRINA":675.7, "CD MATRIZ":825.1, "CD PAGUE MENOS":0, "CD RANCHARIA":146.5, "CD SJ RIO PRETO":220.6 },   // PAO NUTRI DEL GRANO INTEGRAL PANUTRIR 500G
-  "162272": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":3.1, "CD CURITIBA":1.9, "CD LONDRINA":7, "CD MATRIZ":8, "CD PAGUE MENOS":0, "CD RANCHARIA":64.3, "CD SJ RIO PRETO":30.6 },   // NOSSA PADARIA BISNAGUINHA EMB TRANSP 300G
-  "162275": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":21, "CD CURITIBA":4, "CD LONDRINA":5.6, "CD MATRIZ":50, "CD PAGUE MENOS":263, "CD RANCHARIA":213, "CD SJ RIO PRETO":0 },   // NOSSA PADARIA PAO HAMBURGUER GOURMET EMB TRANS 330G
-  "162276": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":6, "CD CURITIBA":4, "CD LONDRINA":4, "CD MATRIZ":8, "CD PAGUE MENOS":72, "CD RANCHARIA":47.5, "CD SJ RIO PRETO":45 },   // NOSSA PADARIA PAO INTEGRAL EMB TRANSP 450G
-  "162358": { "CANAL INDIRETO":0, "CD BARUERI":45.4, "CD BAURU":216.4, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":5.6, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":47.7 },   // US PAO INTEGRAL UNISABOR 450G
-  "162396": { "CANAL INDIRETO":45.2, "CD BARUERI":121.6, "CD BAURU":54.2, "CD CURITIBA":216.5, "CD LONDRINA":328.5, "CD MATRIZ":450.8, "CD PAGUE MENOS":0, "CD RANCHARIA":51.6, "CD SJ RIO PRETO":230.9 },   // PAO NUTRI DEL GRANO TIPO CASEIRO PANUTRIR 500G
-  "162767": { "CANAL INDIRETO":0, "CD BARUERI":140, "CD BAURU":0, "CD CURITIBA":155.9, "CD LONDRINA":0, "CD MATRIZ":362.6, "CD PAGUE MENOS":0, "CD RANCHARIA":73.2, "CD SJ RIO PRETO":100.5 },   // MUFFATO PAO INTEGRAL 450G
-  "162775": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":0, "CD CURITIBA":0, "CD LONDRINA":3, "CD MATRIZ":107.3, "CD PAGUE MENOS":0, "CD RANCHARIA":9.3, "CD SJ RIO PRETO":1.2 },   // MUFFATO BISNAGUINHAS 300G
-  "162783": { "CANAL INDIRETO":0, "CD BARUERI":14, "CD BAURU":85.7, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":2.8, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":19.6 },   // US PAO ARTESANAL TRADICIONAL UNISABOR 500G
-  "162784": { "CANAL INDIRETO":0, "CD BARUERI":14.4, "CD BAURU":77.7, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":2.6, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":31.6 },   // US PAO ARTESANAL INTEGRAL UNISABOR 500G
-  "162800": { "CANAL INDIRETO":0, "CD BARUERI":377.6, "CD BAURU":0, "CD CURITIBA":579, "CD LONDRINA":12, "CD MATRIZ":1305.4, "CD PAGUE MENOS":0, "CD RANCHARIA":122.7, "CD SJ RIO PRETO":187.7 },   // MUFFATO PAO FORMA 400G
-  "162801": { "CANAL INDIRETO":0, "CD BARUERI":284.5, "CD BAURU":26.4, "CD CURITIBA":283.2, "CD LONDRINA":18, "CD MATRIZ":638.1, "CD PAGUE MENOS":0, "CD RANCHARIA":111.6, "CD SJ RIO PRETO":54.9 },   // MUFFATO PAO LEITE 400G
-  "162802": { "CANAL INDIRETO":0, "CD BARUERI":143.7, "CD BAURU":5.6, "CD CURITIBA":103.1, "CD LONDRINA":2.4, "CD MATRIZ":230, "CD PAGUE MENOS":0, "CD RANCHARIA":98.6, "CD SJ RIO PRETO":100.2 },   // MUFFATO PAO HAMBURGUER 500G
-  "162920": { "CANAL INDIRETO":46.1, "CD BARUERI":134.9, "CD BAURU":66.3, "CD CURITIBA":17.8, "CD LONDRINA":38.7, "CD MATRIZ":117.6, "CD PAGUE MENOS":0, "CD RANCHARIA":11.8, "CD SJ RIO PRETO":87.8 },   // PAO NUTRI DEL GRANO HAMBURGUER ARTESANAL PANUTRIR 320G
-  "162921": { "CANAL INDIRETO":151.3, "CD BARUERI":276.5, "CD BAURU":117.9, "CD CURITIBA":363.5, "CD LONDRINA":293.5, "CD MATRIZ":759.7, "CD PAGUE MENOS":0, "CD RANCHARIA":116.5, "CD SJ RIO PRETO":64.8 },   // PAO NUTRI DEL GRANO HAMBURGUER BRIOCHE PANUTRIR 320G
-  "162922": { "CANAL INDIRETO":38.7, "CD BARUERI":111.9, "CD BAURU":10.3, "CD CURITIBA":7.2, "CD LONDRINA":20.9, "CD MATRIZ":41.5, "CD PAGUE MENOS":0, "CD RANCHARIA":8, "CD SJ RIO PRETO":12.3 },   // PAO NUTRI DEL GRANO HAMBURGUER AUSTRALIANO PANUTRIR 320G
-  "162923": { "CANAL INDIRETO":121.5, "CD BARUERI":189.5, "CD BAURU":42.6, "CD CURITIBA":124.9, "CD LONDRINA":182.8, "CD MATRIZ":454.6, "CD PAGUE MENOS":0, "CD RANCHARIA":51, "CD SJ RIO PRETO":66.4 }   // PAO NUTRI DEL GRANO HAMBURGUER GERGELIM PANUTRIR 320G
+  "2": { "CANAL INDIRETO":1552.5, "CD BARUERI":1030.1, "CD BAURU":514.3, "CD CURITIBA":2121.6, "CD LONDRINA":1043.8, "CD MATRIZ":3276.7, "CD PAGUE MENOS":0, "CD RANCHARIA":408.9, "CD SJ RIO PRETO":502.6 },   // PAO FORMA PANUTRIR 400G
+  "5": { "CANAL INDIRETO":490.7, "CD BARUERI":1609.5, "CD BAURU":256.9, "CD CURITIBA":556.9, "CD LONDRINA":872.7, "CD MATRIZ":3382.1, "CD PAGUE MENOS":0, "CD RANCHARIA":309.1, "CD SJ RIO PRETO":247.9 },   // PAO LEITE PANUTRIR 400G
+  "6": { "CANAL INDIRETO":179.3, "CD BARUERI":885.9, "CD BAURU":137.9, "CD CURITIBA":109.3, "CD LONDRINA":221.9, "CD MATRIZ":645.7, "CD PAGUE MENOS":0, "CD RANCHARIA":83.9, "CD SJ RIO PRETO":64.3 },   // PAEZINHOS LEITE PANUTRINHA PANUTRIR 400G
+  "11": { "CANAL INDIRETO":67.7, "CD BARUERI":89.9, "CD BAURU":27.9, "CD CURITIBA":206.5, "CD LONDRINA":117.1, "CD MATRIZ":292.9, "CD PAGUE MENOS":0, "CD RANCHARIA":50, "CD SJ RIO PRETO":74.9 },   // PAO INTEGRAL CENTEIO FITNESS ZERO PANUTRIR 350G
+  "16": { "CANAL INDIRETO":43.3, "CD BARUERI":53.5, "CD BAURU":33.3, "CD CURITIBA":139.3, "CD LONDRINA":65.1, "CD MATRIZ":184.1, "CD PAGUE MENOS":0, "CD RANCHARIA":6.5, "CD SJ RIO PRETO":26.5 },   // PAO INTEG 7 GRAOS DAMASCO HIBISCO ZERO PANUTRIR 350G
+  "655": { "CANAL INDIRETO":116.4, "CD BARUERI":621.6, "CD BAURU":33.3, "CD CURITIBA":269.2, "CD LONDRINA":257.1, "CD MATRIZ":571.5, "CD PAGUE MENOS":0, "CD RANCHARIA":60.3, "CD SJ RIO PRETO":87.9 },   // PAO INTEGRAL 12 GRAOS PANUTRIR 450G
+  "669": { "CANAL INDIRETO":6.1, "CD BARUERI":8.4, "CD BAURU":74, "CD CURITIBA":47.5, "CD LONDRINA":67.5, "CD MATRIZ":669.2, "CD PAGUE MENOS":0, "CD RANCHARIA":49.6, "CD SJ RIO PRETO":28.9 },   // BISNAGUINHA BISNUTRINHAS PANUTRIR 300G
+  "1224": { "CANAL INDIRETO":233.1, "CD BARUERI":1246.7, "CD BAURU":52.7, "CD CURITIBA":457.2, "CD LONDRINA":288.1, "CD MATRIZ":714.7, "CD PAGUE MENOS":0, "CD RANCHARIA":74.7, "CD SJ RIO PRETO":105.7 },   // PAO CAST PARA E QUINOA INTEG PANUTRIR BROA 450G
+  "2279": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":0, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":217.3, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0 },   // PAO PCT CASEIRO 500G
+  "69251": { "CANAL INDIRETO":406.6, "CD BARUERI":2278.3, "CD BAURU":256.6, "CD CURITIBA":252.9, "CD LONDRINA":437.2, "CD MATRIZ":1110.1, "CD PAGUE MENOS":0, "CD RANCHARIA":184.1, "CD SJ RIO PRETO":145.7 },   // PAO HOT DOG PANUTRIR 400G
+  "81571": { "CANAL INDIRETO":58.2, "CD BARUERI":65.4, "CD BAURU":18.5, "CD CURITIBA":94.1, "CD LONDRINA":56.5, "CD MATRIZ":160.9, "CD PAGUE MENOS":0, "CD RANCHARIA":8, "CD SJ RIO PRETO":11.6 },   // PAO INTEGRAL SURPREENDENTE PANUTRIR 450G
+  "81581": { "CANAL INDIRETO":86.3, "CD BARUERI":294.9, "CD BAURU":21.7, "CD CURITIBA":217.1, "CD LONDRINA":148.9, "CD MATRIZ":265.2, "CD PAGUE MENOS":0, "CD RANCHARIA":53.5, "CD SJ RIO PRETO":42.3 },   // PAO INTEGRAL 12 GRAOS ZERO PANUTRIR 350G
+  "81591": { "CANAL INDIRETO":75.3, "CD BARUERI":67.5, "CD BAURU":23.7, "CD CURITIBA":25.7, "CD LONDRINA":16.1, "CD MATRIZ":178, "CD PAGUE MENOS":0, "CD RANCHARIA":4.3, "CD SJ RIO PRETO":19.4 },   // PAO INTEGRAL CHIA MACADAMIA PANUTRIR 400G
+  "81661": { "CANAL INDIRETO":202.3, "CD BARUERI":5966.7, "CD BAURU":413.1, "CD CURITIBA":1243.3, "CD LONDRINA":1147, "CD MATRIZ":3616.2, "CD PAGUE MENOS":0, "CD RANCHARIA":294.8, "CD SJ RIO PRETO":615 },   // PAO FORMA PLUFI NUT 400G
+  "82051": { "CANAL INDIRETO":391.3, "CD BARUERI":5838.8, "CD BAURU":283.2, "CD CURITIBA":511.7, "CD LONDRINA":412.5, "CD MATRIZ":1286.8, "CD PAGUE MENOS":0, "CD RANCHARIA":229.5, "CD SJ RIO PRETO":187.6 },   // PAO HAMBURGUER GOURMET PANUTRIR 500G
+  "85181": { "CANAL INDIRETO":0, "CD BARUERI":93.6, "CD BAURU":2.7, "CD CURITIBA":116.9, "CD LONDRINA":2.7, "CD MATRIZ":266, "CD PAGUE MENOS":0, "CD RANCHARIA":95.6, "CD SJ RIO PRETO":125.5 },   // MUFFATO PAO HOT DOG 400G
+  "85841": { "CANAL INDIRETO":0, "CD BARUERI":188.1, "CD BAURU":11.3, "CD CURITIBA":75.2, "CD LONDRINA":2, "CD MATRIZ":148.3, "CD PAGUE MENOS":0, "CD RANCHARIA":158.5, "CD SJ RIO PRETO":187.6 },   // MUFFATO PAEZINHOS DE LEITE 400G
+  "86151": { "CANAL INDIRETO":638.2, "CD BARUERI":1797.9, "CD BAURU":187, "CD CURITIBA":1550.1, "CD LONDRINA":664, "CD MATRIZ":1398.3, "CD PAGUE MENOS":0, "CD RANCHARIA":198.7, "CD SJ RIO PRETO":282.6 },   // PAO INTEGRAL PANUTRIR 450G
+  "121581": { "CANAL INDIRETO":0, "CD BARUERI":31.2, "CD BAURU":104.7, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":9.9, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":11.7 },   // US PAO HOT DOG UNISABOR 400G
+  "121801": { "CANAL INDIRETO":0, "CD BARUERI":27.1, "CD BAURU":113.6, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":7.9, "CD PAGUE MENOS":0, "CD RANCHARIA":0.5, "CD SJ RIO PRETO":19.7 },   // US PAO HAMBURGUER GOURMET UNISABOR 500G
+  "121811": { "CANAL INDIRETO":0, "CD BARUERI":21.2, "CD BAURU":88.8, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":7.7, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":2.7 },   // US PAEZINHOS DE LEITE UNISABOR 400G
+  "121821": { "CANAL INDIRETO":0, "CD BARUERI":10.4, "CD BAURU":40.8, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":0.3, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":21.4 },   // US PAO INTEGRAL 12 GRAOS ZERO UNISABOR 350G
+  "121831": { "CANAL INDIRETO":0, "CD BARUERI":8.2, "CD BAURU":28.9, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":0.1, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0.1 },   // US PAO INTEGRAL 12 GRAOS UNISABOR 450G
+  "121841": { "CANAL INDIRETO":0, "CD BARUERI":10.8, "CD BAURU":39.1, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":0, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0.1 },   // US PAO CASTANHA PARA E QUINOA INTEG UNISABOR 450G
+  "121861": { "CANAL INDIRETO":0, "CD BARUERI":73.5, "CD BAURU":477.5, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":13.3, "CD PAGUE MENOS":0, "CD RANCHARIA":9.6, "CD SJ RIO PRETO":225.5 },   // US PAO FORMA UNISABOR 400G
+  "121871": { "CANAL INDIRETO":0, "CD BARUERI":62.8, "CD BAURU":197.2, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":6.7, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":92.4 },   // US PAO LEITE UNISABOR 450G
+  "135211": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":8.1, "CD CURITIBA":2.1, "CD LONDRINA":3.7, "CD MATRIZ":14.6, "CD PAGUE MENOS":1303.5, "CD RANCHARIA":17.6, "CD SJ RIO PRETO":507.3 },   // NOSSA PADARIA PAO HAMBURGUER GOURMET EMB TRANS 500G
+  "135221": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":45.9, "CD CURITIBA":3.8, "CD LONDRINA":3.7, "CD MATRIZ":90.1, "CD PAGUE MENOS":1098.1, "CD RANCHARIA":376.8, "CD SJ RIO PRETO":522.9 },   // NOSSA PADARIA PAO HOT DOG EMB TRANSP 400G
+  "135231": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":36, "CD CURITIBA":18.4, "CD LONDRINA":9.3, "CD MATRIZ":100, "CD PAGUE MENOS":1286.7, "CD RANCHARIA":400.2, "CD SJ RIO PRETO":684.9 },   // NOSSA PADARIA PAEZINHOS LEITE EMB TRANSP 400G
+  "135241": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":17.5, "CD CURITIBA":3.2, "CD LONDRINA":17.6, "CD MATRIZ":58, "CD PAGUE MENOS":407.2, "CD RANCHARIA":245.1, "CD SJ RIO PRETO":527.7 },   // NOSSA PADARIA PAO FORMA EMB TRANSP 400G
+  "141441": { "CANAL INDIRETO":61.3, "CD BARUERI":10, "CD BAURU":4.7, "CD CURITIBA":224.3, "CD LONDRINA":161.3, "CD MATRIZ":34.5, "CD PAGUE MENOS":0, "CD RANCHARIA":30.5, "CD SJ RIO PRETO":33 },   // PAO SIRIO TRADIC PANIFICADORA DUBAI 320G EAN 7898585460028
+  "141951": { "CANAL INDIRETO":4, "CD BARUERI":0, "CD BAURU":0, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":34.8, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":0 },   // PAO SIRIO TRADIC PANIFICADORA DUBAI 260G  EAN 7893590194951
+  "145511": { "CANAL INDIRETO":106.9, "CD BARUERI":119.4, "CD BAURU":42.8, "CD CURITIBA":77.7, "CD LONDRINA":144.5, "CD MATRIZ":236.8, "CD PAGUE MENOS":0, "CD RANCHARIA":47.6, "CD SJ RIO PRETO":133.5 },   // PAO NUTRI DEL GRANO TRADICIONAL PANUTRIR 500G
+  "145521": { "CANAL INDIRETO":199.2, "CD BARUERI":838.3, "CD BAURU":83.9, "CD CURITIBA":490.1, "CD LONDRINA":613.3, "CD MATRIZ":788.3, "CD PAGUE MENOS":0, "CD RANCHARIA":135.6, "CD SJ RIO PRETO":226.9 },   // PAO NUTRI DEL GRANO INTEGRAL PANUTRIR 500G
+  "162272": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":3.4, "CD CURITIBA":6.1, "CD LONDRINA":4.7, "CD MATRIZ":16.5, "CD PAGUE MENOS":0, "CD RANCHARIA":46.9, "CD SJ RIO PRETO":36.5 },   // NOSSA PADARIA BISNAGUINHA EMB TRANSP 300G
+  "162275": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":27.1, "CD CURITIBA":15.3, "CD LONDRINA":3.7, "CD MATRIZ":50.3, "CD PAGUE MENOS":256.7, "CD RANCHARIA":257.3, "CD SJ RIO PRETO":0 },   // NOSSA PADARIA PAO HAMBURGUER GOURMET EMB TRANS 330G
+  "162276": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":6, "CD CURITIBA":2.7, "CD LONDRINA":2.7, "CD MATRIZ":7.3, "CD PAGUE MENOS":78.7, "CD RANCHARIA":54, "CD SJ RIO PRETO":49.1 },   // NOSSA PADARIA PAO INTEGRAL EMB TRANSP 450G
+  "162358": { "CANAL INDIRETO":0, "CD BARUERI":40.3, "CD BAURU":187, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":5.7, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":52.9 },   // US PAO INTEGRAL UNISABOR 450G
+  "162396": { "CANAL INDIRETO":50.2, "CD BARUERI":189.7, "CD BAURU":57.3, "CD CURITIBA":221.7, "CD LONDRINA":299, "CD MATRIZ":416.9, "CD PAGUE MENOS":0, "CD RANCHARIA":50.9, "CD SJ RIO PRETO":183.7 },   // PAO NUTRI DEL GRANO TIPO CASEIRO PANUTRIR 500G
+  "162767": { "CANAL INDIRETO":0, "CD BARUERI":94.1, "CD BAURU":0, "CD CURITIBA":141.9, "CD LONDRINA":2.7, "CD MATRIZ":358.9, "CD PAGUE MENOS":0, "CD RANCHARIA":65, "CD SJ RIO PRETO":105 },   // MUFFATO PAO INTEGRAL 450G
+  "162775": { "CANAL INDIRETO":0, "CD BARUERI":0, "CD BAURU":0, "CD CURITIBA":0, "CD LONDRINA":3.3, "CD MATRIZ":117.8, "CD PAGUE MENOS":0, "CD RANCHARIA":7, "CD SJ RIO PRETO":2.1 },   // MUFFATO BISNAGUINHAS 300G
+  "162783": { "CANAL INDIRETO":0, "CD BARUERI":12.1, "CD BAURU":62.8, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":2.1, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":21 },   // US PAO ARTESANAL TRADICIONAL UNISABOR 500G
+  "162784": { "CANAL INDIRETO":0, "CD BARUERI":12.9, "CD BAURU":70.9, "CD CURITIBA":0, "CD LONDRINA":0, "CD MATRIZ":2, "CD PAGUE MENOS":0, "CD RANCHARIA":0, "CD SJ RIO PRETO":29.8 },   // US PAO ARTESANAL INTEGRAL UNISABOR 500G
+  "162800": { "CANAL INDIRETO":0, "CD BARUERI":266.9, "CD BAURU":8, "CD CURITIBA":520.1, "CD LONDRINA":20.1, "CD MATRIZ":1128.7, "CD PAGUE MENOS":0, "CD RANCHARIA":138.9, "CD SJ RIO PRETO":198.3 },   // MUFFATO PAO FORMA 400G
+  "162801": { "CANAL INDIRETO":0, "CD BARUERI":213.4, "CD BAURU":22.4, "CD CURITIBA":255.3, "CD LONDRINA":32, "CD MATRIZ":619.5, "CD PAGUE MENOS":0, "CD RANCHARIA":97.3, "CD SJ RIO PRETO":57.9 },   // MUFFATO PAO LEITE 400G
+  "162802": { "CANAL INDIRETO":0, "CD BARUERI":108.9, "CD BAURU":3.7, "CD CURITIBA":96.5, "CD LONDRINA":3.2, "CD MATRIZ":221.5, "CD PAGUE MENOS":0, "CD RANCHARIA":88.7, "CD SJ RIO PRETO":106.7 },   // MUFFATO PAO HAMBURGUER 500G
+  "162920": { "CANAL INDIRETO":48.1, "CD BARUERI":126, "CD BAURU":72.9, "CD CURITIBA":22.1, "CD LONDRINA":40.2, "CD MATRIZ":102.9, "CD PAGUE MENOS":0, "CD RANCHARIA":10.7, "CD SJ RIO PRETO":66.3 },   // PAO NUTRI DEL GRANO HAMBURGUER ARTESANAL PANUTRIR 320G
+  "162921": { "CANAL INDIRETO":161.8, "CD BARUERI":285.7, "CD BAURU":135.5, "CD CURITIBA":347.3, "CD LONDRINA":271.6, "CD MATRIZ":736.7, "CD PAGUE MENOS":0, "CD RANCHARIA":116.3, "CD SJ RIO PRETO":67.1 },   // PAO NUTRI DEL GRANO HAMBURGUER BRIOCHE PANUTRIR 320G
+  "162922": { "CANAL INDIRETO":48.3, "CD BARUERI":93.1, "CD BAURU":11.4, "CD CURITIBA":9.5, "CD LONDRINA":24.4, "CD MATRIZ":41.9, "CD PAGUE MENOS":0, "CD RANCHARIA":8.7, "CD SJ RIO PRETO":9.2 },   // PAO NUTRI DEL GRANO HAMBURGUER AUSTRALIANO PANUTRIR 320G
+  "162923": { "CANAL INDIRETO":136.1, "CD BARUERI":151.7, "CD BAURU":47.4, "CD CURITIBA":119.5, "CD LONDRINA":182.2, "CD MATRIZ":424.1, "CD PAGUE MENOS":0, "CD RANCHARIA":63.2, "CD SJ RIO PRETO":69.7 }   // PAO NUTRI DEL GRANO HAMBURGUER GERGELIM PANUTRIR 320G
 };
 
 // Venda diária TOTAL da CIA por código = soma de TODOS os CDs (= "Total Geral" da planilha,
@@ -1928,6 +1930,8 @@ function okLocal(autoV){
       document.getElementById('painel-monitoramento').style.display = 'block';
       document.getElementById('tab-dashboard').style.display = 'inline-block';
       document.getElementById('tab-rastreio').style.display = 'inline-block';
+      // Atualiza badges + indicadores da CIA agora que o painel está visível
+      atualizarStatusMonitor();
       const hoje = new Date().toISOString().split('T')[0];
       document.getElementById('data_relatorio').value = hoje;
       // MATRIZ: oculta a pergunta Sim/Não e mostra os campos diretamente
@@ -4056,7 +4060,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     // ── aba CONSOLIDADO ───────────────────────────────────────────
     // A análise por Validade Efetiva é usada internamente para definir o STATUS
     // e a ordenação, mas a coluna em si NÃO aparece para manter a planilha limpa.
-    const header = ['CD ORIGEM','CÓDIGO','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','QTD','COBERTURA (DIAS)','STATUS COBERTURA','DIRECIONAMENTO','MOTIVO','✏️ EDITADO MANUALMENTE','QTD ORIGINAL','VALIDADE ORIGINAL'];
+    const header = ['CD ORIGEM','CÓDIGO','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','QTD','VENDA DIÁRIA (CD)','COBERTURA (DIAS)','STATUS COBERTURA','DIRECIONAMENTO','MOTIVO','✏️ EDITADO MANUALMENTE','QTD ORIGINAL','VALIDADE ORIGINAL'];
     const wsData = [header];
 
     // Pré-processa e ordena por prazo crescente (menos dias primeiro = mais urgente no topo).
@@ -4064,11 +4068,12 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     const linhasPreparadas = dados.map(r => {
         const cob = calcCobertura(r);
         const ve  = calcValidadeEfetiva(r, cob);
+        const venda = getVendaParaLinha(r);  // venda diária do item no seu CD (CIA quando MATRIZ)
         const cdUpper = (r.cd || '').toString().toUpperCase().trim();
         const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
         const status = statusLabel(r, cob);
         const nivel  = statusNivel(r, cob);
-        return { r, cob, ve, ehMatriz, status, nivel };
+        return { r, cob, ve, venda, ehMatriz, status, nivel };
     }).sort((a, b) => {
         // Linhas com ALERTA combinado (data curta + alta cobertura) sobem ao topo.
         const aAlerta = a.status === 'ALERTA - ALTA COBERTURA E DATA CURTA';
@@ -4083,11 +4088,12 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     });
 
     const niveisConsolidado = []; // nível canônico por linha (alinha com wsData a partir do índice 1)
-    linhasPreparadas.forEach(({ r, cob, ve, ehMatriz, status, nivel }) => {
+    linhasPreparadas.forEach(({ r, cob, ve, venda, ehMatriz, status, nivel }) => {
         niveisConsolidado.push(nivel);
         wsData.push([
             r.cd, r.codigo, r.produto, r.validade, r.prazo,
             r.quantidade,
+            venda > 0 ? +venda.toFixed(1) : '-',
             cob !== null ? cob : '-',
             status,
             r.destino, r.motivo,
@@ -4098,7 +4104,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     });
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [{wch:14},{wch:10},{wch:46},{wch:12},{wch:13},{wch:10},{wch:16},{wch:40},{wch:28},{wch:36},{wch:22},{wch:14},{wch:16}];
+    ws['!cols'] = [{wch:14},{wch:10},{wch:46},{wch:12},{wch:13},{wch:10},{wch:18},{wch:16},{wch:40},{wch:28},{wch:36},{wch:22},{wch:14},{wch:16}];
 
     // Cores por status na coluna STATUS COBERTURA (col H = índice 7) e
     // pintar também COBERTURA (col G = 6).
@@ -4110,11 +4116,11 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
 
     const nColsCons = header.length;
     for(let i = 1; i < wsData.length; i++) {
-        const cellRefStatus = XLSX.utils.encode_cell({r: i, c: 7});  // STATUS COBERTURA
-        const cellRefCob    = XLSX.utils.encode_cell({r: i, c: 6});  // COBERTURA
-        const cellEdit      = XLSX.utils.encode_cell({r: i, c: 10}); // EDITADO MANUALMENTE
+        const cellRefStatus = XLSX.utils.encode_cell({r: i, c: 8});  // STATUS COBERTURA
+        const cellRefCob    = XLSX.utils.encode_cell({r: i, c: 7});  // COBERTURA
+        const cellEdit      = XLSX.utils.encode_cell({r: i, c: 11}); // EDITADO MANUALMENTE
         const nivel  = niveisConsolidado[i - 1];
-        const cobVal = parseFloat(wsData[i][6]);
+        const cobVal = parseFloat(wsData[i][7]);
 
         // Obs.: linhas de ALERTA combinado continuam agrupadas no topo (ver sort),
         // mas seguem o mesmo padrão de cor das demais — sem pintar a linha inteira.
@@ -4130,7 +4136,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             fill,
             font: (isFinite(cobVal) && cobVal > 3) ? {bold:true, color:{rgb:'C0392B'}} : {}
         };
-        if(ws[cellEdit] && wsData[i][10]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
+        if(ws[cellEdit] && wsData[i][11]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
     }
 
     // Header row estilo
@@ -4726,6 +4732,19 @@ async function atualizarStatusMonitor() {
         const resumoEl = document.getElementById('mon-data-label');
         resumoEl.innerHTML = `Exibindo: ${labelData}`;
 
+        // ---- Indicadores da CIA: só quando TODOS os CDs esperados já lançaram o controle de datas ----
+        const boxKpi = document.getElementById('mon-kpi-cia');
+        if (boxKpi) {
+            const painelVisivel = document.getElementById('painel-monitoramento')?.style.display === 'block';
+            const todosLancaram = esperaControle && unidades.every(un => enviadosControle.includes(un));
+            if (painelVisivel && todosLancaram) {
+                renderMonitorKpiCia(_monitorData);
+            } else {
+                boxKpi.style.display = 'none';
+                if (_monitorChart) { try { _monitorChart.destroy(); } catch(_) {} _monitorChart = null; }
+            }
+        }
+
     } catch (e) {
         unidades.forEach(un => {
             const badge = document.getElementById(`badge-${un}`);
@@ -4733,10 +4752,190 @@ async function atualizarStatusMonitor() {
             badge.className = "cd-status-badge status-pending";
             badge.innerHTML = `<strong>${un}</strong><br><small>❌ Erro de Conexão</small>`;
         });
+        const boxKpiErr = document.getElementById('mon-kpi-cia');
+        if (boxKpiErr) boxKpiErr.style.display = 'none';
     }
 }
 
 window.addEventListener('load', atualizarStatusMonitor);
+
+// =========================================================================
+// INDICADORES DA CIA (dentro do painel de Monitoramento de Envios)
+// Aparecem só quando TODOS os CDs já lançaram o estoque do dia. Mostram:
+//   • % de datas curtas (≤22d) da CIA inteira
+//   • SKU com maior quantidade em data curta
+//   • mini-gráfico de evolução semanal da % de data curta
+// Fonte: action=relatorio (mesmo backend AppScript do consolidado/dashboard).
+// =========================================================================
+let _monitorChart = null;
+
+// Prazo "real" em dias: usa r.prazo; se ausente/zero, recalcula a partir da validade.
+// (mesma regra usada no dashboard)
+function _prazoRealCia(r, hoje0) {
+    const p = Number(r.prazo);
+    if (p > 0) return p;
+    const valStr = String(r.validade || '').trim();
+    if (!valStr) return null;
+    let d;
+    const ptBR = valStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    const iso  = valStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ptBR) d = new Date(`${ptBR[3]}-${ptBR[2]}-${ptBR[1]}T00:00:00`);
+    else if (iso) d = new Date(valStr + 'T00:00:00');
+    if (!d || isNaN(d)) return null;
+    return Math.round((d - hoje0) / 86400000);
+}
+
+async function renderMonitorKpiCia(dataRef) {
+    const box = document.getElementById('mon-kpi-cia');
+    if (!box) return;
+    box.style.display = 'block';
+    box.innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:var(--txs);font-size:12px;font-style:italic;padding:6px 0;">
+        <span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--p);border-radius:50%;animation:spin .6s linear infinite;"></span>
+        Calculando indicadores da CIA...</div>`;
+
+    // Janela semanal: últimos 7 dias corridos terminando na data de referência.
+    const [dd, mm, yy] = dataRef.split('/').map(Number);
+    const ref = new Date(yy, mm - 1, dd);
+    const datas = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(ref); d.setDate(ref.getDate() - i);
+        datas.push(d.toLocaleDateString('pt-BR'));
+    }
+
+    let estoque;
+    try {
+        estoque = await buscarEstoquePorPeriodo(datas);
+    } catch (e) {
+        box.innerHTML = `<div style="color:var(--ct);font-size:12px;">Não foi possível carregar os indicadores da CIA.</div>`;
+        return;
+    }
+    if (!estoque || estoque.length === 0) {
+        box.innerHTML = `<div style="color:var(--txs);font-size:12px;font-style:italic;">Sem dados de estoque para o período.</div>`;
+        return;
+    }
+
+    const hoje0 = new Date(); hoje0.setHours(0, 0, 0, 0);
+    const dataParaNum = d => { const p = d.split('/'); return parseInt(p[2] + p[1] + p[0], 10); };
+
+    // Agrupa por CD → por data (cada envio é um snapshot; forward-fill por CD).
+    const porCDData = {};
+    estoque.forEach(r => {
+        const c = (r.cd || '').toUpperCase().trim();
+        if (!porCDData[c]) porCDData[c] = {};
+        if (!porCDData[c][r._data]) porCDData[c][r._data] = [];
+        porCDData[c][r._data].push(r);
+    });
+    const cds = Object.keys(porCDData);
+
+    // Snapshot até uma data: último envio de cada CD até aquela data (forward-fill).
+    function snapshotAte(dataNum) {
+        const linhas = [];
+        cds.forEach(c => {
+            const ds = Object.keys(porCDData[c]).filter(d => dataParaNum(d) <= dataNum);
+            if (!ds.length) return;
+            const ult = ds.reduce((a, d) => dataParaNum(d) > dataParaNum(a) ? d : a);
+            linhas.push(...porCDData[c][ult]);
+        });
+        return linhas;
+    }
+
+    // % de datas curtas (em unidades) de um conjunto de linhas.
+    function pctDataCurta(linhas) {
+        let tot = 0, crit = 0;
+        linhas.forEach(r => {
+            const q = Number(r.quantidade) || 0;
+            if (q <= 0) return;
+            tot += q;
+            const pr = _prazoRealCia(r, hoje0);
+            if (pr !== null && pr <= 22) crit += q;
+        });
+        return { tot, crit, pct: tot > 0 ? (crit / tot * 100) : 0 };
+    }
+
+    // Snapshot atual (na data de referência).
+    const refNum = dataParaNum(dataRef);
+    const atual = snapshotAte(refNum);
+    const { tot, crit, pct } = pctDataCurta(atual);
+
+    // Top 5 SKUs com maior quantidade em data curta.
+    const porSku = {};
+    atual.forEach(r => {
+        const q = Number(r.quantidade) || 0;
+        const pr = _prazoRealCia(r, hoje0);
+        if (q > 0 && pr !== null && pr <= 22) {
+            const cod = String(r.codigo || '').trim();
+            if (!porSku[cod]) porSku[cod] = { cod, qtd: 0, nome: (SKU[cod] || r.produto || cod) };
+            porSku[cod].qtd += q;
+        }
+    });
+    const top5Sku = Object.values(porSku).sort((a, b) => b.qtd - a.qtd).slice(0, 5);
+
+    // Evolução semanal: % de data curta por dia (forward-fill).
+    const evolucao = datas.map(d => +pctDataCurta(snapshotAte(dataParaNum(d))).pct.toFixed(1));
+    const labels = datas.map(d => { const p = d.split('/'); return `${p[0]}/${p[1]}`; });
+
+    box.innerHTML = `
+      <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:12px;">📊 Indicadores da CIA <span style="font-weight:400;color:var(--txs);font-size:11px;">(todos os CDs lançaram o estoque do dia)</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">
+        <div class="dash-kpi warn" style="margin:0;">
+          <div class="dkv">${pct.toFixed(1)}%</div>
+          <div class="dkl">Datas curtas da CIA</div>
+          <div class="dkd">${crit.toLocaleString('pt-BR')} de ${tot.toLocaleString('pt-BR')} unid. (≤22d)</div>
+        </div>
+        <div class="dash-kpi accent" style="margin:0;">
+          <div class="dkl" style="margin-bottom:8px;">Top 5 SKUs em data curta <span style="color:var(--txs);font-weight:400;text-transform:none;">(unid. ≤22d)</span></div>
+          ${top5Sku.length ? `<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;">
+            ${top5Sku.map((s, i) => `
+              <li style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.25;">
+                <span style="flex:0 0 18px;height:18px;line-height:18px;text-align:center;border-radius:50%;background:${i === 0 ? 'var(--p)' : 'var(--sur2)'};color:${i === 0 ? '#fff' : 'var(--txs)'};font-weight:600;font-size:11px;">${i + 1}</span>
+                <span title="${s.nome} · cód ${s.cod}" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:capitalize;">${s.nome.toLowerCase()}</span>
+                <span style="font-weight:600;white-space:nowrap;color:var(--p);">${s.qtd.toLocaleString('pt-BR')}</span>
+              </li>`).join('')}
+          </ol>` : `<div class="dkd">Nenhum item em data curta</div>`}
+        </div>
+        <div class="dash-kpi" style="margin:0;">
+          <div class="dkl" style="margin-bottom:6px;">Evolução semanal — % data curta</div>
+          <div style="height:82px;position:relative;"><canvas id="mon-chart-evolucao"></canvas></div>
+        </div>
+      </div>`;
+
+    // Mini-gráfico (instância PRÓPRIA — não usa _dashCharts, p/ não ser apagado por destruirCharts()).
+    if (_monitorChart) { try { _monitorChart.destroy(); } catch (_) {} _monitorChart = null; }
+    const cv = document.getElementById('mon-chart-evolucao');
+    if (cv && window.Chart) {
+        _monitorChart = new Chart(cv, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    data: evolucao,
+                    borderColor: '#C67C2A',
+                    backgroundColor: 'rgba(198,124,42,0.12)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#C67C2A',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(44,32,22,.9)',
+                        callbacks: { label: ctx => ctx.parsed.y + '% em data curta' }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: v => v + '%', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+                    x: { ticks: { font: { size: 9 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+}
 // Auto-login se o usuário optou por "manter conectado" neste dispositivo.
 window.addEventListener('load', tentarAutoLogin);
 
