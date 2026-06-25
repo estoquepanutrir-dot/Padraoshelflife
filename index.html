@@ -4761,13 +4761,17 @@ window.addEventListener('load', atualizarStatusMonitor);
 
 // =========================================================================
 // INDICADORES DA CIA (dentro do painel de Monitoramento de Envios)
-// Aparecem só quando TODOS os CDs já lançaram o estoque do dia. Mostram:
-//   • % de datas curtas (≤22d) da CIA inteira
-//   • SKU com maior quantidade em data curta
-//   • mini-gráfico de evolução semanal da % de data curta
+// Aparecem só quando TODOS os CDs já lançaram o estoque do dia. Duas seções:
+//   • DATA CURTA (validade ≤22d): % da CIA · Top 5 SKUs · evolução semanal
+//   • COBERTURA ALTA (>3 dias de estoque): % da CIA · Top 5 SKUs · evolução semanal
+// Ambas as seções respeitam os filtros de Família e de SKU.
+// Cobertura usa a visão CIA: estoque total do SKU ÷ venda diária total da CIA
+// (VENDA_DIARIA_CIA), mesma régua da aba "Cobertura CIA Consolidada".
 // Fonte: action=relatorio (mesmo backend AppScript do consolidado/dashboard).
 // =========================================================================
-let _monitorChart = null;
+let _monitorChart = null;     // gráfico de evolução — data curta
+let _monitorChartCob = null;  // gráfico de evolução — cobertura
+let _monitorCache = null;     // { estoque, datas, dataRef } — evita refetch ao aplicar filtros
 
 // Prazo "real" em dias: usa r.prazo; se ausente/zero, recalcula a partir da validade.
 // (mesma regra usada no dashboard)
@@ -4814,6 +4818,81 @@ async function renderMonitorKpiCia(dataRef) {
         return;
     }
 
+    // Guarda o estoque buscado p/ recalcular ao mudar filtros (sem nova chamada à API).
+    _monitorCache = { estoque, datas, dataRef };
+    _montarShellMonitorKpi(box);
+    _aplicarFiltrosMonitorKpi();
+}
+
+// Famílias únicas (de FAMILIA_PROD), ordenadas em pt-BR.
+function _familiasUnicas() {
+    return [...new Set(Object.values(FAMILIA_PROD))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+// Monta a casca fixa: título + filtros (Família e SKU) + container de conteúdo.
+// Os controles são montados uma vez; os KPIs são (re)desenhados ao filtrar.
+function _montarShellMonitorKpi(box) {
+    const inS = 'background:var(--surv);border:1.5px solid var(--out);border-radius:10px;color:var(--tx);font-family:inherit;font-size:13px;padding:7px 12px;outline:none;';
+    const familias = _familiasUnicas();
+    box.innerHTML = `
+      <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:10px;">📊 Indicadores da CIA <span style="font-weight:400;color:var(--txs);font-size:11px;">(todos os CDs lançaram o estoque do dia)</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
+        <span style="font-size:11px;color:var(--txs);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Filtros</span>
+        <select id="mon-filtro-familia" style="${inS}" title="Filtrar por família de produto">
+          <option value="">Todas as famílias</option>
+          ${familias.map(f => `<option value="${f}">${f}</option>`).join('')}
+        </select>
+        <input id="mon-filtro-sku" list="mon-sku-datalist" placeholder="Filtrar por SKU — código ou nome" style="${inS}min-width:230px;" title="Filtrar por um SKU específico (código ou nome)">
+        <datalist id="mon-sku-datalist">
+          ${Object.entries(SKU).map(([c, n]) => `<option value="${c} — ${n}"></option>`).join('')}
+        </datalist>
+        <button id="mon-filtro-limpar" type="button" style="padding:7px 12px;border-radius:10px;border:1.5px solid var(--out);background:transparent;color:var(--txs);cursor:pointer;font-size:12px;">Limpar</button>
+        <span id="mon-filtro-info" style="font-size:11px;color:var(--p);font-style:italic;margin-left:auto;"></span>
+      </div>
+      <div id="mon-kpi-conteudo"></div>`;
+    document.getElementById('mon-filtro-familia').onchange = _aplicarFiltrosMonitorKpi;
+    document.getElementById('mon-filtro-sku').oninput = _aplicarFiltrosMonitorKpi;
+    document.getElementById('mon-filtro-limpar').onclick = () => {
+        document.getElementById('mon-filtro-familia').value = '';
+        document.getElementById('mon-filtro-sku').value = '';
+        _aplicarFiltrosMonitorKpi();
+    };
+}
+
+// Aplica os filtros (Família + SKU) ao estoque do cache e re-renderiza os KPIs.
+function _aplicarFiltrosMonitorKpi() {
+    if (!_monitorCache) return;
+    const { estoque, datas, dataRef } = _monitorCache;
+    const fam = (document.getElementById('mon-filtro-familia')?.value || '').trim();
+    const termo = (document.getElementById('mon-filtro-sku')?.value || '').trim().toLowerCase();
+    const codTermo = termo.split('—')[0].trim();  // quando vem do datalist "cod — nome"
+
+    const filtrado = estoque.filter(r => {
+        const cod = String(r.codigo || '').trim();
+        if (fam && (FAMILIA_PROD[cod] || '') !== fam) return false;
+        if (termo) {
+            const nome = (SKU[cod] || r.produto || '').toLowerCase();
+            if (!(cod === codTermo || (cod + ' ' + nome).includes(termo))) return false;
+        }
+        return true;
+    });
+
+    const info = document.getElementById('mon-filtro-info');
+    if (info) {
+        const partes = [];
+        if (fam) partes.push(`família "${fam}"`);
+        if (termo) partes.push(`SKU "${termo}"`);
+        info.textContent = partes.length ? `Filtrando por ${partes.join(' · ')}` : '';
+    }
+
+    _renderMonitorKpiConteudo(filtrado, datas, dataRef);
+}
+
+// Calcula e desenha as duas seções (data curta + cobertura) a partir do estoque já filtrado.
+function _renderMonitorKpiConteudo(estoque, datas, dataRef) {
+    const cont = document.getElementById('mon-kpi-conteudo');
+    if (!cont) return;
+
     const hoje0 = new Date(); hoje0.setHours(0, 0, 0, 0);
     const dataParaNum = d => { const p = d.split('/'); return parseInt(p[2] + p[1] + p[0], 10); };
 
@@ -4826,8 +4905,6 @@ async function renderMonitorKpiCia(dataRef) {
         porCDData[c][r._data].push(r);
     });
     const cds = Object.keys(porCDData);
-
-    // Snapshot até uma data: último envio de cada CD até aquela data (forward-fill).
     function snapshotAte(dataNum) {
         const linhas = [];
         cds.forEach(c => {
@@ -4839,7 +4916,7 @@ async function renderMonitorKpiCia(dataRef) {
         return linhas;
     }
 
-    // % de datas curtas (em unidades) de um conjunto de linhas.
+    // % de unidades em data curta (≤22d).
     function pctDataCurta(linhas) {
         let tot = 0, crit = 0;
         linhas.forEach(r => {
@@ -4851,91 +4928,138 @@ async function renderMonitorKpiCia(dataRef) {
         });
         return { tot, crit, pct: tot > 0 ? (crit / tot * 100) : 0 };
     }
+    // % de unidades em SKUs com alta cobertura (visão CIA: estoque do SKU ÷ venda CIA > 3 dias).
+    function pctAltaCobertura(linhas) {
+        const porSku = {};
+        linhas.forEach(r => {
+            const q = Number(r.quantidade) || 0;
+            if (q <= 0) return;
+            const cod = String(r.codigo || '').trim();
+            porSku[cod] = (porSku[cod] || 0) + q;
+        });
+        let tot = 0, alta = 0;
+        Object.entries(porSku).forEach(([cod, est]) => {
+            tot += est;
+            const venda = parseFloat(VENDA_DIARIA_CIA[cod]) || 0;
+            if (venda > 0 && est / venda > 3) alta += est;
+        });
+        return { tot, alta, pct: tot > 0 ? (alta / tot * 100) : 0 };
+    }
 
-    // Snapshot atual (na data de referência).
     const refNum = dataParaNum(dataRef);
     const atual = snapshotAte(refNum);
-    const { tot, crit, pct } = pctDataCurta(atual);
 
-    // Top 5 SKUs com maior quantidade em data curta.
-    const porSku = {};
+    // DATA CURTA: métricas + Top 5 SKUs por quantidade.
+    const dc = pctDataCurta(atual);
+    const porSkuDC = {};
     atual.forEach(r => {
         const q = Number(r.quantidade) || 0;
         const pr = _prazoRealCia(r, hoje0);
         if (q > 0 && pr !== null && pr <= 22) {
             const cod = String(r.codigo || '').trim();
-            if (!porSku[cod]) porSku[cod] = { cod, qtd: 0, nome: (SKU[cod] || r.produto || cod) };
-            porSku[cod].qtd += q;
+            if (!porSkuDC[cod]) porSkuDC[cod] = { cod, qtd: 0, nome: (SKU[cod] || r.produto || cod) };
+            porSkuDC[cod].qtd += q;
         }
     });
-    const top5Sku = Object.values(porSku).sort((a, b) => b.qtd - a.qtd).slice(0, 5);
+    const top5DC = Object.values(porSkuDC).sort((a, b) => b.qtd - a.qtd).slice(0, 5);
 
-    // Evolução semanal: % de data curta por dia (forward-fill).
-    const evolucao = datas.map(d => +pctDataCurta(snapshotAte(dataParaNum(d))).pct.toFixed(1));
+    // COBERTURA: métricas + Top 5 SKUs por cobertura (dias), entre os de alta cobertura.
+    const cob = pctAltaCobertura(atual);
+    const porSkuCob = {};
+    atual.forEach(r => {
+        const q = Number(r.quantidade) || 0;
+        if (q <= 0) return;
+        const cod = String(r.codigo || '').trim();
+        if (!porSkuCob[cod]) porSkuCob[cod] = { cod, est: 0, nome: (SKU[cod] || r.produto || cod) };
+        porSkuCob[cod].est += q;
+    });
+    const top5Cob = Object.values(porSkuCob)
+        .map(o => { const v = parseFloat(VENDA_DIARIA_CIA[o.cod]) || 0; return { ...o, cobertura: v > 0 ? o.est / v : null }; })
+        .filter(o => o.cobertura !== null && o.cobertura > 3)
+        .sort((a, b) => b.cobertura - a.cobertura)
+        .slice(0, 5);
+
+    // Evolução semanal (% por dia, forward-fill).
     const labels = datas.map(d => { const p = d.split('/'); return `${p[0]}/${p[1]}`; });
+    const evolDC  = datas.map(d => +pctDataCurta(snapshotAte(dataParaNum(d))).pct.toFixed(1));
+    const evolCob = datas.map(d => +pctAltaCobertura(snapshotAte(dataParaNum(d))).pct.toFixed(1));
 
-    box.innerHTML = `
-      <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:12px;">📊 Indicadores da CIA <span style="font-weight:400;color:var(--txs);font-size:11px;">(todos os CDs lançaram o estoque do dia)</span></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">
+    // Monta um ranking (Top 5) em HTML. fmtValor(item) → texto da coluna direita.
+    function rankingHTML(itens, fmtValor, vazio) {
+        if (!itens.length) return `<div class="dkd">${vazio}</div>`;
+        return `<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;">
+          ${itens.map((s, i) => `
+            <li style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.25;">
+              <span style="flex:0 0 18px;height:18px;line-height:18px;text-align:center;border-radius:50%;background:${i === 0 ? 'var(--p)' : 'var(--sur2)'};color:${i === 0 ? '#fff' : 'var(--txs)'};font-weight:600;font-size:11px;">${i + 1}</span>
+              <span title="${s.nome} · cód ${s.cod}" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:capitalize;">${s.nome.toLowerCase()}</span>
+              <span style="font-weight:600;white-space:nowrap;color:var(--p);">${fmtValor(s)}</span>
+            </li>`).join('')}
+        </ol>`;
+    }
+
+    cont.innerHTML = `
+      <div style="font-size:12px;font-weight:600;color:var(--ct);margin:2px 0 8px;">🔴 Data curta — validade ≤ 22 dias</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px;">
         <div class="dash-kpi warn" style="margin:0;">
-          <div class="dkv">${pct.toFixed(1)}%</div>
+          <div class="dkv">${dc.pct.toFixed(1)}%</div>
           <div class="dkl">Datas curtas da CIA</div>
-          <div class="dkd">${crit.toLocaleString('pt-BR')} de ${tot.toLocaleString('pt-BR')} unid. (≤22d)</div>
+          <div class="dkd">${dc.crit.toLocaleString('pt-BR')} de ${dc.tot.toLocaleString('pt-BR')} unid. (≤22d)</div>
         </div>
-        <div class="dash-kpi accent" style="margin:0;">
-          <div class="dkl" style="margin-bottom:8px;">Top 5 SKUs em data curta <span style="color:var(--txs);font-weight:400;text-transform:none;">(unid. ≤22d)</span></div>
-          ${top5Sku.length ? `<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;">
-            ${top5Sku.map((s, i) => `
-              <li style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.25;">
-                <span style="flex:0 0 18px;height:18px;line-height:18px;text-align:center;border-radius:50%;background:${i === 0 ? 'var(--p)' : 'var(--sur2)'};color:${i === 0 ? '#fff' : 'var(--txs)'};font-weight:600;font-size:11px;">${i + 1}</span>
-                <span title="${s.nome} · cód ${s.cod}" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:capitalize;">${s.nome.toLowerCase()}</span>
-                <span style="font-weight:600;white-space:nowrap;color:var(--p);">${s.qtd.toLocaleString('pt-BR')}</span>
-              </li>`).join('')}
-          </ol>` : `<div class="dkd">Nenhum item em data curta</div>`}
+        <div class="dash-kpi warn" style="margin:0;">
+          <div class="dkl" style="margin-bottom:8px;">Top 5 SKUs em data curta <span style="color:var(--txs);font-weight:400;text-transform:none;">(unid.)</span></div>
+          ${rankingHTML(top5DC, s => s.qtd.toLocaleString('pt-BR'), 'Nenhum item em data curta')}
         </div>
         <div class="dash-kpi" style="margin:0;">
           <div class="dkl" style="margin-bottom:6px;">Evolução semanal — % data curta</div>
           <div style="height:82px;position:relative;"><canvas id="mon-chart-evolucao"></canvas></div>
         </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--p);margin:2px 0 8px;">📦 Cobertura alta — acima de 3 dias de estoque</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">
+        <div class="dash-kpi accent" style="margin:0;">
+          <div class="dkv">${cob.pct.toFixed(1)}%</div>
+          <div class="dkl">Cobertura alta da CIA</div>
+          <div class="dkd">${cob.alta.toLocaleString('pt-BR')} de ${cob.tot.toLocaleString('pt-BR')} unid. (acima de 3d)</div>
+        </div>
+        <div class="dash-kpi accent" style="margin:0;">
+          <div class="dkl" style="margin-bottom:8px;">Top 5 SKUs em cobertura alta <span style="color:var(--txs);font-weight:400;text-transform:none;">(dias)</span></div>
+          ${rankingHTML(top5Cob, s => s.cobertura.toFixed(1) + 'd', 'Nenhum item em cobertura alta')}
+        </div>
+        <div class="dash-kpi" style="margin:0;">
+          <div class="dkl" style="margin-bottom:6px;">Evolução semanal — % cobertura alta</div>
+          <div style="height:82px;position:relative;"><canvas id="mon-chart-cobertura"></canvas></div>
+        </div>
       </div>`;
 
-    // Mini-gráfico (instância PRÓPRIA — não usa _dashCharts, p/ não ser apagado por destruirCharts()).
-    if (_monitorChart) { try { _monitorChart.destroy(); } catch (_) {} _monitorChart = null; }
-    const cv = document.getElementById('mon-chart-evolucao');
-    if (cv && window.Chart) {
-        _monitorChart = new Chart(cv, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    data: evolucao,
-                    borderColor: '#C67C2A',
-                    backgroundColor: 'rgba(198,124,42,0.12)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.35,
-                    pointRadius: 2,
-                    pointBackgroundColor: '#C67C2A',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(44,32,22,.9)',
-                        callbacks: { label: ctx => ctx.parsed.y + '% em data curta' }
-                    }
-                },
-                scales: {
-                    y: { beginAtZero: true, ticks: { callback: v => v + '%', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' } },
-                    x: { ticks: { font: { size: 9 } }, grid: { display: false } }
-                }
-            }
-        });
-    }
+    // Mini-gráficos (instâncias próprias — não usam _dashCharts, p/ não serem apagados por destruirCharts()).
+    _monitorChart    = _miniChartLinha('mon-chart-evolucao', labels, evolDC,  '#C0392B', 'em data curta', _monitorChart);
+    _monitorChartCob = _miniChartLinha('mon-chart-cobertura', labels, evolCob, '#C67C2A', 'em cobertura alta', _monitorChartCob);
 }
+
+// Cria um mini-gráfico de linha (% por dia), destruindo a instância anterior. Retorna a nova.
+function _miniChartLinha(canvasId, labels, data, cor, sufixoTooltip, instanciaAntiga) {
+    if (instanciaAntiga) { try { instanciaAntiga.destroy(); } catch (_) {} }
+    const cv = document.getElementById(canvasId);
+    if (!cv || !window.Chart) return null;
+    const rgba = cor === '#C0392B' ? 'rgba(192,57,43,0.12)' : 'rgba(198,124,42,0.12)';
+    return new Chart(cv, {
+        type: 'line',
+        data: { labels, datasets: [{ data, borderColor: cor, backgroundColor: rgba, borderWidth: 2, fill: true, tension: 0.35, pointRadius: 2, pointBackgroundColor: cor }] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: 'rgba(44,32,22,.9)', callbacks: { label: ctx => ctx.parsed.y + '% ' + sufixoTooltip } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: v => v + '%', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+                x: { ticks: { font: { size: 9 } }, grid: { display: false } }
+            }
+        }
+    });
+}
+
 // Auto-login se o usuário optou por "manter conectado" neste dispositivo.
 window.addEventListener('load', tentarAutoLogin);
 
