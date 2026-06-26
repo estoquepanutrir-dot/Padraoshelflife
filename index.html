@@ -713,7 +713,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     <div class="bulk hidden" id="bulk">
       <div class="bulk-hd">
         <span class="bulk-badge">✦ Preenchimento em lote</span>
-        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade ≤ 22 dias de uma só vez</span>
+        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade curta de uma só vez</span>
       </div>
       <div class="bulk-grid">
         <div class="f" style="margin:0">
@@ -740,7 +740,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
     <div class="bn bn-w hidden" id="wb2">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span>Há pães com validade ≤ 22 dias. Recomenda-se fortemente informar o <strong>Direcionamento</strong> (rota) e o <strong>Motivo</strong> de cada item em data curta.</span>
+      <span>Há pães com validade curta. Recomenda-se fortemente informar o <strong>Direcionamento</strong> (rota) e o <strong>Motivo</strong> de cada item em data curta.</span>
     </div>
 
     <div class="fpill" id="fpill">
@@ -790,7 +790,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     <div class="bulk hidden" id="me-bulk">
       <div class="bulk-hd">
         <span class="bulk-badge">✦ Preenchimento em lote</span>
-        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade ≤ 22 dias</span>
+        <span class="bulk-title">Aplicar Destino e Motivo para todos os SKUs com validade curta</span>
       </div>
       <div class="bulk-grid">
         <div class="f" style="margin:0">
@@ -817,7 +817,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
     <div class="bn bn-w hidden" id="me-wb">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-8.02 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3l-8-13.9a2 2 0 0 0-3.44-.14z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span>Há SKUs com validade ≤ 22 dias. Recomenda-se fortemente informar o <strong>Direcionamento</strong> (rota) e o <strong>Motivo</strong> de cada item em data curta.</span>
+      <span>Há SKUs com validade curta. Recomenda-se fortemente informar o <strong>Direcionamento</strong> (rota) e o <strong>Motivo</strong> de cada item em data curta.</span>
     </div>
 
     <div class="fpill hidden" id="me-fpill">
@@ -1323,7 +1323,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         <div class="card" style="margin-bottom:0;">
           <div class="ch" style="margin-bottom:16px;">
             <div class="ci" style="background:#FFF0F0; font-size:18px;">⚠️</div>
-            <div><div class="ct" style="font-size:15px;">SKUs em Data Curta (≤22d)</div><div class="cs">Proporção crítica vs. normal por CD</div></div>
+            <div><div class="ct" style="font-size:15px;">SKUs em Data Curta</div><div class="cs">Proporção crítica vs. normal por CD</div></div>
           </div>
           <div style="position:relative; height:220px;">
             <canvas id="chart-data-curta"></canvas>
@@ -1345,7 +1345,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
                 <th style="text-align:right">Envios</th>
                 <th style="text-align:right">Total Unidades</th>
                 <th style="text-align:right">SKUs Únicos</th>
-                <th style="text-align:right">Data Curta ≤22d</th>
+                <th style="text-align:right">Data Curta</th>
                 <th style="text-align:right">% Crítico</th>
                 <th style="text-align:right">Prazo Médio</th>
                 <th>Último Envio</th>
@@ -1379,7 +1379,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         <div class="card" style="margin-bottom:0;">
           <div class="ch" style="margin-bottom:14px;">
             <div class="ci" style="background:#FFF0F0; font-size:18px;">🚨</div>
-            <div><div class="ct" style="font-size:15px;">Top 10 SKUs — Data Curta</div><div class="cs">Produtos com maior volume crítico (≤22d)</div></div>
+            <div><div class="ct" style="font-size:15px;">Top 10 SKUs — Data Curta</div><div class="cs">Produtos com maior volume crítico</div></div>
           </div>
           <div id="dash-top-criticos"></div>
         </div>
@@ -1662,6 +1662,41 @@ const SKU={"2":"Pao Forma Panutrir 400g","5":"Pao Leite Panutrir 400g","6":"Paez
 // Usados na aba "Total CIA" do relatório consolidado. Mapeamento por código individual.
 const FAMILIA_PROD = {"2":"Forma","5":"Forma","81591":"Especiais","121811":"Paezinhos de Leite","11":"Especiais","16":"Especiais","669":"Bisnaguinhas","135221":"Hot Dog","2279":"Del Grano 500g","69251":"Hot Dog","141441":"Sirio","121801":"Hamburguer com 6","6":"Paezinhos de Leite","81661":"Forma","82051":"Hamburguer com 6","85181":"Hot Dog","85841":"Paezinhos de Leite","86151":"Forma","121581":"Hot Dog","81571":"Broa","135211":"Hamburguer com 6","121871":"Forma","121821":"Especiais","121831":"Broa","121841":"Broa","121861":"Forma","162920":"Hamburguer com 4","162922":"Hamburguer com 4","1224":"Broa","135241":"Forma","162275":"Hamburguer com 4","141951":"Sirio","145511":"Del Grano 500g","145521":"Del Grano 500g","81581":"Especiais","162272":"Bisnaguinhas","162276":"Forma","162358":"Forma","162396":"Del Grano 500g","162767":"Forma","162775":"Bisnaguinhas","162783":"Del Grano 500g","162784":"Del Grano 500g","162800":"Forma","162801":"Forma","135231":"Paezinhos de Leite","655":"Broa","162921":"Hamburguer com 4","162802":"Hamburguer com 6","162923":"Hamburguer com 4"};
 const PPG_PROD = {"2":12,"5":12,"81591":15,"121811":10,"11":15,"16":15,"669":12,"135221":8,"2279":10,"69251":8,"141441":20,"121801":8,"6":10,"81661":12,"82051":8,"85181":8,"85841":10,"86151":10,"121581":8,"81571":10,"135211":8,"121871":10,"121821":15,"121831":10,"121841":10,"121861":12,"162920":10,"162922":10,"1224":10,"135241":12,"162275":10,"141951":20,"145511":9,"145521":9,"81581":15,"162272":12,"162276":10,"162358":10,"162396":9,"162767":10,"162775":12,"162783":9,"162784":9,"162800":12,"162801":12,"135231":10,"655":10,"162921":10,"162802":8,"162923":10};
+
+// ── Classificação INTEGRAL × LINHA BRANCA (base da régua de data curta) ──
+// Integrais têm prazo de alerta MENOR que a linha branca. Panetones (sazonais)
+// ficam fora da régua de data curta. Para reclassificar, mova o código entre os
+// conjuntos abaixo (um código fora de SKUS_INTEGRAIS é tratado como Linha Branca).
+const SKUS_INTEGRAIS = new Set(['11','16','655','1224','81571','81581','81591','86151','99161','121821','121831','121841','145521','152291','162276','162358','162767','162784']);
+const SKUS_SEM_DATA_CURTA = new Set(['7','156021','156051']); // panetones (sazonais) — sem alerta de data curta
+
+// Régua de DATA CURTA por CD (Matriz × demais) e classificação (Integral × Branca).
+// Retorna 'URGENTE' | 'CRÍTICO' | null (não é data curta). NÃO existe mais "Atenção".
+//   MATRIZ → Integral: ≤23 Urgente, ≤26 Crítico | Branca: ≤29 Urgente, ≤32 Crítico
+//   Outros → Integral: ≤22 Urgente, ≤25 Crítico | Branca: ≤26 Urgente, ≤29 Crítico
+function nivelDataCurtaSKU(prazo, cd, codigo) {
+  const p = parseFloat(prazo);
+  if (!isFinite(p)) return null;
+  const cod = String(codigo == null ? '' : codigo).trim();
+  if (SKUS_SEM_DATA_CURTA.has(cod)) return null;             // sazonais fora da régua
+  const cdU = (cd == null ? '' : cd).toString().toUpperCase().trim();
+  const ehMatriz = cdU === 'MATRIZ' || cdU === 'CD MATRIZ';
+  const integral = SKUS_INTEGRAIS.has(cod);
+  let urg, crit;
+  if (ehMatriz) { urg = integral ? 23 : 29; crit = integral ? 26 : 32; }
+  else          { urg = integral ? 22 : 26; crit = integral ? 25 : 29; }
+  if (p <= urg)  return 'URGENTE';
+  if (p <= crit) return 'CRÍTICO';
+  return null;
+}
+function ehDataCurtaSKU(prazo, cd, codigo) {
+  return nivelDataCurtaSKU(prazo, cd, codigo) !== null;
+}
+// Classe de cor da pílula de prazo: pcr=Urgente (vermelho), pca=Crítico (amarelo), pco=OK (verde).
+function classeCorPrazo(prazo, cd, codigo) {
+  const n = nivelDataCurtaSKU(prazo, cd, codigo);
+  return n === 'URGENTE' ? 'pcr' : (n === 'CRÍTICO' ? 'pca' : 'pco');
+}
 
 // Ordem das colunas de CD na aba "Total CIA" (rótulo exibido + chaves aceitas na base).
 const TOTAL_CIA_CDS = [
@@ -2113,7 +2148,7 @@ function parseFormatoInflow(raw, ks) {
     if(val instanceof Date)val=val.toLocaleDateString('pt-BR');
     else val=String(val).trim();
     const prazo=parseInt(r[pk])||0,qtd=parseInt(r[qk])||0;
-    return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:prazo<=22};
+    return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:ehDataCurtaSKU(prazo,cd,cod)};
   }).sort((a,b)=>a.prazo-b.prazo);
 }
 
@@ -2166,7 +2201,7 @@ function parseFormatoBarueri(raw, ks) {
       const val   = toDataBR(r[vk]);
       const prazo = parseInt(r[pk]) || 0;
       const qtd   = parseInt(r[qk]) || 0;
-      return { cod, sku: SKU[cod] || null, validade: val, prazo, qtd, dir:'', motivo:'', isWarn: prazo <= 22 };
+      return { cod, sku: SKU[cod] || null, validade: val, prazo, qtd, dir:'', motivo:'', isWarn: ehDataCurtaSKU(prazo, cd, cod) };
     })
     .sort((a, b) => a.prazo - b.prazo);
 }
@@ -2244,7 +2279,7 @@ function parseFormatoShelflife(raw, ks) {
         qtd,
         dir,
         motivo,
-        isWarn: prazo <= 22
+        isWarn: ehDataCurtaSKU(prazo, cd, cod)
       };
     })
     .sort((a, b) => a.prazo - b.prazo);
@@ -2259,7 +2294,7 @@ function render(){
   document.getElementById('sg').innerHTML=`
     <div class="sc b"><div class="sv">${rows.length}</div><div class="sl">Linhas importadas</div></div>
     <div class="sc"><div class="sv">${tot.toLocaleString('pt-BR')}</div><div class="sl">Unidades totais</div></div>
-    <div class="sc w"><div class="sv">${wCnt}</div><div class="sl">Data curta ≤ 22d</div></div>
+    <div class="sc w"><div class="sv">${wCnt}</div><div class="sl">Data curta</div></div>
     <div class="sc"><div class="sv">${rows.filter(r=>!r.sku).length}</div><div class="sl">SKUs não mapeados</div></div>`;
   if(hasW){
     document.getElementById('bulk').classList.remove('hidden');
@@ -2275,7 +2310,7 @@ function render(){
   rows.forEach((row,i)=>{
     const tr=document.createElement('tr');
     if(row.isWarn)tr.classList.add('wr');
-    const pc=row.prazo<=14?'pcr':row.prazo<=22?'pca':'pco';
+    const pc=classeCorPrazo(row.prazo, cd, row.cod);
     const sh=row.sku?`<span class="skun">${row.sku}</span>`:`<span class="ukn">COD não mapeado</span>`;
     const editedBadge=row.skuEditado?`<span class="sku-edited-badge" title="Qtd/data editados manualmente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>editado</span>`:'';
     const pencilBtn=`<button class="sku-edit-btn" onclick="openSkuEdit(${i})" title="Editar quantidade e data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
@@ -2370,7 +2405,7 @@ function confirmSkuEdit(i){
   rows[i].qtd=novaQtd;
   rows[i].validade=novaValidade;
   rows[i].prazo=novoPrazo;
-  rows[i].isWarn=novoPrazo<=22;
+  rows[i].isWarn=ehDataCurtaSKU(novoPrazo, cd, rows[i].cod);
   rows[i].skuEditado=true;
   // Atualiza células na tabela
   const tdVal=document.getElementById(`skutd-val${i}`);
@@ -2378,7 +2413,7 @@ function confirmSkuEdit(i){
   const tdQtd=document.getElementById(`skutd-qtd${i}`);
   if(tdVal)tdVal.textContent=novaValidade;
   if(tdQtd)tdQtd.textContent=novaQtd.toLocaleString('pt-BR');
-  if(tdPc){const pc2=novoPrazo<=14?'pcr':novoPrazo<=22?'pca':'pco';tdPc.innerHTML=`<span class="pc ${pc2}">${novoPrazo}d</span>`;}
+  if(tdPc){const pc2=classeCorPrazo(novoPrazo, cd, rows[i].cod);tdPc.innerHTML=`<span class="pc ${pc2}">${novoPrazo}d</span>`;}
   // Badge de editado na coluna SKU
   const skuCell=document.querySelector(`#skuedit${i}`)?.previousElementSibling;
   const wrapper=document.getElementById(`skuedit${i}`)?.parentElement;
@@ -2397,7 +2432,7 @@ function confirmSkuEdit(i){
   document.getElementById('sg').innerHTML=`
     <div class="sc b"><div class="sv">${rows.length}</div><div class="sl">Linhas importadas</div></div>
     <div class="sc"><div class="sv">${tot.toLocaleString('pt-BR')}</div><div class="sl">Unidades totais</div></div>
-    <div class="sc w"><div class="sv">${wCnt}</div><div class="sl">Data curta ≤ 22d</div></div>
+    <div class="sc w"><div class="sv">${wCnt}</div><div class="sl">Data curta</div></div>
     <div class="sc"><div class="sv">${rows.filter(r=>!r.sku).length}</div><div class="sl">SKUs não mapeados</div></div>`;
 }
 
@@ -2461,7 +2496,7 @@ function dlXlsx(){
   });
   const ws=XLSX.utils.aoa_to_sheet(data);
   ws['!cols']=[{wch:12},{wch:46},{wch:14},{wch:14},{wch:12},{wch:30},{wch:36}];
-  const meta=[['RELATÓRIO DE ESTOQUE — DATA CURTA'],[''],['Local (CD)',cd],['Data/Hora',now],['Total linhas',rows.length],['Data curta ≤22d',wCnt],['',''],['Gerado por','Sistema Padronizado de CD']];
+  const meta=[['RELATÓRIO DE ESTOQUE — DATA CURTA'],[''],['Local (CD)',cd],['Data/Hora',now],['Total linhas',rows.length],['Data curta',wCnt],['',''],['Gerado por','Sistema Padronizado de CD']];
   const wm=XLSX.utils.aoa_to_sheet(meta);wm['!cols']=[{wch:30},{wch:42}];
   XLSX.utils.book_append_sheet(wb,ws,'Estoque');
   XLSX.utils.book_append_sheet(wb,wm,'Info');
@@ -2574,9 +2609,9 @@ function mePrazo(valStr){
   return Math.round((d-today)/(1000*60*60*24));
 }
 
-function prazoTag(p){
+function prazoTag(p, cod){
   if(p===null)return '';
-  const cls=p<=14?'pcr':p<=22?'pca':'pco';
+  const cls=classeCorPrazo(p, cd, cod);
   return `<span class="me-prazo-tag pc ${cls}">${p}d</span>`;
 }
 
@@ -2605,7 +2640,7 @@ function meRenderDates(cod){
   cont.innerHTML='';
   meData[cod].forEach((entry,idx)=>{
     const p=entry.val?mePrazo(entry.val):null;
-    const isW=p!==null&&p<=22;
+    const isW=ehDataCurtaSKU(p, cd, cod);
     const qtdCls='me-inp qtd'+(entry.qtd?(isW?' wn':' ok'):'');
     const datCls='me-inp dat'+(entry.val?(isW?' wn':' ok'):'');
     const delBtn=meData[cod].length>1
@@ -2616,7 +2651,7 @@ function meRenderDates(cod){
           value="${entry.qtd}" oninput="meUpdEntry('${cod}',${idx},'qtd',this.value)">
         <input type="date" class="${datCls}"
           value="${entry.val}" oninput="meUpdEntry('${cod}',${idx},'val',this.value)">
-        ${prazoTag(p)}
+        ${prazoTag(p, cod)}
         ${delBtn}
       </div>`);
   });
@@ -2641,7 +2676,7 @@ function meUpdEntry(cod,idx,field,val){
   meData[cod][idx][field]=val;
   const entry=meData[cod][idx];
   const p=entry.val?mePrazo(entry.val):null;
-  const isW=p!==null&&p<=22;
+  const isW=ehDataCurtaSKU(p, cd, cod);
   const rowEl=document.getElementById(`medr-${cod}-${idx}`);
   if(rowEl){
     const qi=rowEl.querySelector('input[type=number]');
@@ -2649,9 +2684,9 @@ function meUpdEntry(cod,idx,field,val){
     const tagEl=rowEl.querySelector('.me-prazo-tag');
     if(qi)qi.className='me-inp qtd'+(entry.qtd?(isW?' wn':' ok'):'');
     if(di)di.className='me-inp dat'+(entry.val?(isW?' wn':' ok'):'');
-    if(tagEl){tagEl.outerHTML=prazoTag(p);} else {
+    if(tagEl){tagEl.outerHTML=prazoTag(p, cod);} else {
       const newTag=document.createElement('span');
-      newTag.innerHTML=prazoTag(p);
+      newTag.innerHTML=prazoTag(p, cod);
       const delBtn=rowEl.querySelector('.me-del-btn');
       if(delBtn)rowEl.insertBefore(newTag.firstChild,delBtn);
       else rowEl.appendChild(newTag.firstChild);
@@ -2667,7 +2702,7 @@ function meRefreshRowStyle(cod){
   if(!rowEl)return;
   const entries=meData[cod]||[];
   const hasFilled=entries.some(e=>e.qtd&&e.val);
-  const hasWarn=entries.some(e=>{const p=e.val?mePrazo(e.val):null;return p!==null&&p<=22&&e.qtd;});
+  const hasWarn=entries.some(e=>{const p=e.val?mePrazo(e.val):null;return ehDataCurtaSKU(p, cd, cod)&&e.qtd;});
   rowEl.className='me-sku-row'+(hasFilled?(hasWarn?' has-warn':' has-data'):'');
 }
 
@@ -2700,7 +2735,7 @@ function meProcess(){
       const p=mePrazo(entry.val);
       const d=new Date(entry.val);
       const valFormatted=isNaN(d)?entry.val:d.toLocaleDateString('pt-BR');
-      meProcessed.push({cod,sku:SKU[cod],validade:valFormatted,prazo:p,qtd:parseInt(entry.qtd)||0,dir:'',motivo:'',isWarn:p!==null&&p<=22});
+      meProcessed.push({cod,sku:SKU[cod],validade:valFormatted,prazo:p,qtd:parseInt(entry.qtd)||0,dir:'',motivo:'',isWarn:ehDataCurtaSKU(p,cd,cod)});
     });
   });
   meProcessed.sort((a,b)=>(a.prazo??999)-(b.prazo??999));
@@ -2727,7 +2762,7 @@ function meProcess(){
   meProcessed.forEach((row,i)=>{
     const tr=document.createElement('tr');
     if(row.isWarn)tr.classList.add('wr');
-    const pc=row.prazo<=14?'pcr':row.prazo<=22?'pca':'pco';
+    const pc=classeCorPrazo(row.prazo, cd, row.cod);
     let ex='';
     if(meHasW){
       if(row.isWarn){
@@ -2811,7 +2846,7 @@ function meDlXlsx(){
   });
   const ws=XLSX.utils.aoa_to_sheet(data);
   ws['!cols']=[{wch:12},{wch:46},{wch:14},{wch:14},{wch:12},{wch:30},{wch:36}];
-  const meta=[['RELATÓRIO DE ESTOQUE — DATA CURTA'],[''],['Local (CD)',cd],['Data/Hora',now],['Total linhas',meProcessed.length],['Data curta ≤22d',meWCnt],['',''],['Gerado por','Sistema Padronizado de CD']];
+  const meta=[['RELATÓRIO DE ESTOQUE — DATA CURTA'],[''],['Local (CD)',cd],['Data/Hora',now],['Total linhas',meProcessed.length],['Data curta',meWCnt],['',''],['Gerado por','Sistema Padronizado de CD']];
   const wm=XLSX.utils.aoa_to_sheet(meta);wm['!cols']=[{wch:30},{wch:42}];
   XLSX.utils.book_append_sheet(wb2,ws,'Estoque');
   XLSX.utils.book_append_sheet(wb2,wm,'Info');
@@ -3842,34 +3877,25 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         return +(prazo - cob).toFixed(1);
     }
 
-    // ── RÉGUA DE STATUS (nova lógica) ─────────────────────────────
-    // Dois eixos independentes, aplicados a TODOS os CDs:
+    // ── RÉGUA DE STATUS ───────────────────────────────────────────
+    // Dois eixos independentes:
     //
-    //  A) DATA CURTA (prazo de validade em dias):
-    //       prazo < 18  → URGENTE
-    //       prazo ≤ 20  → CRÍTICO
-    //       prazo ≤ 22  → ATENÇÃO
+    //  A) DATA CURTA → nivelDataCurtaSKU(prazo, cd, código) (função global).
+    //       Régua por CD (Matriz × demais) e tipo (Integral × Linha Branca).
+    //       Resulta só em 'URGENTE' ou 'CRÍTICO' — o nível "Atenção" NÃO
+    //       existe mais na data curta.
     //
     //  B) ALTA COBERTURA (dias de estoque ÷ venda diária):
-    //       cobertura > 5 → URGENTE
-    //       cobertura > 4 → CRÍTICO
-    //       cobertura > 3 → ATENÇÃO
+    //       cobertura > 5 → URGENTE | > 4 → CRÍTICO | > 3 → ATENÇÃO
     //
     //  Quando os DOIS eixos disparam ao mesmo tempo → ALERTA combinado
     //  (rótulo destacado). O nível canônico (p/ cor/ordenação) é o
     //  mais grave entre os dois eixos.
     //
     // Níveis canônicos: 'URGENTE' | 'CRÍTICO' | 'ATENÇÃO' | 'OK' | 'Sem venda'
+    // (Atenção agora só vem da cobertura.)
     const NIVEL_RANK = { 'URGENTE': 3, 'CRÍTICO': 2, 'ATENÇÃO': 1, 'OK': 0 };
 
-    function nivelDataCurta(prazo) {
-        const p = parseFloat(prazo);
-        if (!isFinite(p)) return null;
-        if (p < 18)  return 'URGENTE';
-        if (p <= 20) return 'CRÍTICO';
-        if (p <= 22) return 'ATENÇÃO';
-        return 'OK';
-    }
     function nivelAltaCobertura(cob) {
         if (cob === null || cob === undefined) return null;
         if (cob > 5) return 'URGENTE';
@@ -3881,11 +3907,11 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     // Avalia os dois eixos e devolve { nivel, label }.
     //  - nivel: nível canônico p/ cor e ordenação
     //  - label: rótulo descritivo exibido na planilha
-    function avaliarStatus(prazo, cob) {
-        const nDC  = nivelDataCurta(prazo);                 // null se prazo ausente
-        const nCob = nivelAltaCobertura(cob);               // null se sem venda
+    function avaliarStatus(r, cob) {
+        const nDC  = nivelDataCurtaSKU(r.prazo, r.cd, r.codigo); // 'URGENTE'|'CRÍTICO'|null
+        const nCob = nivelAltaCobertura(cob);                    // null se sem venda
 
-        const dcAtivo  = nDC  && nDC  !== 'OK';
+        const dcAtivo  = !!nDC;                              // data curta não tem mais nível 'OK'
         const cobAtivo = nCob && nCob !== 'OK';
 
         // Caso combinado — bem destacado
@@ -3904,11 +3930,11 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
 
     // statusLabel: rótulo descritivo de uma linha (usa prazo + cobertura da própria linha)
     function statusLabel(r, cob) {
-        return avaliarStatus(r.prazo, cob).label;
+        return avaliarStatus(r, cob).label;
     }
     // statusNivel: nível canônico de uma linha (p/ cor e ordenação)
     function statusNivel(r, cob) {
-        return avaliarStatus(r.prazo, cob).nivel;
+        return avaliarStatus(r, cob).nivel;
     }
 
     // ── aba TOTAL CIA (primeira aba) ──────────────────────────────
@@ -4319,7 +4345,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             const ve  = calcValidadeEfetiva(r, cob);
             const cdUpper = (r.cd || '').toString().toUpperCase().trim();
             const ehMatriz = cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ';
-            const aval = avaliarStatus(r.prazo, cob);
+            const aval = avaliarStatus(r, cob);
             return { ...r, cob, ve, ehMatriz, status: aval.label, nivel: aval.nivel };
         })
         .filter(r => r.nivel === 'URGENTE' || r.nivel === 'CRÍTICO' || r.nivel === 'ATENÇÃO')
@@ -4762,7 +4788,7 @@ window.addEventListener('load', atualizarStatusMonitor);
 // =========================================================================
 // INDICADORES DA CIA (dentro do painel de Monitoramento de Envios)
 // Aparecem só quando TODOS os CDs já lançaram o estoque do dia. Duas seções:
-//   • DATA CURTA (validade ≤22d): % da CIA · Top 5 SKUs · evolução semanal
+//   • DATA CURTA (régua por CD e tipo): % da CIA · Top 5 SKUs · evolução semanal
 //   • COBERTURA ALTA (>3 dias de estoque): % da CIA · Top 5 SKUs · evolução semanal
 // Ambas as seções respeitam os filtros de Família e de SKU.
 // Cobertura usa a visão CIA: estoque total do SKU ÷ venda diária total da CIA
@@ -4916,7 +4942,7 @@ function _renderMonitorKpiConteudo(estoque, datas, dataRef) {
         return linhas;
     }
 
-    // % de unidades em data curta (≤22d).
+    // % de unidades em data curta (régua por CD e tipo).
     function pctDataCurta(linhas) {
         let tot = 0, crit = 0;
         linhas.forEach(r => {
@@ -4924,7 +4950,7 @@ function _renderMonitorKpiConteudo(estoque, datas, dataRef) {
             if (q <= 0) return;
             tot += q;
             const pr = _prazoRealCia(r, hoje0);
-            if (pr !== null && pr <= 22) crit += q;
+            if (ehDataCurtaSKU(pr, r.cd, r.codigo)) crit += q;
         });
         return { tot, crit, pct: tot > 0 ? (crit / tot * 100) : 0 };
     }
@@ -4955,7 +4981,7 @@ function _renderMonitorKpiConteudo(estoque, datas, dataRef) {
     atual.forEach(r => {
         const q = Number(r.quantidade) || 0;
         const pr = _prazoRealCia(r, hoje0);
-        if (q > 0 && pr !== null && pr <= 22) {
+        if (q > 0 && ehDataCurtaSKU(pr, r.cd, r.codigo)) {
             const cod = String(r.codigo || '').trim();
             if (!porSkuDC[cod]) porSkuDC[cod] = { cod, qtd: 0, nome: (SKU[cod] || r.produto || cod) };
             porSkuDC[cod].qtd += q;
@@ -4998,12 +5024,12 @@ function _renderMonitorKpiConteudo(estoque, datas, dataRef) {
     }
 
     cont.innerHTML = `
-      <div style="font-size:12px;font-weight:600;color:var(--ct);margin:2px 0 8px;">🔴 Data curta — validade ≤ 22 dias</div>
+      <div style="font-size:12px;font-weight:600;color:var(--ct);margin:2px 0 8px;">🔴 Data curta <span style="font-weight:400;color:var(--txs);text-transform:none;">(régua por CD e tipo)</span></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px;">
         <div class="dash-kpi warn" style="margin:0;">
           <div class="dkv">${dc.pct.toFixed(1)}%</div>
           <div class="dkl">Datas curtas da CIA</div>
-          <div class="dkd">${dc.crit.toLocaleString('pt-BR')} de ${dc.tot.toLocaleString('pt-BR')} unid. (≤22d)</div>
+          <div class="dkd">${dc.crit.toLocaleString('pt-BR')} de ${dc.tot.toLocaleString('pt-BR')} unid. em data curta</div>
         </div>
         <div class="dash-kpi warn" style="margin:0;">
           <div class="dkl" style="margin-bottom:8px;">Top 5 SKUs em data curta <span style="color:var(--txs);font-weight:400;text-transform:none;">(unid.)</span></div>
@@ -5577,7 +5603,7 @@ function renderDashboard(estoque, grades, datas) {
   // ---- Métricas globais (baseadas no snapshot atual de cada CD) ----
   const totalUnidades   = estoqueAtual.reduce((s,r) => s + (Number(r.quantidade)||0), 0);
   const totalSKUs       = new Set(estoqueAtual.map(r => r.codigo)).size;
-  const totalCriticos   = estoqueAtual.filter(r => (prazoReal(r)??99) <= 22).reduce((s,r) => s + (Number(r.quantidade)||0), 0);
+  const totalCriticos   = estoqueAtual.filter(r => ehDataCurtaSKU(prazoReal(r), r.cd, r.codigo)).reduce((s,r) => s + (Number(r.quantidade)||0), 0);
   const pctCritico      = totalUnidades > 0 ? ((totalCriticos/totalUnidades)*100).toFixed(1) : 0;
   const prazoMedioGeral = (()=>{ const validos=estoqueAtual.filter(r=>prazoReal(r)!==null); return validos.length>0?(validos.reduce((s,r)=>s+(prazoReal(r)||0),0)/validos.length).toFixed(1):0; })();
   const totalVazias     = grades.reduce((s,r) => s + (Number(r.caixas_vazias)||0), 0);
@@ -5658,14 +5684,14 @@ function renderDashboard(estoque, grades, datas) {
     const c = (r.cd||'').toUpperCase().trim();
     const qtd = Number(r.quantidade)||0;
     const prazo = prazoReal(r);
-    if (prazo!==null && prazo<=22) criticoPorCD[c] = (criticoPorCD[c]||0) + qtd;
+    if (ehDataCurtaSKU(prazo, r.cd, r.codigo)) criticoPorCD[c] = (criticoPorCD[c]||0) + qtd;
     else normalPorCD[c] = (normalPorCD[c]||0) + qtd;
   });
   criarChart('chart-data-curta', 'bar', {
     labels: cdKeys,
     datasets: [
-      { label:'Normal (>22d)', data: cdKeys.map(c=>normalPorCD[c]||0), backgroundColor:'rgba(46,139,80,.7)', borderRadius:3 },
-      { label:'Crítico (≤22d)', data: cdKeys.map(c=>criticoPorCD[c]||0), backgroundColor:'rgba(192,57,43,.75)', borderRadius:3 }
+      { label:'Normal', data: cdKeys.map(c=>normalPorCD[c]||0), backgroundColor:'rgba(46,139,80,.7)', borderRadius:3 },
+      { label:'Data curta', data: cdKeys.map(c=>criticoPorCD[c]||0), backgroundColor:'rgba(192,57,43,.75)', borderRadius:3 }
     ]
   }, {
     plugins:{ legend:{ labels:{ font:{size:11}, boxWidth:12 }}},
@@ -5726,7 +5752,7 @@ function renderDashboard(estoque, grades, datas) {
     const snap = estoqueAtual.filter(r=>(r.cd||'').toUpperCase().trim()===c);
     const unidades = snap.reduce((s,r)=>s+(Number(r.quantidade)||0),0);
     const skus     = new Set(snap.map(r=>r.codigo)).size;
-    const criticos = snap.filter(r=>(prazoReal(r)??99)<=22).reduce((s,r)=>s+(Number(r.quantidade)||0),0);
+    const criticos = snap.filter(r=>ehDataCurtaSKU(prazoReal(r), r.cd, r.codigo)).reduce((s,r)=>s+(Number(r.quantidade)||0),0);
     const pct      = unidades>0?((criticos/unidades)*100).toFixed(1):0;
     const validosR = snap.filter(r=>prazoReal(r)!==null);
     const prazoM   = validosR.length>0?(validosR.reduce((s,r)=>s+(prazoReal(r)||0),0)/validosR.length).toFixed(1):0;
@@ -5767,7 +5793,7 @@ function renderDashboard(estoque, grades, datas) {
 
   // ---- Top SKUs — críticos (snapshot atual) ----
   const skuCrit = {};
-  estoqueAtual.filter(r=>(prazoReal(r)??99)<=22).forEach(r => {
+  estoqueAtual.filter(r=>ehDataCurtaSKU(prazoReal(r), r.cd, r.codigo)).forEach(r => {
     const k=`${r.codigo}|${r.produto}`; skuCrit[k]=(skuCrit[k]||0)+(Number(r.quantidade)||0);
   });
   const topCrit = Object.entries(skuCrit).sort((a,b)=>b[1]-a[1]).slice(0,10);
@@ -5826,17 +5852,15 @@ function dashCobStatusInfo(label) {
 }
 
 // Régua de status para a cobertura do dashboard (mesma lógica da planilha exportada):
-//   Data curta: prazo <18 Urgente, ≤20 Crítico, ≤22 Atenção
+//   Data curta: nivelDataCurtaSKU(prazo, cd, código) → Urgente/Crítico (sem Atenção)
 //   Alta cobertura: >5 Urgente, >4 Crítico, >3 Atenção
 //   Combinado: ALERTA destacado
-function dashAvaliarCobertura(prazo, cob) {
+function dashAvaliarCobertura(prazo, cob, cd, codigo) {
   const RANK = { 'URGENTE':3, 'CRÍTICO':2, 'ATENÇÃO':1, 'OK':0 };
-  let nDC = null;
-  const p = parseFloat(prazo);
-  if (isFinite(p)) nDC = p < 18 ? 'URGENTE' : (p <= 20 ? 'CRÍTICO' : (p <= 22 ? 'ATENÇÃO' : 'OK'));
+  const nDC = nivelDataCurtaSKU(prazo, cd, codigo);   // 'URGENTE'|'CRÍTICO'|null
   let nCob = null;
   if (cob !== null && cob !== undefined) nCob = cob > 5 ? 'URGENTE' : (cob > 4 ? 'CRÍTICO' : (cob > 3 ? 'ATENÇÃO' : 'OK'));
-  const dcAtivo = nDC && nDC !== 'OK';
+  const dcAtivo = !!nDC;
   const cobAtivo = nCob && nCob !== 'OK';
   if (dcAtivo && cobAtivo) {
     const rank = Math.max(RANK[nDC], RANK[nCob]);
@@ -5867,7 +5891,7 @@ function dashCalcularCobertura(estoqueAtual, ultimaDataPorCD, prazoReal) {
     const estoque = Math.abs(parseFloat(item.quantidade) || 0);
     const cob = venda > 0 ? +(estoque / venda).toFixed(1) : null;
     const prazo = prazoReal(item);
-    const aval = dashAvaliarCobertura(prazo, cob);
+    const aval = dashAvaliarCobertura(prazo, cob, cdRaw, cod);
     return {
       cd: cdRaw, produto: item.produto || SKU[item.codigo] || '',
       estoque, vendaDiaria: venda, cobertura: cob,
