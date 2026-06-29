@@ -1187,7 +1187,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         </div>
         <div class="f" style="margin:0;">
           <label for="dash-cd-filtro">Filtrar por CD</label>
-          <select id="dash-cd-filtro">
+          <select id="dash-cd-filtro" onchange="dashAplicarFiltros()">
             <option value="TODOS">Todos os CDs</option>
             <option value="BAURU">Bauru</option>
             <option value="CURITIBA">Curitiba</option>
@@ -1195,6 +1195,14 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
             <option value="RANCHARIA">Rancharia</option>
             <option value="SJRP">SJRP</option>
             <option value="BARUERI">Barueri</option>
+          </select>
+        </div>
+        <div class="f" style="margin:0;">
+          <label for="dash-tipo-filtro">Filtrar por Tipo</label>
+          <select id="dash-tipo-filtro" onchange="dashAplicarFiltros()">
+            <option value="TODOS">Todos os tipos</option>
+            <option value="INTEGRAL">Integral</option>
+            <option value="BRANCA">Linha Branca</option>
           </select>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
@@ -1692,10 +1700,19 @@ function nivelDataCurtaSKU(prazo, cd, codigo) {
 function ehDataCurtaSKU(prazo, cd, codigo) {
   return nivelDataCurtaSKU(prazo, cd, codigo) !== null;
 }
+// No LANÇAMENTO do CD a barrinha de justificativa só aparece no nível URGENTE
+// (Outros CDs → branca ≤26, integral ≤22 | Matriz → branca ≤29, integral ≤23).
+function ehUrgenteSKU(prazo, cd, codigo) {
+  return nivelDataCurtaSKU(prazo, cd, codigo) === 'URGENTE';
+}
 // Classe de cor da pílula de prazo: pcr=Urgente (vermelho), pca=Crítico (amarelo), pco=OK (verde).
 function classeCorPrazo(prazo, cd, codigo) {
   const n = nivelDataCurtaSKU(prazo, cd, codigo);
   return n === 'URGENTE' ? 'pcr' : (n === 'CRÍTICO' ? 'pca' : 'pco');
+}
+// Tipo da linha de produto (binário): 'Integral' (em SKUS_INTEGRAIS) × 'Linha Branca' (o resto).
+function tipoLinhaSKU(codigo) {
+  return SKUS_INTEGRAIS.has(String(codigo == null ? '' : codigo).trim()) ? 'Integral' : 'Linha Branca';
 }
 
 // Ordem das colunas de CD na aba "Total CIA" (rótulo exibido + chaves aceitas na base).
@@ -1776,6 +1793,150 @@ const VENDA_DIARIA_CIA = Object.fromEntries(
 );
 
 const API_URL = "https://script.google.com/macros/s/AKfycbzBmKVbtKmX6-z4g25UDFKN5M5NhpiXt3K3tyn9gzOC7I1I1uvwGNGhhgTTbSrfYaxf/exec";
+
+// ============================================================
+//  CAMADA DE DADOS — SUPABASE (substitui o Google Apps Script)
+//  Mantém EXATAMENTE o mesmo comportamento das 4 operações
+//  antigas (relatorio / grades / status / POST), porém falando
+//  direto com o Postgres do Supabase via RPC (PostgREST).
+//  A lógica de negócio do app não muda — só a fonte dos dados.
+// ============================================================
+const SUPABASE_URL  = "https://vieafcgghboxwhultile.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZWFmY2dnaGJveHdodWx0aWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MDMzMTMsImV4cCI6MjA5ODI3OTMxM30.uv4zRK1AWNn59lxUTxsUJPlG4fF7D4gFDnkGmecS7VY";
+
+// Converte 'DD/MM/AAAA' -> 'AAAA-MM-DD' (formato date do Postgres)
+function _brToISO(s){
+  if(!s) return null;
+  const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  const iso = String(s).trim().match(/^\d{4}-\d{2}-\d{2}$/);
+  return iso ? String(s).trim() : null;
+}
+
+// Chama uma RPC do Supabase e devolve o JSON já parseado
+async function _rpc(fn, args){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON
+    },
+    body: JSON.stringify(args || {})
+  });
+  if(!res.ok){
+    const txt = await res.text().catch(()=> '');
+    throw new Error(`RPC ${fn} falhou: ${res.status} ${txt}`);
+  }
+  return res.json();
+}
+
+// Interceptador de fetch: quando a URL é do Apps Script (API_URL),
+// traduz a operação para a RPC equivalente do Supabase e devolve
+// uma Response-like compatível (.json()).
+const _origFetch = window.fetch.bind(window);
+window.fetch = async function(input, init){
+  const url = (typeof input === 'string') ? input : (input && input.url) || '';
+
+  // Só intercepta chamadas ao Apps Script; o resto segue normal.
+  if(!url.startsWith(API_URL)){
+    return _origFetch(input, init);
+  }
+
+  const fakeResponse = (obj) => ({
+    ok: true, status: 200,
+    json: async () => obj,
+    text: async () => JSON.stringify(obj)
+  });
+
+  try {
+    const u = new URL(url);
+    const action = u.searchParams.get('action');
+    const dataParam = u.searchParams.get('data'); // DD/MM/AAAA
+
+    // ---- GET ?action=relatorio ----
+    if(action === 'relatorio'){
+      const dados = await _rpc('api_relatorio', { p_data: _brToISO(dataParam) });
+      return fakeResponse({ status: 'sucesso', dados: dados || [] });
+    }
+
+    // ---- GET ?action=grades ----
+    if(action === 'grades'){
+      const grades = await _rpc('api_grades', { p_data: _brToISO(dataParam) });
+      return fakeResponse(grades || []);
+    }
+
+    // ---- GET ?action=status ----
+    if(action === 'status'){
+      const st = await _rpc('api_status', { p_data: _brToISO(dataParam) });
+      return fakeResponse(st);
+    }
+
+    // ---- POST (corpo JSON com "tipo") ----
+    if(init && init.method && init.method.toUpperCase() === 'POST'){
+      const payload = JSON.parse(init.body || '{}');
+
+      if(payload.tipo === 'estoque'){
+        const itens = (payload.itens||[]).map(it => ({
+          codigo: String(it.codigo ?? ''),
+          produto: it.produto,
+          validade: _brToISO(it.validade),
+          dias: it.prazo != null ? String(it.prazo) : null,
+          prazo: it.prazo,
+          quantidade: it.quantidade,
+          motivo: it.motivo,
+          destino: it.destino,
+          skuEditado: !!it.skuEditado,
+          qtdOriginal: it.qtdOriginal,
+          validadeOriginal: _brToISO(it.validadeOriginal)
+        }));
+        const r = await _rpc('api_enviar_estoque', {
+          p_cd: payload.nomeCD,
+          p_data: _brToISO(payload.itens?.[0]?.dataEnvio) || _brToISO(new Date().toLocaleDateString('pt-BR')),
+          p_itens: itens
+        });
+        return fakeResponse(r);
+      }
+
+      if(payload.tipo === 'estoque_cia'){
+        const itens = (payload.itens||[]).map(it => ({
+          codigo: String(it.codigo ?? ''),
+          produto: it.produto,
+          dataEstoque: it.dataEstoque || null,
+          quantidade: it.quantidade
+        }));
+        const r = await _rpc('api_enviar_estoque_cia', {
+          p_cd: payload.nomeCD,
+          p_data: _brToISO(payload.itens?.[0]?.dataEnvio) || _brToISO(new Date().toLocaleDateString('pt-BR')),
+          p_itens: itens
+        });
+        return fakeResponse(r);
+      }
+
+      if(payload.tipo === 'grades'){
+        const r = await _rpc('api_enviar_grades', { p_grade: payload });
+        return fakeResponse(r);
+      }
+
+      if(payload.tipo === 'liberar'){
+        const r = await _rpc('api_liberar', {
+          p_cd: payload.cd,
+          p_alvo: payload.alvo,
+          p_data: _brToISO(payload.data)
+        });
+        return fakeResponse(r);
+      }
+    }
+
+    // Operação desconhecida: devolve vazio compatível
+    return fakeResponse({ status: 'sucesso', dados: [] });
+
+  } catch(err){
+    console.error('Erro na camada Supabase:', err);
+    // Propaga como rejeição p/ o .catch() existente tratar
+    throw err;
+  }
+};
 
 let cd='',rows=[],hasW=false,wCnt=0;
 let _activeTab = 'import';
@@ -4086,7 +4247,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     // ── aba CONSOLIDADO ───────────────────────────────────────────
     // A análise por Validade Efetiva é usada internamente para definir o STATUS
     // e a ordenação, mas a coluna em si NÃO aparece para manter a planilha limpa.
-    const header = ['CD ORIGEM','CÓDIGO','SKU / PRODUTO','VALIDADE','PRAZO (DIAS)','QTD','VENDA DIÁRIA (CD)','COBERTURA (DIAS)','STATUS COBERTURA','DIRECIONAMENTO','MOTIVO','✏️ EDITADO MANUALMENTE','QTD ORIGINAL','VALIDADE ORIGINAL'];
+    const header = ['CD ORIGEM','CÓDIGO','SKU / PRODUTO','TIPO','VALIDADE','PRAZO (DIAS)','QTD','VENDA DIÁRIA (CD)','COBERTURA (DIAS)','STATUS COBERTURA','DIRECIONAMENTO','MOTIVO','✏️ EDITADO MANUALMENTE','QTD ORIGINAL','VALIDADE ORIGINAL'];
     const wsData = [header];
 
     // Pré-processa e ordena por prazo crescente (menos dias primeiro = mais urgente no topo).
@@ -4117,7 +4278,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     linhasPreparadas.forEach(({ r, cob, ve, venda, ehMatriz, status, nivel }) => {
         niveisConsolidado.push(nivel);
         wsData.push([
-            r.cd, r.codigo, r.produto, r.validade, r.prazo,
+            r.cd, r.codigo, r.produto, tipoLinhaSKU(r.codigo), r.validade, r.prazo,
             r.quantidade,
             venda > 0 ? +venda.toFixed(1) : '-',
             cob !== null ? cob : '-',
@@ -4130,7 +4291,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     });
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [{wch:14},{wch:10},{wch:46},{wch:12},{wch:13},{wch:10},{wch:18},{wch:16},{wch:40},{wch:28},{wch:36},{wch:22},{wch:14},{wch:16}];
+    ws['!cols'] = [{wch:14},{wch:10},{wch:46},{wch:13},{wch:12},{wch:13},{wch:10},{wch:18},{wch:16},{wch:40},{wch:28},{wch:36},{wch:22},{wch:14},{wch:16}];
 
     // Cores por status na coluna STATUS COBERTURA (col H = índice 7) e
     // pintar também COBERTURA (col G = 6).
@@ -4142,11 +4303,11 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
 
     const nColsCons = header.length;
     for(let i = 1; i < wsData.length; i++) {
-        const cellRefStatus = XLSX.utils.encode_cell({r: i, c: 8});  // STATUS COBERTURA
-        const cellRefCob    = XLSX.utils.encode_cell({r: i, c: 7});  // COBERTURA
-        const cellEdit      = XLSX.utils.encode_cell({r: i, c: 11}); // EDITADO MANUALMENTE
+        const cellRefStatus = XLSX.utils.encode_cell({r: i, c: 9});  // STATUS COBERTURA
+        const cellRefCob    = XLSX.utils.encode_cell({r: i, c: 8});  // COBERTURA
+        const cellEdit      = XLSX.utils.encode_cell({r: i, c: 12}); // EDITADO MANUALMENTE
         const nivel  = niveisConsolidado[i - 1];
-        const cobVal = parseFloat(wsData[i][7]);
+        const cobVal = parseFloat(wsData[i][8]);
 
         // Obs.: linhas de ALERTA combinado continuam agrupadas no topo (ver sort),
         // mas seguem o mesmo padrão de cor das demais — sem pintar a linha inteira.
@@ -4162,7 +4323,7 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
             fill,
             font: (isFinite(cobVal) && cobVal > 3) ? {bold:true, color:{rgb:'C0392B'}} : {}
         };
-        if(ws[cellEdit] && wsData[i][11]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
+        if(ws[cellEdit] && wsData[i][12]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
     }
 
     // Header row estilo
@@ -4868,6 +5029,11 @@ function _montarShellMonitorKpi(box) {
           <option value="">Todas as famílias</option>
           ${familias.map(f => `<option value="${f}">${f}</option>`).join('')}
         </select>
+        <select id="mon-filtro-tipo" style="${inS}" title="Filtrar por tipo (Integral × Linha Branca)">
+          <option value="">Todos os tipos</option>
+          <option value="Integral">Integral</option>
+          <option value="Linha Branca">Linha Branca</option>
+        </select>
         <input id="mon-filtro-sku" list="mon-sku-datalist" placeholder="Filtrar por SKU — código ou nome" style="${inS}min-width:230px;" title="Filtrar por um SKU específico (código ou nome)">
         <datalist id="mon-sku-datalist">
           ${Object.entries(SKU).map(([c, n]) => `<option value="${c} — ${n}"></option>`).join('')}
@@ -4877,9 +5043,11 @@ function _montarShellMonitorKpi(box) {
       </div>
       <div id="mon-kpi-conteudo"></div>`;
     document.getElementById('mon-filtro-familia').onchange = _aplicarFiltrosMonitorKpi;
+    document.getElementById('mon-filtro-tipo').onchange = _aplicarFiltrosMonitorKpi;
     document.getElementById('mon-filtro-sku').oninput = _aplicarFiltrosMonitorKpi;
     document.getElementById('mon-filtro-limpar').onclick = () => {
         document.getElementById('mon-filtro-familia').value = '';
+        document.getElementById('mon-filtro-tipo').value = '';
         document.getElementById('mon-filtro-sku').value = '';
         _aplicarFiltrosMonitorKpi();
     };
@@ -4890,12 +5058,14 @@ function _aplicarFiltrosMonitorKpi() {
     if (!_monitorCache) return;
     const { estoque, datas, dataRef } = _monitorCache;
     const fam = (document.getElementById('mon-filtro-familia')?.value || '').trim();
+    const tipo = (document.getElementById('mon-filtro-tipo')?.value || '').trim();
     const termo = (document.getElementById('mon-filtro-sku')?.value || '').trim().toLowerCase();
     const codTermo = termo.split('—')[0].trim();  // quando vem do datalist "cod — nome"
 
     const filtrado = estoque.filter(r => {
         const cod = String(r.codigo || '').trim();
         if (fam && (FAMILIA_PROD[cod] || '') !== fam) return false;
+        if (tipo && tipoLinhaSKU(cod) !== tipo) return false;
         if (termo) {
             const nome = (SKU[cod] || r.produto || '').toLowerCase();
             if (!(cod === codTermo || (cod + ' ' + nome).includes(termo))) return false;
@@ -4907,6 +5077,7 @@ function _aplicarFiltrosMonitorKpi() {
     if (info) {
         const partes = [];
         if (fam) partes.push(`família "${fam}"`);
+        if (tipo) partes.push(`tipo "${tipo}"`);
         if (termo) partes.push(`SKU "${termo}"`);
         info.textContent = partes.length ? `Filtrando por ${partes.join(' · ')}` : '';
     }
@@ -5399,6 +5570,25 @@ function dashSetPeriodo(dias, carregar = true) {
   if (carregar) carregarDashboard();
 }
 
+// Cache dos dados brutos do dashboard, p/ re-filtrar (CD + Tipo) sem refetch.
+let _dashCacheEstoque = null, _dashCacheGrades = null, _dashCacheDatas = null;
+
+// Aplica os filtros de CD e Tipo (Integral × Linha Branca) ao cache e re-renderiza o dashboard.
+function dashAplicarFiltros() {
+  if (!_dashCacheEstoque) return;
+  const cdFiltro   = document.getElementById('dash-cd-filtro').value;
+  const tipoFiltro = document.getElementById('dash-tipo-filtro').value;
+  let estoque = cdFiltro === 'TODOS' ? _dashCacheEstoque
+    : _dashCacheEstoque.filter(r => (r.cd||'').toUpperCase().includes(cdFiltro));
+  let grades  = cdFiltro === 'TODOS' ? _dashCacheGrades
+    : _dashCacheGrades.filter(r => (r.cd_origem||'').toUpperCase().includes(cdFiltro));
+  if (tipoFiltro && tipoFiltro !== 'TODOS') {
+    const querIntegral = tipoFiltro === 'INTEGRAL';
+    estoque = estoque.filter(r => (tipoLinhaSKU(r.codigo) === 'Integral') === querIntegral);
+  }
+  renderDashboard(estoque, grades, _dashCacheDatas);
+}
+
 async function carregarDashboard() {
   const iniVal = document.getElementById('dash-data-ini').value;
   const fimVal = document.getElementById('dash-data-fim').value;
@@ -5430,11 +5620,10 @@ async function carregarDashboard() {
       return;
     }
 
-    // Aplica filtro de CD se necessário
-    const estoque = cdFiltro === 'TODOS' ? dadosEstoque
-      : dadosEstoque.filter(r => (r.cd||'').toUpperCase().includes(cdFiltro));
-    const grades  = cdFiltro === 'TODOS' ? dadosGrades
-      : dadosGrades.filter(r => (r.cd_origem||'').toUpperCase().includes(cdFiltro));
+    // Guarda os dados brutos p/ re-filtrar (CD + Tipo) sem nova chamada à API.
+    _dashCacheEstoque = dadosEstoque;
+    _dashCacheGrades  = dadosGrades;
+    _dashCacheDatas   = datas;
 
     // Monta mapa de vendas por CÓDIGO: { "<codigo>::CD BARUERI": venda } (fonte: VENDA_DIARIA_CD)
     _dashVendasMap = {};
@@ -5444,7 +5633,7 @@ async function carregarDashboard() {
       });
     });
 
-    renderDashboard(estoque, grades, datas);
+    dashAplicarFiltros();   // aplica CD + Tipo e renderiza
     content.classList.remove('hidden');
 
   } catch(e) {
