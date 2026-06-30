@@ -3956,7 +3956,7 @@ function baixarRelatorioConsolidado() {
     })
     .catch(err => {
         console.error(err);
-        alert("Erro ao buscar relatório. Verifique sua conexão com a internet.");
+        alert("Erro ao gerar o relatório: " + (err && err.message ? err.message : err));
     })
     .finally(() => {
         btn.innerHTML = textoBotaoOriginal;
@@ -4578,6 +4578,10 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         }
         // Cor por status
         const fillAlertaA = { patternType:'solid', fgColor:{rgb:'C0392B'} }; // alerta combinado
+        const fillUrgente = { patternType: 'solid', fgColor: { rgb: 'F0D5D5' } };
+        const fillCritico = { patternType: 'solid', fgColor: { rgb: 'F5DDD9' } };
+        const fillAtencao = { patternType: 'solid', fgColor: { rgb: 'F5EDD5' } };
+        const fillSem     = { patternType: 'solid', fgColor: { rgb: 'EDEDED' } };
         const nColsAlertas = hRes.length;
         for (let i = 1; i < resData.length; i++) {
             const refCob    = XLSX.utils.encode_cell({r: i, c: 8});
