@@ -503,6 +503,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     <div class="f">
       <select id="li" class="modern-select" style="width:100%; border:1px solid var(--out); margin-top:10px;" onchange="onSelectUnidade(this)">
         <option value="" disabled selected>Escolha a sua Unidade...</option>
+        <option value="DIRETORIA">DIRETORIA PANUTRIR</option>
         <option value="BRUNO">BRUNO RAMANAUSKAS</option>
         <option value="MATRIZ">MATRIZ</option>
         <option value="BAURU">BAURU</option>
@@ -1189,6 +1190,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           <label for="dash-cd-filtro">Filtrar por CD</label>
           <select id="dash-cd-filtro" onchange="dashAplicarFiltros()">
             <option value="TODOS">Todos os CDs</option>
+            <option value="MATRIZ">Matriz</option>
             <option value="BAURU">Bauru</option>
             <option value="CURITIBA">Curitiba</option>
             <option value="LONDRINA">Londrina</option>
@@ -1680,7 +1682,7 @@ const SKUS_SEM_DATA_CURTA = new Set(['7','156021','156051']); // panetones (sazo
 
 // Régua de DATA CURTA por CD (Matriz × demais) e classificação (Integral × Branca).
 // Retorna 'URGENTE' | 'CRÍTICO' | null (não é data curta). NÃO existe mais "Atenção".
-//   MATRIZ → Integral: ≤23 Urgente, ≤26 Crítico | Branca: ≤29 Urgente, ≤32 Crítico
+//   MATRIZ → Integral: ≤24 Urgente, ≤27 Crítico | Branca: ≤29 Urgente, ≤32 Crítico
 //   Outros → Integral: ≤22 Urgente, ≤25 Crítico | Branca: ≤26 Urgente, ≤29 Crítico
 function nivelDataCurtaSKU(prazo, cd, codigo) {
   const p = parseFloat(prazo);
@@ -1691,7 +1693,7 @@ function nivelDataCurtaSKU(prazo, cd, codigo) {
   const ehMatriz = cdU === 'MATRIZ' || cdU === 'CD MATRIZ';
   const integral = SKUS_INTEGRAIS.has(cod);
   let urg, crit;
-  if (ehMatriz) { urg = integral ? 23 : 29; crit = integral ? 26 : 32; }
+  if (ehMatriz) { urg = integral ? 24 : 29; crit = integral ? 27 : 32; }
   else          { urg = integral ? 22 : 26; crit = integral ? 25 : 29; }
   if (p <= urg)  return 'URGENTE';
   if (p <= crit) return 'CRÍTICO';
@@ -2069,6 +2071,7 @@ function okLocal(autoV){
   const senhas = {
     "MATRIZ": "445566@Edu",
     "BRUNO": "123rom",
+    "DIRETORIA": "dirpanutrir2026",
     "BAURU": "bru1234",
     "CURITIBA": "cwb1234",
     "LONDRINA": "lon1234",
@@ -2103,7 +2106,7 @@ function okLocal(autoV){
   // Bruno Ramanauskas: usuário com todas as permissões da Matriz.
   // Após validar a senha própria, opera internamente como MATRIZ.
   let unidade = v;
-  if (v === 'BRUNO') unidade = 'MATRIZ';
+  if (v === 'BRUNO' || v === 'DIRETORIA') unidade = 'MATRIZ';
 
   cd = unidade;
   document.getElementById('mo').style.display='none';
@@ -2176,6 +2179,17 @@ function okLocal(autoV){
 
   // Aplica as regras de dia da semana (oculta abas não liberadas para o dia)
   aplicarRegrasDeDia();
+
+  // DIRETORIA: visão executiva. Roda DEPOIS das regras de dia (senão elas
+  // reexibem as abas). Esconde as abas de envio (some o botão de importar) e
+  // abre direto no Dashboard, logo abaixo do Monitoramento.
+  if (v === 'DIRETORIA') {
+    document.getElementById('chip-txt').textContent = 'DIRETORIA';
+    document.getElementById('tab-controle').style.display = 'none';
+    document.getElementById('tab-estoque-cia').style.display = 'none';
+    document.getElementById('tab-grades').style.display = 'none';
+    switchTab('dashboard');
+  }
 
   // Exibe aviso diário de importação para CDs (não aparece para a Matriz)
   if (cd !== 'MATRIZ') mostrarAvisoDiario();
@@ -2309,7 +2323,7 @@ function parseFormatoInflow(raw, ks) {
     if(val instanceof Date)val=val.toLocaleDateString('pt-BR');
     else val=String(val).trim();
     const prazo=parseInt(r[pk])||0,qtd=parseInt(r[qk])||0;
-    return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:ehDataCurtaSKU(prazo,cd,cod)};
+    return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:ehUrgenteSKU(prazo,cd,cod)};
   }).sort((a,b)=>a.prazo-b.prazo);
 }
 
@@ -2362,7 +2376,7 @@ function parseFormatoBarueri(raw, ks) {
       const val   = toDataBR(r[vk]);
       const prazo = parseInt(r[pk]) || 0;
       const qtd   = parseInt(r[qk]) || 0;
-      return { cod, sku: SKU[cod] || null, validade: val, prazo, qtd, dir:'', motivo:'', isWarn: ehDataCurtaSKU(prazo, cd, cod) };
+      return { cod, sku: SKU[cod] || null, validade: val, prazo, qtd, dir:'', motivo:'', isWarn: ehUrgenteSKU(prazo, cd, cod) };
     })
     .sort((a, b) => a.prazo - b.prazo);
 }
@@ -2440,7 +2454,7 @@ function parseFormatoShelflife(raw, ks) {
         qtd,
         dir,
         motivo,
-        isWarn: ehDataCurtaSKU(prazo, cd, cod)
+        isWarn: ehUrgenteSKU(prazo, cd, cod)
       };
     })
     .sort((a, b) => a.prazo - b.prazo);
@@ -2566,7 +2580,7 @@ function confirmSkuEdit(i){
   rows[i].qtd=novaQtd;
   rows[i].validade=novaValidade;
   rows[i].prazo=novoPrazo;
-  rows[i].isWarn=ehDataCurtaSKU(novoPrazo, cd, rows[i].cod);
+  rows[i].isWarn=ehUrgenteSKU(novoPrazo, cd, rows[i].cod);
   rows[i].skuEditado=true;
   // Atualiza células na tabela
   const tdVal=document.getElementById(`skutd-val${i}`);
@@ -2725,9 +2739,16 @@ function switchSubControle(sub){
   // _activeTab passa a refletir a sub-aba ativa, pois várias funções legadas dependem de 'import'/'manual'
   _activeTab = sub;
   if(sub==='manual' && !meBuilt) meBuild();
-  // Ao voltar para a sub-aba de importação com base já carregada, restaura a
-  // barra de ação (espelha o comportamento de switchSubEstoqueCia com ecRows).
-  if(sub==='import' && rows.length > 0) chkDL();
+  // Ao voltar para a sub-aba de importação, restaura o estado correto:
+  //  - com base carregada (rows) → mostra a tabela (#s2) e a barra de ação;
+  //  - sem base                  → mostra a dropzone (#s1), garantindo que o
+  //    botão de importar NUNCA suma por estado residual de outra sub-aba.
+  if(sub==='import'){
+    const temBase = rows.length > 0;
+    document.getElementById('s1').classList.toggle('hidden', temBase);
+    document.getElementById('s2').classList.toggle('hidden', !temBase);
+    if(temBase) chkDL();
+  }
 }
 
 // Sub-abas dentro de "Estoque da CIA"
@@ -2801,7 +2822,7 @@ function meRenderDates(cod){
   cont.innerHTML='';
   meData[cod].forEach((entry,idx)=>{
     const p=entry.val?mePrazo(entry.val):null;
-    const isW=ehDataCurtaSKU(p, cd, cod);
+    const isW=ehUrgenteSKU(p, cd, cod);
     const qtdCls='me-inp qtd'+(entry.qtd?(isW?' wn':' ok'):'');
     const datCls='me-inp dat'+(entry.val?(isW?' wn':' ok'):'');
     const delBtn=meData[cod].length>1
@@ -2837,7 +2858,7 @@ function meUpdEntry(cod,idx,field,val){
   meData[cod][idx][field]=val;
   const entry=meData[cod][idx];
   const p=entry.val?mePrazo(entry.val):null;
-  const isW=ehDataCurtaSKU(p, cd, cod);
+  const isW=ehUrgenteSKU(p, cd, cod);
   const rowEl=document.getElementById(`medr-${cod}-${idx}`);
   if(rowEl){
     const qi=rowEl.querySelector('input[type=number]');
@@ -2863,7 +2884,7 @@ function meRefreshRowStyle(cod){
   if(!rowEl)return;
   const entries=meData[cod]||[];
   const hasFilled=entries.some(e=>e.qtd&&e.val);
-  const hasWarn=entries.some(e=>{const p=e.val?mePrazo(e.val):null;return ehDataCurtaSKU(p, cd, cod)&&e.qtd;});
+  const hasWarn=entries.some(e=>{const p=e.val?mePrazo(e.val):null;return ehUrgenteSKU(p, cd, cod)&&e.qtd;});
   rowEl.className='me-sku-row'+(hasFilled?(hasWarn?' has-warn':' has-data'):'');
 }
 
@@ -2896,7 +2917,7 @@ function meProcess(){
       const p=mePrazo(entry.val);
       const d=new Date(entry.val);
       const valFormatted=isNaN(d)?entry.val:d.toLocaleDateString('pt-BR');
-      meProcessed.push({cod,sku:SKU[cod],validade:valFormatted,prazo:p,qtd:parseInt(entry.qtd)||0,dir:'',motivo:'',isWarn:ehDataCurtaSKU(p,cd,cod)});
+      meProcessed.push({cod,sku:SKU[cod],validade:valFormatted,prazo:p,qtd:parseInt(entry.qtd)||0,dir:'',motivo:'',isWarn:ehUrgenteSKU(p,cd,cod)});
     });
   });
   meProcessed.sort((a,b)=>(a.prazo??999)-(b.prazo??999));
@@ -4295,11 +4316,15 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
 
     // Cores por status na coluna STATUS COBERTURA (col H = índice 7) e
     // pintar também COBERTURA (col G = 6).
-    const fillUrgente = { patternType:'solid', fgColor:{rgb:'F0D5D5'} };
-    const fillCritico = { patternType:'solid', fgColor:{rgb:'F5DDD9'} };
-    const fillAtencao = { patternType:'solid', fgColor:{rgb:'F5EDD5'} };
-    const fillOk      = { patternType:'solid', fgColor:{rgb:'D9EDDD'} };
-    const fillSem     = { patternType:'solid', fgColor:{rgb:'EDEDED'} };
+    // Cores por TIPO de alerta (lido do rótulo de STATUS), nas colunas STATUS e COBERTURA:
+    //   Data curta Urgente → vermelho | Data curta Crítico → amarelo
+    //   Alta cobertura → laranjado | Data curta + Alta cobertura → vermelho destacado
+    const fillDcUrgente = { patternType:'solid', fgColor:{rgb:'F4CCCC'} }; // vermelho
+    const fillDcCritico = { patternType:'solid', fgColor:{rgb:'FFF2CC'} }; // amarelo
+    const fillCobAlta   = { patternType:'solid', fgColor:{rgb:'FCE4D6'} }; // laranjado
+    const fillAlerta    = { patternType:'solid', fgColor:{rgb:'E06666'} }; // vermelho destacado (combinado)
+    const fillOk        = { patternType:'solid', fgColor:{rgb:'D9EDDD'} }; // verde
+    const fillSem       = { patternType:'solid', fgColor:{rgb:'EDEDED'} }; // cinza
 
     const nColsCons = header.length;
     for(let i = 1; i < wsData.length; i++) {
@@ -4307,21 +4332,24 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
         const cellRefCob    = XLSX.utils.encode_cell({r: i, c: 8});  // COBERTURA
         const cellEdit      = XLSX.utils.encode_cell({r: i, c: 12}); // EDITADO MANUALMENTE
         const nivel  = niveisConsolidado[i - 1];
+        const status = String(wsData[i][9] || '');
         const cobVal = parseFloat(wsData[i][8]);
 
-        // Obs.: linhas de ALERTA combinado continuam agrupadas no topo (ver sort),
-        // mas seguem o mesmo padrão de cor das demais — sem pintar a linha inteira.
-        let fill;
-        if(nivel === 'URGENTE')       fill = fillUrgente;
-        else if(nivel === 'CRÍTICO')  fill = fillCritico;
-        else if(nivel === 'ATENÇÃO')  fill = fillAtencao;
-        else if(nivel === 'OK')       fill = fillOk;
-        else                          fill = fillSem;
-        if(ws[cellRefStatus]) ws[cellRefStatus].s = { fill, font:{bold: nivel==='URGENTE'||nivel==='CRÍTICO'} };
-        // Coluna COBERTURA: acima de 3 dias → fonte vermelha e negrito.
+        // Escolhe a cor pelo TIPO de alerta (rótulo da coluna STATUS).
+        let fill, fontCor;
+        if (status.indexOf('ALERTA') === 0)            { fill = fillAlerta; fontCor = 'FFFFFF'; }   // data curta + cobertura
+        else if (status.indexOf('Data curta') >= 0)    { if (nivel === 'URGENTE') { fill = fillDcUrgente; fontCor = 'C0392B'; }
+                                                         else                     { fill = fillDcCritico; fontCor = '7F6000'; } }
+        else if (status.indexOf('Alta Cobertura') >= 0){ fill = fillCobAlta; fontCor = 'C65911'; }   // cobertura alta
+        else if (nivel === 'OK')                       { fill = fillOk;  fontCor = '1E6B33'; }
+        else                                           { fill = fillSem; fontCor = '7A7A7A'; }
+
+        const negrito = (status.indexOf('ALERTA') === 0) || nivel === 'URGENTE' || nivel === 'CRÍTICO';
+        if(ws[cellRefStatus]) ws[cellRefStatus].s = { fill, font:{ bold: negrito, color:{rgb: fontCor} } };
+        // Coluna COBERTURA: mesmo fundo; fonte legível (branca no alerta) e negrito acima de 3 dias.
         if(ws[cellRefCob]) ws[cellRefCob].s = {
             fill,
-            font: (isFinite(cobVal) && cobVal > 3) ? {bold:true, color:{rgb:'C0392B'}} : {}
+            font: { bold: isFinite(cobVal) && cobVal > 3, color:{rgb: fontCor} }
         };
         if(ws[cellEdit] && wsData[i][12]==='SIM') ws[cellEdit].s = { fill:{patternType:'solid',fgColor:{rgb:'FFF3CD'}}, font:{bold:true, color:{rgb:'6B4A00'}} };
     }
@@ -5025,6 +5053,16 @@ function _montarShellMonitorKpi(box) {
       <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:10px;">📊 Indicadores da CIA <span style="font-weight:400;color:var(--txs);font-size:11px;">(todos os CDs lançaram o estoque do dia)</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
         <span style="font-size:11px;color:var(--txs);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Filtros</span>
+        <select id="mon-filtro-cd" style="${inS}" title="Filtrar por CD">
+          <option value="">Todos os CDs</option>
+          <option value="MATRIZ">Matriz</option>
+          <option value="BAURU">Bauru</option>
+          <option value="CURITIBA">Curitiba</option>
+          <option value="LONDRINA">Londrina</option>
+          <option value="RANCHARIA">Rancharia</option>
+          <option value="SJRP">SJRP</option>
+          <option value="BARUERI">Barueri</option>
+        </select>
         <select id="mon-filtro-familia" style="${inS}" title="Filtrar por família de produto">
           <option value="">Todas as famílias</option>
           ${familias.map(f => `<option value="${f}">${f}</option>`).join('')}
@@ -5042,10 +5080,12 @@ function _montarShellMonitorKpi(box) {
         <span id="mon-filtro-info" style="font-size:11px;color:var(--p);font-style:italic;margin-left:auto;"></span>
       </div>
       <div id="mon-kpi-conteudo"></div>`;
+    document.getElementById('mon-filtro-cd').onchange = _aplicarFiltrosMonitorKpi;
     document.getElementById('mon-filtro-familia').onchange = _aplicarFiltrosMonitorKpi;
     document.getElementById('mon-filtro-tipo').onchange = _aplicarFiltrosMonitorKpi;
     document.getElementById('mon-filtro-sku').oninput = _aplicarFiltrosMonitorKpi;
     document.getElementById('mon-filtro-limpar').onclick = () => {
+        document.getElementById('mon-filtro-cd').value = '';
         document.getElementById('mon-filtro-familia').value = '';
         document.getElementById('mon-filtro-tipo').value = '';
         document.getElementById('mon-filtro-sku').value = '';
@@ -5057,6 +5097,7 @@ function _montarShellMonitorKpi(box) {
 function _aplicarFiltrosMonitorKpi() {
     if (!_monitorCache) return;
     const { estoque, datas, dataRef } = _monitorCache;
+    const cdSel = (document.getElementById('mon-filtro-cd')?.value || '').trim();
     const fam = (document.getElementById('mon-filtro-familia')?.value || '').trim();
     const tipo = (document.getElementById('mon-filtro-tipo')?.value || '').trim();
     const termo = (document.getElementById('mon-filtro-sku')?.value || '').trim().toLowerCase();
@@ -5064,6 +5105,7 @@ function _aplicarFiltrosMonitorKpi() {
 
     const filtrado = estoque.filter(r => {
         const cod = String(r.codigo || '').trim();
+        if (cdSel && !(r.cd || '').toString().toUpperCase().includes(cdSel)) return false;
         if (fam && (FAMILIA_PROD[cod] || '') !== fam) return false;
         if (tipo && tipoLinhaSKU(cod) !== tipo) return false;
         if (termo) {
@@ -5076,6 +5118,7 @@ function _aplicarFiltrosMonitorKpi() {
     const info = document.getElementById('mon-filtro-info');
     if (info) {
         const partes = [];
+        if (cdSel) partes.push(`CD ${cdSel}`);
         if (fam) partes.push(`família "${fam}"`);
         if (tipo) partes.push(`tipo "${tipo}"`);
         if (termo) partes.push(`SKU "${termo}"`);
@@ -5548,8 +5591,8 @@ const DASH_CORES_CD = {
 
 function iniciarDashboard() {
   dashBuilt = true;
-  // Define período padrão: últimos 15 dias
-  dashSetPeriodo(15, false);
+  // Padrão: hoje em ambas as datas (situação do dia). O usuário amplia o período se quiser.
+  dashSetPeriodo(1, false);
   carregarDashboard();
 }
 
@@ -6076,7 +6119,11 @@ function dashCalcularCobertura(estoqueAtual, ultimaDataPorCD, prazoReal) {
     const cdRaw = (item.cd || '').toString().toUpperCase().trim();
     const cdKey = VENDAS_DIARIAS_CD_MAP[cdRaw] || ('CD ' + cdRaw);
     const cod = String(item.codigo || '').trim();
-    const venda = _dashVendasMap[cod + '::' + cdKey] || 0;
+    // Matriz: o estoque abastece toda a rede → cobertura usa a venda TOTAL da CIA
+    // (soma de todos os CDs/rotas), igual ao consolidado. Demais CDs: venda do próprio CD.
+    const ehMatrizCob = cdRaw === 'MATRIZ' || cdRaw === 'CD MATRIZ';
+    const venda = ehMatrizCob ? (parseFloat(VENDA_DIARIA_CIA[cod]) || 0)
+                              : (_dashVendasMap[cod + '::' + cdKey] || 0);
     const estoque = Math.abs(parseFloat(item.quantidade) || 0);
     const cob = venda > 0 ? +(estoque / venda).toFixed(1) : null;
     const prazo = prazoReal(item);
