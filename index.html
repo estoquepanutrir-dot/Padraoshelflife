@@ -5172,20 +5172,38 @@ function _renderMonitorKpiConteudo(estoque, datas, dataRef) {
         });
         return { tot, crit, pct: tot > 0 ? (crit / tot * 100) : 0 };
     }
-    // % de unidades em SKUs com alta cobertura (visão CIA: estoque do SKU ÷ venda CIA > 3 dias).
+    // % de unidades em SKUs com alta cobertura.
+    // IMPORTANTE: a venda usada precisa corresponder aos CDs presentes em "linhas".
+    // Quando o filtro de CD está ativo (ex.: só RANCHARIA), dividir pela venda
+    // TOTAL da CIA (todos os CDs somados) sub-estima MUITO a cobertura — o estoque
+    // de 1 CD ficava sendo comparado com a venda de 7 CDs juntos. Por isso, em vez
+    // de usar sempre VENDA_DIARIA_CIA, somamos a venda só dos CDs que de fato
+    // aparecem nas linhas filtradas (consistente com a régua usada no Excel/Alertas).
     function pctAltaCobertura(linhas) {
-        const porSku = {};
+        const porSku = {}; // cod -> { est, cds:Set }
         linhas.forEach(r => {
             const q = Number(r.quantidade) || 0;
             if (q <= 0) return;
             const cod = String(r.codigo || '').trim();
-            porSku[cod] = (porSku[cod] || 0) + q;
+            if (!porSku[cod]) porSku[cod] = { est: 0, cds: new Set() };
+            porSku[cod].est += q;
+            const cdUpper = (r.cd || '').toString().toUpperCase().trim();
+            porSku[cod].cds.add(cdUpper);
         });
         let tot = 0, alta = 0;
-        Object.entries(porSku).forEach(([cod, est]) => {
-            tot += est;
-            const venda = parseFloat(VENDA_DIARIA_CIA[cod]) || 0;
-            if (venda > 0 && est / venda > 3) alta += est;
+        Object.entries(porSku).forEach(([cod, info]) => {
+            tot += info.est;
+            // Soma a venda diária só dos CDs presentes neste conjunto de linhas.
+            let venda = 0;
+            info.cds.forEach(cdUpper => {
+                if (cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ') {
+                    venda += parseFloat(VENDA_DIARIA_CD[cod]?.['CD MATRIZ']) || 0;
+                } else {
+                    const cdKey = VENDAS_DIARIAS_CD_MAP[cdUpper] || ('CD ' + cdUpper);
+                    venda += parseFloat(VENDA_DIARIA_CD[cod]?.[cdKey]) || 0;
+                }
+            });
+            if (venda > 0 && info.est / venda > 3) alta += info.est;
         });
         return { tot, alta, pct: tot > 0 ? (alta / tot * 100) : 0 };
     }
@@ -5214,11 +5232,24 @@ function _renderMonitorKpiConteudo(estoque, datas, dataRef) {
         const q = Number(r.quantidade) || 0;
         if (q <= 0) return;
         const cod = String(r.codigo || '').trim();
-        if (!porSkuCob[cod]) porSkuCob[cod] = { cod, est: 0, nome: (SKU[cod] || r.produto || cod) };
+        if (!porSkuCob[cod]) porSkuCob[cod] = { cod, est: 0, nome: (SKU[cod] || r.produto || cod), cds: new Set() };
         porSkuCob[cod].est += q;
+        porSkuCob[cod].cds.add((r.cd || '').toString().toUpperCase().trim());
     });
+    function vendaParaSku(cod, cds) {
+        let venda = 0;
+        cds.forEach(cdUpper => {
+            if (cdUpper === 'MATRIZ' || cdUpper === 'CD MATRIZ') {
+                venda += parseFloat(VENDA_DIARIA_CD[cod]?.['CD MATRIZ']) || 0;
+            } else {
+                const cdKey = VENDAS_DIARIAS_CD_MAP[cdUpper] || ('CD ' + cdUpper);
+                venda += parseFloat(VENDA_DIARIA_CD[cod]?.[cdKey]) || 0;
+            }
+        });
+        return venda;
+    }
     const top5Cob = Object.values(porSkuCob)
-        .map(o => { const v = parseFloat(VENDA_DIARIA_CIA[o.cod]) || 0; return { ...o, cobertura: v > 0 ? o.est / v : null }; })
+        .map(o => { const v = vendaParaSku(o.cod, o.cds); return { ...o, cobertura: v > 0 ? o.est / v : null }; })
         .filter(o => o.cobertura !== null && o.cobertura > 3)
         .sort((a, b) => b.cobertura - a.cobertura)
         .slice(0, 5);
