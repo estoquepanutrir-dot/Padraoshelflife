@@ -1176,16 +1176,12 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         </div>
       </div>
 
+      <!-- Datas do período ficam ocultas — controladas só pelos botões de atalho abaixo -->
+      <input type="date" id="dash-data-ini" style="display:none;">
+      <input type="date" id="dash-data-fim" style="display:none;">
+
       <!-- Filtros -->
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; align-items:end;">
-        <div class="f" style="margin:0;">
-          <label for="dash-data-ini">Data Inicial</label>
-          <input type="date" id="dash-data-ini">
-        </div>
-        <div class="f" style="margin:0;">
-          <label for="dash-data-fim">Data Final</label>
-          <input type="date" id="dash-data-fim">
-        </div>
         <div class="f" style="margin:0;">
           <label for="dash-cd-filtro">Filtrar por CD</label>
           <select id="dash-cd-filtro" onchange="dashAplicarFiltros()">
@@ -1208,7 +1204,8 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           </select>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="btn btn-t" onclick="dashSetPeriodo(7)" id="dash-p7" style="font-size:12px; padding:8px 14px; border-radius:14px;">7 dias</button>
+          <button class="btn btn-t" onclick="dashSetPeriodo(1)"  id="dash-p1"  style="font-size:12px; padding:8px 14px; border-radius:14px;">Hoje</button>
+          <button class="btn btn-t" onclick="dashSetPeriodo(7)"  id="dash-p7"  style="font-size:12px; padding:8px 14px; border-radius:14px;">7 dias</button>
           <button class="btn btn-t" onclick="dashSetPeriodo(15)" id="dash-p15" style="font-size:12px; padding:8px 14px; border-radius:14px;">15 dias</button>
           <button class="btn btn-t" onclick="dashSetPeriodo(30)" id="dash-p30" style="font-size:12px; padding:8px 14px; border-radius:14px;">30 dias</button>
         </div>
@@ -1229,11 +1226,16 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       </div>
     </div>
 
+    <!-- "HOJE" INDISPONÍVEL — nem todos os CDs lançaram estoque hoje ainda -->
+    <div id="dash-hoje-indisponivel" class="hidden">
+      <div class="bn" style="background:var(--ws); border:1px solid var(--out);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span style="color:var(--wb);" id="dash-hoje-indisponivel-txt"></span>
+      </div>
+    </div>
+
     <!-- CONTEÚDO DO DASHBOARD -->
     <div id="dash-content" class="hidden">
-
-      <!-- KPI CARDS — LINHA 1 -->
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:16px;" id="dash-kpis"></div>
 
       <!-- ===================================================================== -->
       <!-- ANÁLISE DE COBERTURA (lógica shelflife: data curta + alta cobertura)  -->
@@ -1247,26 +1249,14 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           </div>
         </div>
 
-        <!-- KPIs de cobertura -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px;" id="dash-cob-kpis"></div>
-
         <!-- Aviso quando não há lançamento -->
         <div id="dash-cob-aviso" class="bn bn-i" style="display:none; margin-bottom:14px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
           <span id="dash-cob-aviso-txt"></span>
         </div>
 
-        <!-- Sub-abas: por CD x Consolidada CIA -->
-        <div class="subtab-bar" style="margin-bottom:14px;">
-          <button class="subtab-btn active" id="dash-cob-tab-cd"  onclick="dashCobSwitch('cd')">🏭 Cobertura por CD</button>
-          <button class="subtab-btn" id="dash-cob-tab-cia" onclick="dashCobSwitch('cia')">🏢 Consolidada CIA</button>
-        </div>
-
-        <!-- Filtros -->
+        <!-- Filtros (o filtro de CD fica só no select "Evolução por CD" abaixo — controla as duas seções) -->
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
-          <select id="dash-cob-f-cd" onchange="dashRenderCobertura()" style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:8px 12px; outline:none;">
-            <option value="TODOS">Todos os CDs</option>
-          </select>
           <select id="dash-cob-f-status" onchange="dashRenderCobertura()" style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:8px 12px; outline:none;">
             <option value="TODOS">Todos os status</option>
             <option value="ALERTA">🚨 Alerta combinado</option>
@@ -1276,6 +1266,31 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
             <option value="OK">🟢 OK</option>
           </select>
           <input type="text" id="dash-cob-f-busca" placeholder="Buscar produto..." oninput="dashRenderCobertura()" style="flex:1; min-width:160px; background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:8px 12px; outline:none;">
+        </div>
+
+        <!-- Evolução por CD (Cobertura e % Data Curta ao longo do período, um CD por vez) -->
+        <div class="card" style="margin-bottom:14px; box-shadow:none; border:1px solid var(--out);">
+          <div class="ch" style="margin-bottom:12px;">
+            <div class="ci" style="background:#EAF3FF; font-size:16px;">📈</div>
+            <div><div class="ct" style="font-size:14px;">Evolução por CD</div><div class="cs">Cobertura e % de estoque com data curta (régua por CD/linha) ao longo do período selecionado, foto por dia — sem somar entre datas</div></div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+            <select id="dash-evol-f-cd" onchange="dashFiltroCDMudou()" style="background:var(--surv); border:1.5px solid var(--out); border-radius:var(--r12); color:var(--tx); font-family:'Google Sans',sans-serif; font-size:13px; padding:8px 12px; outline:none;"></select>
+          </div>
+          <div class="subtab-bar" style="margin-bottom:12px;">
+            <button class="subtab-btn active" id="dash-evol-tipo-linha" onclick="dashEvolSwitchTipo('line')">📈 Linha</button>
+            <button class="subtab-btn" id="dash-evol-tipo-barra" onclick="dashEvolSwitchTipo('bar')">📊 Barras</button>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px;">
+            <div>
+              <div style="font-size:12px; color:var(--txs); font-weight:600; margin-bottom:6px;">% Estoque com Data Curta</div>
+              <div style="position:relative; height:220px;"><canvas id="chart-dash-evol-curta"></canvas></div>
+            </div>
+            <div>
+              <div style="font-size:12px; color:var(--txs); font-weight:600; margin-bottom:6px;">Cobertura (dias)</div>
+              <div style="position:relative; height:220px;"><canvas id="chart-dash-evol-cobertura"></canvas></div>
+            </div>
+          </div>
         </div>
 
         <!-- Top SKUs por cobertura -->
@@ -2260,6 +2275,70 @@ dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('on')});
 dz.addEventListener('dragleave',()=>dz.classList.remove('on'));
 dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('on');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
 
+// ── Leitura robusta de planilhas importadas ──────────────────────────────
+// A equipe usa modelos com pequenas variações (acentuação diferente por causa
+// do Excel de cada CD, linha de título/logo acima do cabeçalho, colunas de
+// quantidade formatadas como texto com separador de milhar etc.). As funções
+// abaixo tornam a detecção de colunas e o parse de números tolerantes a essas
+// variações, para o sistema não "parar de ler" um modelo que já é aceito.
+
+// Remove acentos, espaços extras e caracteres invisíveis (BOM/zero-width) de
+// um cabeçalho, para comparar colunas ignorando essas diferenças.
+function _normCab(k){
+  return String(k)
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[​-‏﻿]/g,'')
+    .trim()
+    .toUpperCase();
+}
+// Acha, entre as colunas (ks), a primeira cujo cabeçalho normalizado bate com
+// o regex informado. Devolve a chave ORIGINAL (para indexar a linha).
+function _acharCol(ks, re){
+  return ks.find(k => re.test(_normCab(k)));
+}
+// Converte uma célula numérica que pode vir como number, texto com separador
+// de milhar ("1.234"), moeda ("R$ 1.234") ou negativa ("-3"). parseInt puro
+// falha nesses casos (ex.: parseInt("1.234") === 1).
+function _numCel(v){
+  if (v === '' || v === undefined || v === null) return 0;
+  if (typeof v === 'number' && isFinite(v)) return Math.round(v);
+  const s = String(v).trim();
+  const neg = /^-/.test(s);
+  const digitos = s.replace(/[^\d]/g,'');
+  if (!digitos) return 0;
+  return (neg ? -1 : 1) * parseInt(digitos, 10);
+}
+// Localiza, entre todas as abas do arquivo, a que contém uma linha de
+// cabeçalho reconhecível (procura nas 10 primeiras linhas de cada aba).
+// Cobre modelos com linha de título/logo acima do cabeçalho real, ou onde a
+// aba com os dados não é a primeira. Se nada bater com confiança, cai no
+// comportamento antigo (primeira aba, primeira linha).
+function _localizarCabecalho(wb){
+  const GRUPOS = [
+    [/^COD/, /QTD/, /VALID/, /PRAZO/],                              // InFlow
+    [/^CODIGO|^COD/, /VENCIMENTO/, /DIAS.*VENCER/, /QNT.*UND|QTD.*UND/], // Barueri
+    [/^COD/, /^MOTIVO$/],                                           // SHELFLIFE
+  ];
+  let melhor = { sheetName: wb.SheetNames[0], headerRow: 0, score: -1 };
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    const limite = Math.min(10, aoa.length);
+    for (let i = 0; i < limite; i++) {
+      const linha = (aoa[i] || []).map(c => _normCab(c));
+      if (!linha.length) continue;
+      let scoreLinha = 0;
+      for (const grupo of GRUPOS) {
+        const bateu = grupo.filter(re => linha.some(c => re.test(c))).length;
+        scoreLinha = Math.max(scoreLinha, bateu);
+      }
+      if (scoreLinha > melhor.score) melhor = { sheetName, headerRow: i, score: scoreLinha };
+    }
+  }
+  if (melhor.score < 2) return { sheetName: wb.SheetNames[0], headerRow: 0 };
+  return melhor;
+}
+
 function handleFile(f){
   if(!f)return;
   document.getElementById('fn').textContent=f.name;
@@ -2271,27 +2350,39 @@ function handleFile(f){
     setP(50,'Interpretando planilha...');
     try{
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+      const { sheetName, headerRow } = _localizarCabecalho(wb);
+      const ws=wb.Sheets[sheetName];
+      const raw=XLSX.utils.sheet_to_json(ws,{defval:'', range: headerRow});
       setP(80,'Vinculando SKUs...');
       const s=raw[0]||{},ks=Object.keys(s);
+
+      if (!ks.length) {
+        setP(0,'❌ Não foi possível identificar o cabeçalho da planilha. Confira se o arquivo é um dos modelos aceitos (InFlow, Barueri ou SHELFLIFE).');
+        return;
+      }
 
       // Detecta formato Barueri: cabeçalhos próprios (CODIGO + VENCIMENTO +
       // DIAS PARA VENCER + QNT UND). O formato InFlow tem (COD + QTD_TOTAL +
       // VALIDADE + PRAZO). A presença simultânea de VENCIMENTO e DIAS PARA
       // VENCER identifica o formato do Barueri.
-      const temVenc       = ks.some(k => /vencimento/i.test(k.trim()));
-      const temDiasVencer = ks.some(k => /dias.*vencer/i.test(k.trim()));
-      const temQntUnd     = ks.some(k => /qnt.*und|qtd.*und|quantidade.*und/i.test(k.trim()));
+      const temVenc       = !!_acharCol(ks, /VENCIMENTO/);
+      const temDiasVencer = !!_acharCol(ks, /DIAS.*VENCER/);
+      const temQntUnd     = !!_acharCol(ks, /QNT.*UND|QTD.*UND|QUANTIDADE.*UND/);
       const ehBarueri     = temVenc && temDiasVencer && temQntUnd;
 
-      // Formato SHELFLIFE (re-importação da própria planilha exportada, JÁ COM OS
-      // MOTIVOS preenchidos): identificado pela presença de uma coluna MOTIVO.
-      // Pode vir com STATUS, COBERTURA, VENDA DIÁRIA e DIRECIONAMENTO. Ao importar,
-      // os motivos (e o direcionamento, quando houver) são lidos e já preenchidos
-      // automaticamente nos campos da tabela.
-      const temMotivo = ks.some(k => /^motivo$/i.test(k.trim()));
-      const ehShelflife = temMotivo && !ehBarueri;
+      // Formato SHELFLIFE (re-importação da própria planilha exportada, ou o
+      // relatório analítico "Datas Curtas" gerado a partir dela): identificado
+      // pela coluna MOTIVO (reimportação com motivos já preenchidos) OU pelas
+      // colunas analíticas próprias desse layout (VENDA DIÁRIA / COBERTURA /
+      // VALIDADE EFETIVA), que não existem no InFlow nem no Barueri. Sem essa
+      // segunda checagem, um arquivo "Datas Curtas" sem MOTIVO caía no parser
+      // InFlow, que procura uma coluna chamada PRAZO (inexistente aqui — a
+      // coluna se chama DIAS) e zerava o prazo/dias de toda linha.
+      const temMotivo         = !!_acharCol(ks, /^MOTIVO$/);
+      const temVendaDiaria    = !!_acharCol(ks, /VENDA.*DIARIA/);
+      const temCobertura      = !!_acharCol(ks, /COBERTURA/);
+      const temValidadeEfetiva= !!_acharCol(ks, /VALIDADE.*EFETIVA/);
+      const ehShelflife = !ehBarueri && (temMotivo || temVendaDiaria || temCobertura || temValidadeEfetiva);
 
       let fmtMsg = 'Pronto!';
       if (ehShelflife) {
@@ -2304,6 +2395,11 @@ function handleFile(f){
         rows = parseFormatoInflow(raw, ks);
       }
 
+      if (!rows.length) {
+        setP(0,'❌ Nenhuma linha reconhecida no arquivo. Confira se as colunas de código, validade/vencimento, prazo e quantidade estão presentes e se os códigos são numéricos.');
+        return;
+      }
+
       setP(100, fmtMsg);
       setTimeout(()=>{pp.classList.add('hidden');render()},350);
     }catch(err){setP(0,'❌ Erro: '+err.message)}
@@ -2313,16 +2409,25 @@ function handleFile(f){
 
 // Formato InFlow (padrão dos demais CDs): COD · QTD_TOTAL · VALIDADE · PRAZO
 function parseFormatoInflow(raw, ks) {
-  const ck=ks.find(k=>/^cod/i.test(k.trim()))||'COD';
-  const qk=ks.find(k=>/qtd/i.test(k.trim()))||'QTD_TOTAL';
-  const vk=ks.find(k=>/valid/i.test(k.trim()))||'VALIDADE';
-  const pk=ks.find(k=>/prazo/i.test(k.trim()))||'PRAZO';
-  return raw.filter(r=>r[ck]!==''&&r[ck]!==undefined).map(r=>{
+  const ck=_acharCol(ks,/^COD/)||'COD';
+  const qk=_acharCol(ks,/QTD/)||'QTD_TOTAL';
+  const vk=_acharCol(ks,/VALID/)||'VALIDADE';
+  // Aceita PRAZO (InFlow) ou DIAS (relatórios "Datas Críticas" antigos, que
+  // trazem COD·PRODUTO·QTD·VALIDADE·DIAS·STATUS). Sem essa alternativa, a
+  // coluna não era achada e o prazo saía 0 em todas as linhas.
+  const pk=_acharCol(ks,/PRAZO/)||_acharCol(ks,/^DIAS$/)||'PRAZO';
+  return raw.filter(r=>{
+    const c=r[ck];
+    if(c===''||c===undefined||c===null)return false;
+    // Descarta linhas de legenda/total (COD não numérico) que zeram qtd/prazo.
+    const n=parseInt(String(c).trim());
+    return isFinite(n)&&n>0;
+  }).map(r=>{
     const cod=String(r[ck]).trim().replace(/\.0$/,'');
     let val=r[vk];
     if(val instanceof Date)val=val.toLocaleDateString('pt-BR');
     else val=String(val).trim();
-    const prazo=parseInt(r[pk])||0,qtd=parseInt(r[qk])||0;
+    const prazo=_numCel(r[pk]),qtd=_numCel(r[qk]);
     return{cod,sku:SKU[cod]||null,validade:val,prazo,qtd,dir:'',motivo:'',isWarn:ehUrgenteSKU(prazo,cd,cod)};
   }).sort((a,b)=>a.prazo-b.prazo);
 }
@@ -2335,10 +2440,10 @@ function parseFormatoInflow(raw, ks) {
 // - qtd ← QNT UND
 // Linhas onde CODIGO não for numérico são ignoradas (ex.: blocos de totais).
 function parseFormatoBarueri(raw, ks) {
-  const ck = ks.find(k => /^codigo$/i.test(k.trim())) || ks.find(k => /^cod/i.test(k.trim())) || 'CODIGO';
-  const vk = ks.find(k => /^vencimento$/i.test(k.trim())) || 'VENCIMENTO';
-  const pk = ks.find(k => /dias.*vencer/i.test(k.trim())) || 'DIAS PARA VENCER';
-  const qk = ks.find(k => /qnt.*und|qtd.*und|quantidade.*und/i.test(k.trim())) || 'QNT UND';
+  const ck = _acharCol(ks, /^CODIGO$/) || _acharCol(ks, /^COD/) || 'CODIGO';
+  const vk = _acharCol(ks, /^VENCIMENTO$/) || 'VENCIMENTO';
+  const pk = _acharCol(ks, /DIAS.*VENCER/) || 'DIAS PARA VENCER';
+  const qk = _acharCol(ks, /QNT.*UND|QTD.*UND|QUANTIDADE.*UND/) || 'QNT UND';
 
   // Converte uma célula de data: aceita Date (cellDates:true), número serial Excel ou string.
   // IMPORTANTE: usa componentes UTC para formatar. Com cellDates:true o XLSX cria a Date
@@ -2374,8 +2479,8 @@ function parseFormatoBarueri(raw, ks) {
     .map(r => {
       const cod   = String(r[ck]).trim().replace(/\.0$/, '');
       const val   = toDataBR(r[vk]);
-      const prazo = parseInt(r[pk]) || 0;
-      const qtd   = parseInt(r[qk]) || 0;
+      const prazo = _numCel(r[pk]);
+      const qtd   = _numCel(r[qk]);
       return { cod, sku: SKU[cod] || null, validade: val, prazo, qtd, dir:'', motivo:'', isWarn: ehUrgenteSKU(prazo, cd, cod) };
     })
     .sort((a, b) => a.prazo - b.prazo);
@@ -2395,13 +2500,13 @@ function parseFormatoBarueri(raw, ks) {
 // - dir      ← DIRECIONAMENTO (quando existir)
 // - motivo   ← MOTIVO (já preenchido na planilha)
 function parseFormatoShelflife(raw, ks) {
-  const ck = ks.find(k => /^cod/i.test(k.trim())) || 'COD';
-  const pkProd = ks.find(k => /produto|^sku/i.test(k.trim()));
-  const vk = ks.find(k => /valid/i.test(k.trim())) || 'VALIDADE';
-  const dk = ks.find(k => /^dias$|^prazo/i.test(k.trim()));
-  const qk = ks.find(k => /^qtd$|qtd_total|quantidade|^qnt/i.test(k.trim())) || 'QTD';
-  const dirk = ks.find(k => /direcionamento|destino/i.test(k.trim()));
-  const mk = ks.find(k => /^motivo$/i.test(k.trim())) || 'MOTIVO';
+  const ck = _acharCol(ks, /^COD/) || 'COD';
+  const pkProd = _acharCol(ks, /PRODUTO|^SKU/);
+  const vk = _acharCol(ks, /VALID/) || 'VALIDADE';
+  const dk = _acharCol(ks, /^DIAS$|^PRAZO/);
+  const qk = _acharCol(ks, /^QTD$|QTD_TOTAL|QUANTIDADE|^QNT/) || 'QTD';
+  const dirk = _acharCol(ks, /DIRECIONAMENTO|DESTINO/);
+  const mk = _acharCol(ks, /^MOTIVO$/) || 'MOTIVO';
 
   function fmtDataUTC(d) {
     const dia = String(d.getUTCDate()).padStart(2, '0');
@@ -2437,9 +2542,9 @@ function parseFormatoShelflife(raw, ks) {
     .map(r => {
       const cod = String(r[ck]).trim().replace(/\.0$/, '');
       const val = toDataBR(r[vk]);
-      let prazo = dk !== undefined ? parseInt(r[dk]) : NaN;
+      let prazo = dk !== undefined && r[dk] !== '' ? _numCel(r[dk]) : NaN;
       if (isNaN(prazo)) prazo = prazoDaValidade(val);
-      const qtd = parseInt(r[qk]) || 0;
+      const qtd = _numCel(r[qk]);
       const produtoOriginal = pkProd ? String(r[pkProd] || '').trim() : '';
       // Motivo/direcionamento que já vêm na planilha (descarta marcadores "—").
       let motivo = String((mk && r[mk]) || '').trim();
@@ -3932,7 +4037,7 @@ function baixarRelatorioConsolidado() {
     // Busca o estoque na nuvem; as vendas diárias por CD são locais (VENDA_DIARIA_CD)
     fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(dataFormatada)}`)
     .then(r => r.json())
-    .then(resEstoque => {
+    .then(async resEstoque => {
         if(resEstoque.status !== "sucesso" || !resEstoque.dados.length) {
             alert(`Atenção: Nenhum lançamento de estoque encontrado na base para o dia ${dataFormatada}.`);
             return;
@@ -3952,7 +4057,7 @@ function baixarRelatorioConsolidado() {
             });
         });
 
-        gerarExcelMatriz(resEstoque.dados, dataFormatada, vendasMap, CD_MAP);
+        await gerarExcelMatriz(resEstoque.dados, dataFormatada, vendasMap, CD_MAP);
     })
     .catch(err => {
         console.error(err);
@@ -3964,7 +4069,7 @@ function baixarRelatorioConsolidado() {
     });
 }
 
-function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
+async function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
     vendasMap = vendasMap || {};
     CD_MAP = CD_MAP || {};
 
@@ -4617,6 +4722,215 @@ function gerarExcelMatriz(dados, dataStr, vendasMap, CD_MAP) {
 
         XLSX.utils.book_append_sheet(wb, wsRes, "⚠️ Alertas");
     }
+
+    // ── aba ANÁLISE EM RESUMO ─────────────────────────────────────
+    // 1) Distribuição do estoque por faixa de validade, por CD (data escolhida).
+    // 2) Comparativo dia-a-dia (cobertura média e prazo médio por CD) numa janela
+    //    que TERMINA na data escolhida — cada dia é uma foto independente (nunca soma).
+    async function gerarAbaAnaliseResumo() {
+        const FAIXAS = [                          // faixas configuráveis
+            { label:'0-23 dias',  min:0,  max:23 },
+            { label:'24-26 dias', min:24, max:26 },
+            { label:'27-28 dias', min:27, max:28 },
+            { label:'29-31 dias', min:29, max:31 },
+            { label:'32+ dias',   min:32, max:Infinity },
+        ];
+        const DIAS_COMPARACAO = 15;               // janela do comparativo (inclui a data escolhida)
+        // Ordem fixa de CD usada em TODAS as tabelas desta aba (seção 1 e seções de evolução).
+        // Os 3 primeiros são os principais; os 4 últimos são filiais de média venda.
+        const ORDEM_CDS_PRINCIPAL = ['CD MATRIZ','CD BARUERI','CD CURITIBA','CD LONDRINA','CD SJ RIO PRETO','CD BAURU','CD RANCHARIA'];
+        const CDS = ORDEM_CDS_PRINCIPAL;
+        const nomeCD = r => CD_MAP[r.cd] || ('CD ' + String(r.cd || '').toUpperCase().trim());
+
+        const stAzul   = { fill:{patternType:'solid',fgColor:{rgb:'1F4E79'}}, font:{bold:true,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'} };
+        const stTitulo = { font:{bold:true,sz:12,color:{rgb:'1F4E79'}} };
+        const stCDnome = { font:{bold:true,sz:11} };
+        const stTotal  = { font:{bold:true} };
+        const stNota   = { font:{italic:true,sz:9,color:{rgb:'7A7A7A'}} };
+
+        const aoa = [], est = [];
+        const push = (row, styleMap) => { const r = aoa.length; aoa.push(row || []); if (styleMap) styleMap.forEach(([c,s]) => est.push({r,c,s})); return r; };
+
+        // ===== 1) faixas de validade por CD (data escolhida) =====
+        push(['ANÁLISE EM RESUMO — ' + dataStr], [[0, stTitulo]]);
+        push();
+        push(['1) Estoque por faixa de validade (data escolhida)'], [[0, stTitulo]]);
+        push();
+
+        const porCD = {}; CDS.forEach(c => porCD[c] = FAIXAS.map(()=>0));
+        dados.forEach(r => {
+            const c = nomeCD(r); if (!porCD[c]) return;
+            const p = parseFloat(r.prazo), q = Math.abs(parseFloat(r.quantidade)||0);
+            if (!isFinite(p) || q<=0) return;
+            const i = FAIXAS.findIndex(f => p>=f.min && p<=f.max);
+            if (i>=0) porCD[c][i] += q;
+        });
+
+        const FAIXA_CORES = [                     // 0-23, 24-26, 27-28, 29-31, 32+ — vermelho→verde (urgência)
+            { fill:'C0392B', font:'FFFFFF' },
+            { fill:'E67E22', font:'FFFFFF' },
+            { fill:'F1C40F', font:'000000' },
+            { fill:'A9DFBF', font:'000000' },
+            { fill:'2E8B50', font:'FFFFFF' },
+        ];
+        CDS.forEach(c => {
+            const total = porCD[c].reduce((s,x)=>s+x,0);
+            push([c], [[0, stCDnome]]);
+            push(['Faixa de Validade','Quantidade','% Estoque'], [[0,stAzul],[1,stAzul],[2,stAzul]]);
+            FAIXAS.forEach((f,i) => {
+                const q = porCD[c][i], pct = total>0 ? q/total : 0;
+                const cor = FAIXA_CORES[i];
+                const base = { fill:{patternType:'solid',fgColor:{rgb:cor.fill}}, font:{color:{rgb:cor.font}} };
+                push([f.label, q, pct], [[0,base],[1,base],[2,{...base, numFmt:'0.00%'}]]);
+            });
+            push(['Total', total, total>0?1:0], [[0,stTotal],[1,stTotal],[2,{...stTotal, numFmt:'0.00%'}]]);
+            push();
+        });
+
+        // ===== dados-base do comparativo dia-a-dia (usado nas seções 2 e 3) =====
+        const [dd,mm,yy] = dataStr.split('/').map(Number);
+        const base = new Date(yy, mm-1, dd);
+        const janela = [];
+        for (let i=DIAS_COMPARACAO-1; i>=0; i--){ const d=new Date(base); d.setDate(base.getDate()-i); janela.push(d.toLocaleDateString('pt-BR')); }
+
+        // busca cada data (a escolhida já está em `dados`, sem chamada extra)
+        const porData = { [dataStr]: dados };
+        const faltantes = janela.filter(d => d !== dataStr);
+        for (let i=0;i<faltantes.length;i+=8){
+            const res = await Promise.all(faltantes.slice(i,i+8).map(async d => {
+                try { const r = await fetch(`${API_URL}?action=relatorio&data=${encodeURIComponent(d)}`); const j = await r.json();
+                      return { d, linhas: (j.status==='sucesso' && Array.isArray(j.dados)) ? j.dados : null }; }
+                catch(e){ return { d, linhas:null }; }
+            }));
+            res.forEach(x => { if (x.linhas && x.linhas.length) porData[x.d] = x.linhas; });
+        }
+
+        // por dia/CD: cobertura agregada (por SKU, sem duplicar venda) e % do estoque em data curta,
+        // usando a régua oficial (nivelDataCurtaSKU/ehDataCurtaSKU — limiares por CD e Integral×Branca).
+        // Panetones sazonais (SKUS_SEM_DATA_CURTA) ficam fora do numerador E do denominador.
+        function metricas(linhas){
+            const skuCD = {}, curta = {}; CDS.forEach(c => { skuCD[c]={}; curta[c]={qCurta:0,qTotal:0}; });
+            linhas.forEach(r => {
+                const c = nomeCD(r); if (!skuCD[c]) return;
+                const cod = String(r.codigo||'').trim(), q = Math.abs(parseFloat(r.quantidade)||0), p = parseFloat(r.prazo);
+                if (q<=0) return;
+                if (!skuCD[c][cod]) skuCD[c][cod] = { est:0, venda: getVendaParaLinha(r) };
+                skuCD[c][cod].est += q;
+                if (!SKUS_SEM_DATA_CURTA.has(cod)) {
+                    curta[c].qTotal += q;
+                    if (ehDataCurtaSKU(p, r.cd, cod)) curta[c].qCurta += q;
+                }
+            });
+            const out = {};
+            CDS.forEach(c => { let e=0,v=0; Object.values(skuCD[c]).forEach(s=>{ if(s.venda>0){e+=s.est;v+=s.venda;} });
+                out[c] = { cob: v>0 ? +(e/v).toFixed(1) : null, pctCurta: curta[c].qTotal>0 ? curta[c].qCurta/curta[c].qTotal : null }; });
+            return out;
+        }
+
+        // calcula uma vez por data (foto independente, nunca soma entre dias) e reaproveita nas duas tabelas
+        const metricasPorData = {};
+        janela.forEach(d => { if (porData[d]) metricasPorData[d] = metricas(porData[d]); });
+
+        // dia da semana abreviado (pt-BR) a partir de uma data 'DD/MM/AAAA'
+        const DIAS_SEM = ['dom','seg','ter','qua','qui','sex','sáb'];
+        function diaSemana(d) {
+            const [dd,mm,yy] = d.split('/').map(Number);
+            return DIAS_SEM[new Date(yy, mm-1, dd).getDay()];
+        }
+        function diaCurto(d) {
+            const [dd,mm] = d.split('/');
+            return `${dd}/${mm} (${diaSemana(d)})`;
+        }
+
+        // ===== 2) e 3) evolução por CD — posicionadas ao lado da seção 1 (coluna E em diante) =====
+        // xlsx-js-style (fork do SheetJS community) não escreve conditional formatting nativo do
+        // Excel (sem nós <conditionalFormatting>/dataBar no bundle) — testado e confirmado ausente.
+        // Fallback: barra de blocos (█/░) desenhada como texto dentro da própria célula, fonte
+        // monoespaçada, cor por faixa de risco (mesma paleta usada nas faixas de validade).
+        const COL_E = 4;                          // A=0,B=1,C=2 (seção 1) | D=3 vazio (respiro) | E=4 em diante
+        const BAR_LEN = 10;
+        const stMonoBase = { font:{ name:'Consolas', sz:10 } };
+
+        // grava numa posição fixa (r,c), fora do fluxo sequencial de push() — usado para o
+        // layout lateral, que precisa ocupar as MESMAS linhas já criadas pelos blocos de CD.
+        function set(r, c, v, s) {
+            if (!aoa[r]) aoa[r] = [];
+            aoa[r][c] = v;
+            if (s) est.push({ r, c, s });
+        }
+        function setRow(r, cStart, valores, estilos) {
+            valores.forEach((v, i) => set(r, cStart + i, v, estilos ? estilos[i] : undefined));
+        }
+        function barra(valor, max) {
+            if (valor === null || valor === undefined || !isFinite(valor)) return '';
+            const frac = Math.max(0, Math.min(1, valor / max));
+            const cheio = Math.round(frac * BAR_LEN);
+            return '█'.repeat(cheio) + '░'.repeat(BAR_LEN - cheio);
+        }
+        // Cobertura (dias de estoque): quanto maior, mais risco — mesma régua de
+        // nivelAltaCobertura (URGENTE>5, CRÍTICO>4, ATENÇÃO>3) com um degrau extra "muito OK".
+        function corCobertura(cob) {
+            if (cob === null) return '999999';
+            if (cob > 5)   return 'C0392B';
+            if (cob > 4)   return 'E67E22';
+            if (cob > 3)   return 'F1C40F';
+            if (cob > 1.5) return 'A9DFBF';
+            return '1E7A42';
+        }
+        // % Data Curta: heurística de faixas fixas (0-100%), sem régua oficial equivalente hoje.
+        function corPctCurta(pct) {
+            if (pct === null) return '999999';
+            if (pct > 0.50) return 'C0392B';
+            if (pct > 0.30) return 'E67E22';
+            if (pct > 0.15) return 'F1C40F';
+            if (pct > 0.05) return 'A9DFBF';
+            return '1E7A42';
+        }
+
+        let r2 = 2;   // linha inicial da seção 2 = mesma altura do título da seção 1 (Excel linha 3)
+
+        // ── 2) Evolução de % Data Curta por CD ──
+        set(r2, COL_E, '2) Evolução de % Data Curta por CD', stTitulo); r2++;
+        set(r2, COL_E, '% do estoque em data curta (régua por CD e Integral×Branca), por CD. Cada data é uma foto independente. Janela de '+DIAS_COMPARACAO+' dias terminando em '+dataStr+'.', stNota); r2++;
+        r2++;
+        setRow(r2, COL_E, ['Data', ...CDS], ['Data', ...CDS].map(()=>stAzul)); r2++;
+        janela.forEach(d => {
+            const m = metricasPorData[d];
+            if (!m) return;                        // pula datas sem lançamento (não zera)
+            set(r2, COL_E, diaCurto(d));
+            CDS.forEach((c,i) => {
+                const pct = m[c].pctCurta;
+                const texto = pct === null ? '-' : `${barra(pct,1)} ${(pct*100).toFixed(1)}%`;
+                set(r2, COL_E+1+i, texto, { ...stMonoBase, font:{ ...stMonoBase.font, color:{rgb:corPctCurta(pct)} } });
+            });
+            r2++;
+        });
+
+        r2++;   // linha em branco entre as duas tabelas
+
+        // ── 3) Evolução de Cobertura por CD ──
+        set(r2, COL_E, '3) Evolução de Cobertura por CD', stTitulo); r2++;
+        set(r2, COL_E, 'Cada data é uma foto independente (sem somar entre dias). Janela de '+DIAS_COMPARACAO+' dias terminando em '+dataStr+'.', stNota); r2++;
+        r2++;
+        setRow(r2, COL_E, ['Data', ...CDS], ['Data', ...CDS].map(()=>stAzul)); r2++;
+        janela.forEach(d => {
+            const m = metricasPorData[d];
+            if (!m) return;                        // pula datas sem lançamento (não zera)
+            set(r2, COL_E, diaCurto(d));
+            CDS.forEach((c,i) => {
+                const cob = m[c].cob;
+                const texto = cob === null ? '-' : `${barra(cob,10)} ${cob.toFixed(1)}d`;
+                set(r2, COL_E+1+i, texto, { ...stMonoBase, font:{ ...stMonoBase.font, color:{rgb:corCobertura(cob)} } });
+            });
+            r2++;
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        est.forEach(({r,c,s}) => { const ref = XLSX.utils.encode_cell({r,c}); if(!ws[ref]) ws[ref]={t:'s',v:''}; ws[ref].s = Object.assign({}, ws[ref].s, s); });
+        ws['!cols'] = [{wch:22},{wch:13},{wch:13},{wch:3},{wch:14}].concat(Array(CDS.length).fill({wch:20}));
+        XLSX.utils.book_append_sheet(wb, ws, 'Análise em Resumo');
+    }
+    await gerarAbaAnaliseResumo();
 
     XLSX.writeFile(wb, `Consolidado_Estoque_Geral_${dataStr.replace(/\//g,'-')}.xlsx`);
 }
@@ -5610,7 +5924,6 @@ const VENDAS_DIARIAS_CD_MAP = {
 let _dashVendasMap = {};      // { "PRODUTO_UPPER::CD BARUERI": vendaDiaria } — vindo do backend
 let _dashCobData = [];        // dados de cobertura por CD (snapshot atual)
 let _dashCobCia  = [];        // dados de cobertura consolidada CIA
-let _dashCobView = 'cd';      // sub-aba ativa: 'cd' | 'cia'
 let _chartDashCobertura = null;
 let _dashCharts = {};  // guarda instâncias Chart.js para destruir ao recriar
 
@@ -5623,6 +5936,26 @@ const DASH_CORES_CD = {
   'BARUERI':  '#9C27B0',
   'MATRIZ':   '#607D8B',
 };
+
+// Ordem fixa de CD usada em todo o dashboard (filtros, legendas e cores de gráfico com vários CDs).
+// Os 3 primeiros são os principais; os 4 últimos são filiais de média venda.
+const ORDEM_CDS_DASHBOARD = ['MATRIZ','BARUERI','CURITIBA','LONDRINA','SJRP','BAURU','RANCHARIA'];
+// Normaliza o campo cd bruto do backend para bater com as chaves de ORDEM_CDS_DASHBOARD
+// (cobre tanto 'SJRP' quanto 'SJ RIO PRETO' vindos da API).
+function _dashNormalizarCD(raw) {
+  const u = (raw || '').toString().toUpperCase().trim();
+  if (u.includes('SJ')) return 'SJRP';
+  return u;
+}
+function ordenarPorCDPrincipal(cds) {
+  return [...cds].sort((a,b) => {
+    const ia = ORDEM_CDS_DASHBOARD.indexOf(a), ib = ORDEM_CDS_DASHBOARD.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
 
 function iniciarDashboard() {
   dashBuilt = true;
@@ -5638,7 +5971,7 @@ function dashSetPeriodo(dias, carregar = true) {
   document.getElementById('dash-data-ini').value = ini.toISOString().split('T')[0];
   document.getElementById('dash-data-fim').value = fim.toISOString().split('T')[0];
   // Highlight botão ativo
-  [7,15,30].forEach(d => {
+  [1,7,15,30].forEach(d => {
     const b = document.getElementById(`dash-p${d}`);
     if(b) {
       b.style.background = d===dias ? 'var(--p)' : 'var(--pc)';
@@ -5672,19 +6005,23 @@ async function carregarDashboard() {
   const fimVal = document.getElementById('dash-data-fim').value;
   if (!iniVal || !fimVal) { alert('Selecione o período para análise.'); return; }
 
-  const loading  = document.getElementById('dash-loading');
-  const content  = document.getElementById('dash-content');
-  const vazioEl  = document.getElementById('dash-vazio');
-  const btnRef   = document.getElementById('btn-dash-refresh');
+  const loading     = document.getElementById('dash-loading');
+  const content      = document.getElementById('dash-content');
+  const vazioEl      = document.getElementById('dash-vazio');
+  const hojeIndispEl = document.getElementById('dash-hoje-indisponivel');
+  const btnRef       = document.getElementById('btn-dash-refresh');
 
   loading.classList.remove('hidden');
   content.classList.add('hidden');
   vazioEl.classList.add('hidden');
+  hojeIndispEl.classList.add('hidden');
   btnRef.disabled = true;
 
   // Gera lista de datas no intervalo
   const datas = gerarListaDatas(iniVal, fimVal);
   const cdFiltro = document.getElementById('dash-cd-filtro').value;
+  const hojeISO  = new Date().toISOString().split('T')[0];
+  const ehPeriodoHoje = (iniVal === hojeISO && fimVal === hojeISO);
 
   try {
     // Busca estoque e grades (paralelamente); vendas diárias por CD são locais (VENDA_DIARIA_CD)
@@ -5692,6 +6029,19 @@ async function carregarDashboard() {
       buscarEstoquePorPeriodo(datas),
       buscarGradesPorPeriodo(datas)
     ]);
+
+    // Filtro "Hoje": só mostra o dashboard quando TODOS os CDs já lançaram o estoque do dia —
+    // antes disso os números estariam incompletos e passariam uma falsa sensação de "estoque baixo".
+    if (ehPeriodoHoje) {
+      const cdsPresentes = new Set(dadosEstoque.map(r => _dashNormalizarCD(r.cd)).filter(Boolean));
+      const faltantes = ORDEM_CDS_DASHBOARD.filter(c => !cdsPresentes.has(c));
+      if (faltantes.length > 0) {
+        document.getElementById('dash-hoje-indisponivel-txt').textContent =
+          `Indisponível: a análise de hoje só fica completa depois que todos os CDs lançarem o estoque do dia. Ainda faltam: ${faltantes.join(', ')}. Atualize mais tarde ou consulte 7/15/30 dias.`;
+        hojeIndispEl.classList.remove('hidden');
+        return;
+      }
+    }
 
     if (dadosEstoque.length === 0 && dadosGrades.length === 0) {
       vazioEl.classList.remove('hidden');
@@ -5867,46 +6217,8 @@ function renderDashboard(estoque, grades, datas) {
     volPorDataCorreto[data] = total;
   });
 
-  // ---- Métricas globais (baseadas no snapshot atual de cada CD) ----
-  const totalUnidades   = estoqueAtual.reduce((s,r) => s + (Number(r.quantidade)||0), 0);
-  const totalSKUs       = new Set(estoqueAtual.map(r => r.codigo)).size;
-  const totalCriticos   = estoqueAtual.filter(r => ehDataCurtaSKU(prazoReal(r), r.cd, r.codigo)).reduce((s,r) => s + (Number(r.quantidade)||0), 0);
-  const pctCritico      = totalUnidades > 0 ? ((totalCriticos/totalUnidades)*100).toFixed(1) : 0;
-  const prazoMedioGeral = (()=>{ const validos=estoqueAtual.filter(r=>prazoReal(r)!==null); return validos.length>0?(validos.reduce((s,r)=>s+(prazoReal(r)||0),0)/validos.length).toFixed(1):0; })();
-  const totalVazias     = grades.reduce((s,r) => s + (Number(r.caixas_vazias)||0), 0);
-  const totalTrocas     = grades.reduce((s,r) => s + (Number(r.caixas_trocas)||0), 0);
-
   const diasComEnvio = new Set(estoque.map(r => r._data)).size;
   const ultimoEnvioStr = datasOrdenadas.filter(d => allCDsNoEstoque.some(c => estoquePorCDData[c][d])).slice(-1)[0] || '—';
-
-  // ---- KPIs ----
-  document.getElementById('dash-kpis').innerHTML = `
-    <div class="dash-kpi accent">
-      <div class="dkv">${totalUnidades.toLocaleString('pt-BR')}</div>
-      <div class="dkl">Total de Unidades</div>
-      <div class="dkd">snapshot mais recente por CD</div>
-    </div>
-    <div class="dash-kpi">
-      <div class="dkv">${totalSKUs.toLocaleString('pt-BR')}</div>
-      <div class="dkl">SKUs Únicos</div>
-      <div class="dkd">no estoque atual</div>
-    </div>
-    <div class="dash-kpi warn">
-      <div class="dkv">${totalCriticos.toLocaleString('pt-BR')}</div>
-      <div class="dkl">Unidades em Data Curta</div>
-      <div class="dkd">${pctCritico}% do total</div>
-    </div>
-    <div class="dash-kpi ok">
-      <div class="dkv">${prazoMedioGeral}d</div>
-      <div class="dkl">Prazo Médio Geral</div>
-      <div class="dkd">validade média atual</div>
-    </div>
-    <div class="dash-kpi">
-      <div class="dkv">${totalVazias.toLocaleString('pt-BR')}</div>
-      <div class="dkl">Grades no Período</div>
-      <div class="dkd">${totalTrocas.toLocaleString('pt-BR')} com trocas</div>
-    </div>
-  `;
 
   // ---- Gráfico: evolução do estoque consolidado por data (forward-fill) ----
   const labelsData = datasOrdenadas.map(d => { const p=d.split('/'); return `${p[0]}/${p[1]}`; });
@@ -5931,7 +6243,7 @@ function renderDashboard(estoque, grades, datas) {
     const c = (r.cd||'').toUpperCase().trim();
     porCD[c] = (porCD[c]||0) + (Number(r.quantidade)||0);
   });
-  const cdKeys = Object.keys(porCD).sort((a,b) => porCD[b]-porCD[a]);
+  const cdKeys = ordenarPorCDPrincipal(Object.keys(porCD));
   criarChart('chart-por-cd', 'doughnut', {
     labels: cdKeys,
     datasets: [{
@@ -5992,7 +6304,7 @@ function renderDashboard(estoque, grades, datas) {
   });
 
   // ---- Gráfico: grades por CD (soma do período — grades são eventos, não snapshots) ----
-  const gradesCDs = [...new Set(grades.map(r => (r.cd_origem||'').replace(/^CD\s*/i,'').toUpperCase().trim()))].sort();
+  const gradesCDs = ordenarPorCDPrincipal([...new Set(grades.map(r => (r.cd_origem||'').replace(/^CD\s*/i,'').toUpperCase().trim()))]);
   const gradesVazias = gradesCDs.map(c => grades.filter(r=>(r.cd_origem||'').toUpperCase().includes(c)).reduce((s,r)=>s+(Number(r.caixas_vazias)||0),0));
   const gradesTrocas = gradesCDs.map(c => grades.filter(r=>(r.cd_origem||'').toUpperCase().includes(c)).reduce((s,r)=>s+(Number(r.caixas_trocas)||0),0));
   if (gradesCDs.length > 0) {
@@ -6193,10 +6505,15 @@ function dashCalcularCobertura(estoqueAtual, ultimaDataPorCD, prazoReal) {
              cobertura:cob, validade:'-', prazo:(g.prazoMin!==null?g.prazoMin:'-'), label, nivel };
   });
 
-  // Preenche filtro de CD
-  const cds = [...new Set(_dashCobData.map(d => d.cd).filter(Boolean))].sort();
-  const selCd = document.getElementById('dash-cob-f-cd');
-  if (selCd) selCd.innerHTML = '<option value="TODOS">Todos os CDs</option>' + cds.map(c=>`<option value="${c}">${c}</option>`).join('');
+  // Preenche o único filtro de CD (select "Evolução por CD") — controla tanto a Análise de
+  // Cobertura de Estoque quanto a Evolução por CD. "Todos os CDs" = visão consolidada CIA.
+  const cds = ordenarPorCDPrincipal([...new Set(_dashCobData.map(d => d.cd).filter(Boolean))]);
+  const selEvol = document.getElementById('dash-evol-f-cd');
+  if (selEvol) {
+    const atual = selEvol.value;
+    selEvol.innerHTML = '<option value="TODOS">Todos os CDs</option>' + cds.map(c=>`<option value="${c}">${c}</option>`).join('');
+    selEvol.value = (atual === 'TODOS' || cds.includes(atual)) ? atual : 'TODOS';
+  }
 
   // Aviso de lançamentos
   const aviso = document.getElementById('dash-cob-aviso');
@@ -6216,68 +6533,17 @@ function dashCalcularCobertura(estoqueAtual, ultimaDataPorCD, prazoReal) {
     }
   }
 
-  dashRenderCoberturaKpis();
   dashRenderCobertura();
-  dashRenderCoberturaChart();
-}
-
-function dashCobSwitch(view) {
-  _dashCobView = view;
-  document.getElementById('dash-cob-tab-cd').classList.toggle('active', view==='cd');
-  document.getElementById('dash-cob-tab-cia').classList.toggle('active', view==='cia');
-  // Coluna CD/Filtro CD só fazem sentido na visão por CD
-  const thCd = document.getElementById('dash-cob-th-cd');
-  const fCd  = document.getElementById('dash-cob-f-cd');
-  if (thCd) thCd.style.display = view==='cd' ? '' : 'none';
-  if (fCd)  fCd.style.display  = view==='cd' ? '' : 'none';
-  document.getElementById('dash-cob-top-sub').textContent = view==='cd'
-    ? 'Produtos com mais dias de estoque por CD — os mais urgentes para girar'
-    : 'Produtos com mais dias de estoque na CIA inteira — alta quantidade consolidada';
-  dashRenderCoberturaKpis();
-  dashRenderCobertura();
-  dashRenderCoberturaChart();
-}
-
-function dashRenderCoberturaKpis() {
-  const dados = _dashCobView === 'cd' ? _dashCobData : _dashCobCia;
-  const alerta  = dados.filter(d => d.label === 'ALERTA - ALTA COBERTURA E DATA CURTA').length;
-  const urgente = dados.filter(d => d.nivel === 'URGENTE').length;
-  const critico = dados.filter(d => d.nivel === 'CRÍTICO').length;
-  const atencao = dados.filter(d => d.nivel === 'ATENÇÃO').length;
-  const comCob  = dados.filter(d => d.cobertura !== null);
-  const cobMedia = comCob.length ? (comCob.reduce((s,d)=>s+d.cobertura,0)/comCob.length) : 0;
-
-  const kpis = _dashCobView === 'cd'
-    ? [
-        { icon:'🚨', label:'Alerta combinado', value:alerta,  bg:'#C0392B', color:'#fff' },
-        { icon:'🔴', label:'Urgente',          value:urgente, bg:'#F0D5D5', color:'#6B0000' },
-        { icon:'🟠', label:'Crítico',          value:critico, bg:'var(--cs)', color:'var(--cb)' },
-        { icon:'🟡', label:'Atenção',          value:atencao, bg:'var(--ws)', color:'var(--wb)' },
-        { icon:'📊', label:'Cobertura média',  value:cobMedia.toFixed(1)+'d', bg:'var(--pc)', color:'var(--sec)' },
-      ]
-    : [
-        { icon:'🔴', label:'Urgente (>5d)',    value:urgente, bg:'#F0D5D5', color:'#6B0000' },
-        { icon:'🟠', label:'Crítico (>4d)',    value:critico, bg:'var(--cs)', color:'var(--cb)' },
-        { icon:'🟡', label:'Atenção (>3d)',    value:atencao, bg:'var(--ws)', color:'var(--wb)' },
-        { icon:'📦', label:'SKUs analisados',  value:dados.length, bg:'var(--surv)', color:'var(--tx)' },
-        { icon:'📊', label:'Cobertura média',  value:cobMedia.toFixed(1)+'d', bg:'var(--pc)', color:'var(--sec)' },
-      ];
-  document.getElementById('dash-cob-kpis').innerHTML = kpis.map(k => `
-    <div style="background:${k.bg}; border-radius:var(--r12); padding:14px; box-shadow:var(--sh1);">
-      <div style="font-size:20px; margin-bottom:4px;">${k.icon}</div>
-      <div style="font-size:20px; font-weight:700; color:${k.color};">${k.value}</div>
-      <div style="font-size:11px; color:${k.color}; opacity:.85; font-weight:500; margin-top:2px;">${k.label}</div>
-    </div>`).join('');
+  dashRenderEvolucaoCD();
 }
 
 function dashRenderCobertura() {
-  const base = _dashCobView === 'cd' ? _dashCobData : _dashCobCia;
-  const fCd     = (document.getElementById('dash-cob-f-cd')||{}).value || 'TODOS';
+  const fCd     = (document.getElementById('dash-evol-f-cd')||{}).value || 'TODOS';
   const fStatus = (document.getElementById('dash-cob-f-status')||{}).value || 'TODOS';
   const fBusca  = ((document.getElementById('dash-cob-f-busca')||{}).value || '').toLowerCase().trim();
 
-  let dados = base.slice();
-  if (_dashCobView === 'cd' && fCd !== 'TODOS') dados = dados.filter(d => d.cd === fCd);
+  // "Todos os CDs" → visão consolidada CIA; um CD específico → dados daquele CD
+  let dados = fCd === 'TODOS' ? _dashCobCia.slice() : _dashCobData.filter(d => d.cd === fCd);
   if (fStatus !== 'TODOS') {
     dados = dados.filter(d => {
       const info = dashCobStatusInfo(d.label);
@@ -6297,13 +6563,18 @@ function dashRenderCobertura() {
     return (b.cobertura||0) - (a.cobertura||0);
   });
 
+  // Coluna/filtro "CD" só fazem sentido quando a lista mistura vários CDs ("Todos os CDs")
+  const showCd = fCd === 'TODOS';
+  const thCd = document.getElementById('dash-cob-th-cd');
+  if (thCd) thCd.style.display = showCd ? '' : 'none';
+
   document.getElementById('dash-cob-contagem').textContent = dados.length + ' itens';
   const tbody = document.getElementById('dash-cob-tbody');
   if (!dados.length) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--txs); padding:24px;">Nenhum registro com os filtros aplicados.</td></tr>';
+    dashRenderCoberturaChart();
     return;
   }
-  const showCd = _dashCobView === 'cd';
   tbody.innerHTML = dados.map(d => {
     const info = dashCobStatusInfo(d.label);
     const cobStr = d.cobertura !== null ? d.cobertura + 'd' : '—';
@@ -6320,15 +6591,21 @@ function dashRenderCobertura() {
         <td style="text-align:right; font-size:12px;">${d.prazo}</td>
       </tr>`;
   }).join('');
+
+  dashRenderCoberturaChart();
 }
 
 function dashRenderCoberturaChart() {
-  const base = _dashCobView === 'cd' ? _dashCobData : _dashCobCia;
+  const fCd = (document.getElementById('dash-evol-f-cd')||{}).value || 'TODOS';
+  const base = fCd === 'TODOS' ? _dashCobCia : _dashCobData.filter(d => d.cd === fCd);
   const top = base.filter(d => d.cobertura !== null).sort((a,b)=>b.cobertura-a.cobertura).slice(0,10);
   const labels = top.map(d => {
     const nome = d.produto.length > 26 ? d.produto.slice(0,24)+'…' : d.produto;
-    return _dashCobView === 'cd' ? `${nome} (${d.cd})` : nome;
+    return fCd === 'TODOS' ? nome : `${nome} (${d.cd})`;
   });
+  document.getElementById('dash-cob-top-sub').textContent = fCd === 'TODOS'
+    ? 'Produtos com mais dias de estoque na CIA inteira — alta quantidade consolidada'
+    : 'Produtos com mais dias de estoque por CD — os mais urgentes para girar';
   const cores = top.map(d => {
     if (d.label.startsWith('ALERTA')) return '#7B241C';
     if (d.nivel === 'URGENTE') return '#8B0000';
@@ -6352,6 +6629,117 @@ function dashRenderCoberturaChart() {
       scales:{ x:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.06)' }, title:{ display:true, text:'Dias de estoque' }},
                y:{ grid:{ display:false }, ticks:{ font:{ size:10 }}}}
     }
+  });
+}
+
+// Calcula, para um CD, a série por data (foto independente — nunca soma entre dias)
+// de Cobertura e % de estoque com prazo conforme régua de data curta (Matriz x demais,
+// Integral x Branca), usando o período já carregado no dashboard (_dashCacheEstoque,
+// preenchido por buscarEstoquePorPeriodo).
+// cdFiltro === 'TODOS' → agrega TODOS os CDs como visão consolidada CIA (venda sempre
+// VENDA_DIARIA_CIA por SKU, somando o estoque de todos os CDs, igual a _dashCobCia).
+function _dashEvolucaoMetricas(cdFiltro) {
+  if (!cdFiltro) return { labels: [], cobertura: [], pctCurta: [] };
+  const todos = cdFiltro === 'TODOS';
+  const porData = {};
+  (_dashCacheEstoque||[]).forEach(r => {
+    const cRaw = (r.cd || '').toString().toUpperCase().trim();
+    if (!todos && cRaw !== cdFiltro) return;
+    const d = r._data; if (!d) return;
+    const q = Math.abs(parseFloat(r.quantidade) || 0);
+    if (q <= 0) return;
+    if (!porData[d]) porData[d] = { skus:{}, qCurta:0, qTotal:0 };
+    const cod = String(r.codigo || '').trim();
+    let venda;
+    if (todos) {
+      venda = parseFloat(VENDA_DIARIA_CIA[cod]) || 0;   // consolidado CIA: sempre a venda total da CIA por SKU
+    } else {
+      const cdKey = VENDAS_DIARIAS_CD_MAP[cRaw] || ('CD ' + cRaw);
+      const ehMatriz = cRaw === 'MATRIZ' || cRaw === 'CD MATRIZ';
+      venda = ehMatriz ? (parseFloat(VENDA_DIARIA_CIA[cod]) || 0) : (_dashVendasMap[cod + '::' + cdKey] || 0);
+    }
+    if (!porData[d].skus[cod]) porData[d].skus[cod] = { est:0, venda };
+    porData[d].skus[cod].est += q;
+    porData[d].qTotal += q;
+    const p = parseFloat(r.prazo);
+    if (ehDataCurtaSKU(p, r.cd, cod)) porData[d].qCurta += q;
+  });
+  const dataParaNum = d => { const [dd,mm,yy] = d.split('/'); return Number(yy+mm+dd); };
+  const datasOrdenadas = Object.keys(porData).sort((a,b) => dataParaNum(a)-dataParaNum(b));
+  const cobertura = [], pctCurta = [];
+  datasOrdenadas.forEach(d => {
+    const info = porData[d];
+    let e=0, v=0; Object.values(info.skus).forEach(s => { if (s.venda>0){ e+=s.est; v+=s.venda; } });
+    cobertura.push(v>0 ? +(e/v).toFixed(1) : null);
+    pctCurta.push(info.qTotal>0 ? +(100*info.qCurta/info.qTotal).toFixed(2) : null);
+  });
+  return { labels: datasOrdenadas, cobertura, pctCurta };
+}
+
+// Formata 'DD/MM/AAAA' como 'DD/MM (ddd)' com dia da semana abreviado em pt-BR
+const _DIAS_SEM_ABREV = ['dom','seg','ter','qua','qui','sex','sáb'];
+function diaCurtoBR(d) {
+  const [dd,mm,yy] = d.split('/').map(Number);
+  return `${String(dd).padStart(2,'0')}/${String(mm).padStart(2,'0')} (${_DIAS_SEM_ABREV[new Date(yy, mm-1, dd).getDay()]})`;
+}
+
+// Alterna o visual (linha × barras) da seção "Evolução por CD", sem duplicar a busca/cálculo de dados
+let _dashEvolTipo = 'line';   // 'line' | 'bar' — padrão inicial é linha
+function dashEvolSwitchTipo(tipo) {
+  _dashEvolTipo = tipo;
+  const btnLinha = document.getElementById('dash-evol-tipo-linha');
+  const btnBarra = document.getElementById('dash-evol-tipo-barra');
+  if (btnLinha) btnLinha.classList.toggle('active', tipo === 'line');
+  if (btnBarra) btnBarra.classList.toggle('active', tipo === 'bar');
+  dashRenderEvolucaoCD();
+}
+
+// Cor por faixa de risco de % Data Curta (0-100) — mesma régua usada na barra em célula do Excel.
+function _dashCorPctCurta(pct) {
+  if (pct === null || pct === undefined) return '#999999';
+  if (pct > 50) return '#C0392B';
+  if (pct > 30) return '#E67E22';
+  if (pct > 15) return '#F1C40F';
+  if (pct > 5)  return '#A9DFBF';
+  return '#1E7A42';
+}
+
+// Renderiza os dois gráficos (linha ou barra, conforme _dashEvolTipo) da seção "Evolução por CD" — um único CD por vez
+function dashRenderEvolucaoCD() {
+  const sel = document.getElementById('dash-evol-f-cd');
+  const cd = sel ? sel.value : '';
+  const { labels: labelsBrutos, cobertura, pctCurta } = _dashEvolucaoMetricas(cd);
+  const labels = labelsBrutos.map(diaCurtoBR);
+  const tipo = _dashEvolTipo;
+  const ehBarra = tipo === 'bar';
+
+  criarChart('chart-dash-evol-curta', tipo, {
+    labels,
+    datasets: [{
+      label:'% Data Curta' + (cd ? ' — ' + cd : ''),
+      data: pctCurta,
+      borderColor:'#C0392B',
+      backgroundColor: ehBarra ? pctCurta.map(_dashCorPctCurta) : 'rgba(192,57,43,.12)',
+      borderRadius: ehBarra ? 4 : undefined,
+      tension:.25, fill: !ehBarra, spanGaps:true
+    }]
+  }, {
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, title:{ display:true, text:'%' }, ticks:{ callback: v => v+'%' } } }
+  });
+  criarChart('chart-dash-evol-cobertura', tipo, {
+    labels,
+    datasets: [{
+      label: 'Cobertura (dias)' + (cd ? ' — ' + cd : ''),
+      data: cobertura,
+      borderColor:'#1F4E79',
+      backgroundColor: ehBarra ? 'rgba(31,78,121,.7)' : 'rgba(31,78,121,.12)',
+      borderRadius: ehBarra ? 4 : undefined,
+      tension:.25, fill: !ehBarra, spanGaps:true
+    }]
+  }, {
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, title:{ display:true, text:'Dias' } } }
   });
 }
 
