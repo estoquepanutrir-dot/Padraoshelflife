@@ -12,6 +12,8 @@
 <title>Sistema de Padronização de Relatórios - Panutrir</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -1493,9 +1495,19 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <div class="ch" style="margin-bottom:14px;">
         <div class="ci gn" style="font-size:18px;">🏭</div>
         <div><div class="ct" style="font-size:15px;">Plano de Produção Sugerido</div><div class="cs" id="rp-contagem">Importe um relatório para gerar o plano.</div></div>
-        <div style="margin-left:auto; display:flex; gap:8px; flex-wrap:wrap;">
+        <div style="margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <label style="font-size:13px; color:var(--txs); display:flex; align-items:center; gap:6px;">Cobertura:
+            <select id="rp-sel-cobertura" onchange="rpMudarCobertura(this.value)" style="padding:6px 10px; font-size:13px; border-radius:6px; border:1px solid var(--bd,#ccc);">
+              <option value="1">1 dia</option>
+              <option value="2">2 dias</option>
+              <option value="3">3 dias</option>
+              <option value="4" selected>4 dias</option>
+            </select>
+          </label>
+          <button class="btn btn-o" onclick="blendAbrir()" style="padding:8px 14px; font-size:13px;">⚙️ Cadastrar Blends</button>
           <button class="btn btn-o" id="rp-btn-copiar" onclick="rpCopiarResumo()" style="padding:8px 14px; font-size:13px;">📋 Copiar resumo</button>
           <button class="btn btn-o" onclick="rpExportarExcel()" style="padding:8px 14px; font-size:13px;">⬇️ Exportar Excel</button>
+          <button class="btn btn-o" onclick="rpExportarPDF()" style="padding:8px 14px; font-size:13px;">📄 Exportar PDF (1 folha)</button>
         </div>
       </div>
 
@@ -1510,28 +1522,28 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           <input type="date" id="rp-data" onchange="rpTrocarData()">
         </div>
         <div class="f" style="margin:0;">
-          <label for="rp-f-familia" style="font-size:11px;">Família</label>
-          <select id="rp-f-familia" onchange="rpFiltrar()"><option value="">Todas as famílias</option></select>
-        </div>
-        <div class="f" style="margin:0;">
           <label for="rp-f-busca" style="font-size:11px;">Buscar</label>
           <input type="text" id="rp-f-busca" placeholder="Código ou nome..." oninput="rpFiltrar()">
         </div>
       </div>
 
+      <!-- Toggle de visualização: BLEND x PRODUTO ACABADO -->
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <button class="btn btn-t" id="rp-view-blend" onclick="rpSetView('blend')" style="font-size:12.5px; padding:8px 16px; border-radius:14px;">🥣 BLEND</button>
+        <button class="btn btn-t" id="rp-view-pa" onclick="rpSetView('pa')" style="font-size:12.5px; padding:8px 16px; border-radius:14px;">📦 PRODUTO ACABADO</button>
+      </div>
+
       <div class="tw">
         <table>
-          <thead>
+          <thead id="rp-thead">
             <tr>
               <th>Motivo</th>
-              <th>Código</th>
-              <th>Produto</th>
-              <th>Família</th>
-              <th style="text-align:right">Saldo (import.)</th>
+              <th>BLEND / Produto</th>
+              <th style="text-align:right">Saldo relat.</th>
               <th style="text-align:right">Cob. atual</th>
               <th style="text-align:right">Cob. projetada</th>
-              <th style="text-align:right">Qtd. UND</th>
               <th style="text-align:right">Receitas</th>
+              <th style="text-align:right">Unidades</th>
             </tr>
           </thead>
           <tbody id="rp-tbody">
@@ -1582,7 +1594,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <!-- Adicionar produto -->
       <div style="display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin-bottom:12px;">
         <div class="f" style="margin:0; flex:1; min-width:220px;">
-          <label for="rp-pl-add-sel" style="font-size:11px;">Adicionar produto ao plano</label>
+          <label for="rp-pl-add-sel" style="font-size:11px;">Adicionar BLEND ou produto ao plano</label>
           <select id="rp-pl-add-sel"></select>
         </div>
         <button class="btn btn-o" onclick="rpPlanoAdd()" style="padding:9px 16px; font-size:13px;">+ Adicionar</button>
@@ -1592,9 +1604,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         <table>
           <thead>
             <tr>
-              <th>Código</th>
-              <th>Produto</th>
-              <th>Família</th>
+              <th>BLEND / Produto</th>
               <th style="text-align:right">Rend. (pães/rec.)</th>
               <th style="text-align:right">Receitas</th>
               <th style="text-align:right">Unidades</th>
@@ -1602,7 +1612,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
             </tr>
           </thead>
           <tbody id="rp-pl-tbody">
-            <tr><td colspan="7" style="text-align:center; color:var(--txs); padding:24px;">Nenhum item no plano. Puxe da recomendação ou adicione um produto.</td></tr>
+            <tr><td colspan="5" style="text-align:center; color:var(--txs); padding:24px;">Nenhum item no plano. Puxe da recomendação ou adicione uma receita.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1610,6 +1620,36 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
     </div>
 
   </div><!-- end tab-pcp-content -->
+
+  <!-- ===== MODAL: CADASTRO DE BLENDS ===== -->
+  <div id="modal-blend" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:20px;">
+    <div style="background:var(--sur);border-radius:24px;padding:24px 24px;max-width:740px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.22);position:relative;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+        <div class="ci" style="background:linear-gradient(135deg,#E8A33D,#C8791A);color:#fff;font-size:20px;">🍞</div>
+        <div style="flex:1;">
+          <div style="font-family:'Google Sans Display',sans-serif;font-size:19px;font-weight:500;color:var(--tx);">Cadastro de Blends</div>
+          <div style="font-size:12px;color:var(--txs);margin-top:2px;">Um blend é uma receita que vira vários pães. Produtos sem blend viram receita única (1:1). Salva na nuvem — vale pra todos.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin:16px 0;flex-wrap:wrap;">
+        <button class="btn btn-o" onclick="blendNovo()" style="padding:8px 14px;font-size:13px;">+ Novo blend</button>
+        <button class="btn btn-o" onclick="blendRestaurarPadrao()" style="padding:8px 14px;font-size:13px;">↺ Restaurar padrão</button>
+      </div>
+
+      <div id="blend-lista"></div>
+
+      <div style="margin-top:14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--txs);margin-bottom:6px;">Produtos sem blend (receita única 1:1)</div>
+        <div id="blend-sem" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:22px;justify-content:flex-end;">
+        <button type="button" class="btn btn-o" onclick="blendFechar()" style="font-size:13px;padding:10px 18px;border-radius:12px;">Cancelar</button>
+        <button type="button" class="btn btn-f" id="blend-btn-salvar" onclick="blendSalvar()" style="font-size:13px;padding:10px 20px;border-radius:12px;">☁️ Salvar</button>
+      </div>
+    </div>
+  </div>
 
 
   <!-- ===== APONTAMENTO E RASTREIO DE GRADES (SÓ MATRIZ) ===== -->
@@ -1875,6 +1915,34 @@ const PPG_PROD = {"2":12,"5":12,"81591":15,"121811":10,"11":15,"16":15,"669":12,
 // Códigos sem receita própria no relatório (panetones, bisnaguinhas, pães sírios
 // terceirizados) ficam de fora → a aba mostra "—" em receitas para eles.
 const RENDIMENTO_PROD = {"2":529,"5":529,"6":352,"11":750,"16":742,"655":582,"1224":571,"69251":354,"81571":546,"81581":704,"81591":646,"81661":529,"82051":308,"85181":354,"85841":352,"86151":535,"99161":535,"121581":354,"121801":308,"121811":352,"121821":704,"121831":582,"121841":571,"121861":529,"121871":529,"135211":308,"135221":354,"135231":352,"135241":529,"145511":456,"145521":552,"162275":308,"162276":535,"162358":535,"162396":455,"162767":535,"162783":456,"162784":552,"162800":529,"162801":529,"162802":308,"162920":456,"162921":471,"162922":510,"162923":464};
+
+// RECEITAS-MÃE / BLENDS — uma batelada de massa (1 rendimento) que se divide em
+// vários produtos-filhotes (variações de marca). A recomendação/MRP agrega a
+// cobertura dos filhotes e recomenda no nível do blend; a produção é dividida
+// entre os filhotes proporcional ao déficit. Códigos fora de qualquer blend =
+// receita única (1:1).
+// RECEITAS_MAE_DEFAULT é o padrão embutido; o cadastro (botão "Cadastrar Blends")
+// pode sobrescrever RECEITAS_MAE e salvar na nuvem (blend_cfg / api_blend_get/_set).
+const RECEITAS_MAE_DEFAULT = [
+  { nome:'Hot Dog',               filhotes:['69251','85181','121581','135221'] },
+  { nome:'Hambúrguer Gourmet',    filhotes:['82051','135211','162802','121801'] },
+  { nome:'Plufi / Forma',         filhotes:['81661','135241','162800','121861'] },
+  { nome:'Del Grano Tradicional', filhotes:['145511','162783'] },
+  { nome:'Del Grano Integral',    filhotes:['145521','162784'] },
+  { nome:'Pão Integral',          filhotes:['162358','162276','162767'] },
+  { nome:'Paezinhos',             filhotes:['6','85841','135231','121811'] },
+  { nome:'12 Grãos',              filhotes:['655','121831'] },
+  { nome:'12 Grãos Zero',         filhotes:['81581','121821'] },
+  { nome:'Castanha e Quinoa',     filhotes:['1224','121841'] }
+];
+// Blends ATIVOS (podem ser trocados pelo cadastro salvo). código -> índice do blend.
+let RECEITAS_MAE = RECEITAS_MAE_DEFAULT.map(m => ({ nome:m.nome, filhotes:m.filhotes.slice() }));
+let _MAE_DE_COD = {};
+function _rebuildMaeIndex(){
+  _MAE_DE_COD = {};
+  RECEITAS_MAE.forEach((mae, i) => (mae.filhotes||[]).forEach(c => { _MAE_DE_COD[c] = i; }));
+}
+_rebuildMaeIndex();
 
 // ── Classificação INTEGRAL × LINHA BRANCA (base da régua de data curta) ──
 // Integrais têm prazo de alerta MENOR que a linha branca. Panetones (sazonais)
@@ -2188,13 +2256,19 @@ function vdHandleFile(f){
 //  Persistência: recomendacao_prod_cfg (RPCs api_recomendacao_prod_
 //  get/_set), espelhando a venda diária.
 // ============================================================
-const RP_META_COBERTURA = 4;   // meta de dias de cobertura da CIA — projeta a produção até no máx. estes dias (não recomenda acima disso)
+let RP_META_COBERTURA = 4;   // meta de dias de cobertura da CIA — projeta a produção até no máx. estes dias (não recomenda acima disso); ajustável via dropdown
+
+function rpMudarCobertura(v){
+  RP_META_COBERTURA = parseInt(v, 10) || 4;
+  rpCalcular();
+}
 
 let _rpDados      = null;  // { fonte, dataISO, dataBR, diaSemana, blocoIdx, blocos:[{titulo, itens:{cod:{produto,und,caixa,quebra}}}] }
 let _rpMeta       = null;  // { fonte, atualizado_em }
 let _rpEstoqueCia = {};    // cod -> estoque total da CIA (soma abs(quantidade) de todos os CDs, da api_relatorio)
 let _rpRecs       = [];    // linhas calculadas (obrigatório + sugestão)
 let _rpLoadTried  = false; // já tentou carregar do banco?
+let _rpView       = 'blend'; // sub-aba ativa da tabela: 'blend' (pré-pesagem) | 'pa' (embalagem)
 
 function rpEscolherArquivo(){
   const fi = document.getElementById('rp-fi');
@@ -2202,7 +2276,8 @@ function rpEscolherArquivo(){
 }
 
 // Dia da semana + data a partir do nome do arquivo.
-// Ex.: "Relatório de produção - TERCA-FEIRA 2026071417.xlsx"
+// Ex.: "...TERCA-FEIRA 2026071417.xlsx" (AAAAMMDD) ou "...QUARTA-FEIRA 2026150710.xlsx" (AAAADDMM).
+// Os nomes variam a ordem dos pares (MMDD vs DDMM): detecta qual é válido pelo mês (1..12).
 function _rpInfoDoArquivo(nome){
   const n = _normCab(nome || '');
   const dias = ['SEGUNDA-FEIRA','TERCA-FEIRA','QUARTA-FEIRA','QUINTA-FEIRA','SEXTA-FEIRA','SABADO','DOMINGO'];
@@ -2210,9 +2285,25 @@ function _rpInfoDoArquivo(nome){
   for(const d of dias){ if(n.includes(d)){ diaSemana = d; break; } }
   let dataISO = null, dataBR = '';
   const m = n.match(/(20\d{2})(\d{2})(\d{2})/);
-  if(m){ dataISO = `${m[1]}-${m[2]}-${m[3]}`; dataBR = `${m[3]}/${m[2]}/${m[1]}`; }
+  if(m){
+    const y = m[1], a = +m[2], b = +m[3];
+    let mes = 0, dia = 0;
+    if(a>=1 && a<=12 && b>=1 && b<=31){ mes=a; dia=b; }          // AAAAMMDD
+    else if(b>=1 && b<=12 && a>=1 && a<=31){ mes=b; dia=a; }     // AAAADDMM
+    if(mes){
+      dataISO = `${y}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+      dataBR  = `${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${y}`;
+    }
+  }
   return { diaSemana, dataISO, dataBR };
 }
+
+// True se a string 'AAAA-MM-DD' é uma data válida (mês 1..12).
+function _rpIsoValido(s){
+  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) &&
+         +s.slice(5,7)>=1 && +s.slice(5,7)<=12 && +s.slice(8,10)>=1 && +s.slice(8,10)<=31;
+}
+function _rpHojeISO(){ return new Date().toISOString().split('T')[0]; }
 
 // Acha os blocos "QUANTIDADES ..." por TEXTO (o layout varia dia a dia).
 // Âncora = coluna "QTDE. UND." (só existe nesses blocos). A partir dela,
@@ -2304,6 +2395,13 @@ function rpHandleFile(f){
 
 // Aplica os dados (recém-importados ou vindos do banco): popula UI e calcula.
 async function rpAplicar(dados){
+  // Corrige data inválida vinda de import antigo (ex.: nome de arquivo AAAADDMM
+  // salvo como mês>12). Re-deriva do nome do arquivo; se ainda inválida, usa hoje.
+  if(!_rpIsoValido(dados.dataISO)){
+    const re = _rpInfoDoArquivo(dados.fonte || '');
+    dados.dataISO = _rpIsoValido(re.dataISO) ? re.dataISO : _rpHojeISO();
+    dados.dataBR  = re.dataBR || (() => { const [y,m,d]=dados.dataISO.split('-'); return `${d}/${m}/${y}`; })();
+  }
   _rpDados = dados;
   const sel = document.getElementById('rp-bloco');
   if(sel){
@@ -2311,7 +2409,7 @@ async function rpAplicar(dados){
     sel.value = String(dados.blocoIdx || 0);
   }
   const di = document.getElementById('rp-data');
-  if(di && !di.value){ di.value = dados.dataISO || new Date().toISOString().split('T')[0]; }
+  if(di && !di.value){ di.value = dados.dataISO; }
   _rpMostrarInfo();
   await rpCarregarEstoqueECalcular();
 }
@@ -2328,19 +2426,20 @@ function _rpMostrarInfo(){
   }
 }
 
-// Converte 'yyyy-mm-dd' (input date) -> 'DD/MM/AAAA'
+// Converte 'yyyy-mm-dd' (input date) -> 'DD/MM/AAAA'. Fallbacks sempre válidos.
 function _rpDataInputBR(){
   const di = document.getElementById('rp-data');
   const v = di && di.value;
   if(v){ const [y,m,d] = v.split('-'); return `${d}/${m}/${y}`; }
-  return _rpDados && _rpDados.dataBR;
+  if(_rpDados && /^\d{2}\/\d{2}\/\d{4}$/.test(_rpDados.dataBR||'')) return _rpDados.dataBR;
+  const [y,m,d] = _rpHojeISO().split('-'); return `${d}/${m}/${y}`;
 }
 
 // Carrega o estoque da CIA (api_relatorio do dia escolhido), soma abs(quantidade)
 // por código somando TODOS os CDs (mesma régua de gerarAbaTotalCIA) e recalcula.
 async function rpCarregarEstoqueECalcular(){
   const tbody = document.getElementById('rp-tbody');
-  if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--txs);padding:24px;">⏳ Carregando estoque da CIA...</td></tr>';
+  if(tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--txs);padding:24px;">⏳ Carregando estoque da CIA...</td></tr>';
   try {
     const dataBR = _rpDataInputBR();
     const iso = dataBR ? _brToISO(dataBR) : null;
@@ -2357,140 +2456,304 @@ async function rpCarregarEstoqueECalcular(){
   rpCalcular();
 }
 
-// Núcleo: monta as linhas de recomendação (obrigatório + sugestão por cobertura).
+// Máximo de receitas INTEIRAS cuja cobertura projetada não passa da meta (4 dias).
+// Ex.: se 1 receita projeta 3.2 dias e 2 receitas passariam de 4, devolve 1 (mantém 3.2).
+function _rpReceitasAteMeta(rend, est, venda){
+  if(rend <= 0 || venda <= 0) return 0;
+  return Math.max(0, Math.floor((RP_META_COBERTURA * venda - est) / rend));
+}
+
+// Distribui `total` unidades entre `pesos` (frações que somam ~1), com
+// arredondamento por maior resto para que a soma final seja exatamente `total`.
+function _rpRatear(total, pesos){
+  const brutos = pesos.map(p => total * p);
+  const base   = brutos.map(x => Math.floor(x));
+  let resto = total - base.reduce((s,x)=>s+x, 0);
+  const ordem = brutos.map((x,i)=>({ i, frac:x-Math.floor(x) })).sort((a,b)=>b.frac-a.frac);
+  for(let k=0; k<ordem.length && resto>0; k++){ base[ordem[k].i]++; resto--; }
+  return base;
+}
+
+// Núcleo: monta a recomendação agrupada por RECEITA-MÃE.
+//  - Cobertura da mãe = estoque somado dos filhotes ÷ venda somada (CIA).
+//  - Receitas = máximo que projeta até no máx. 4 dias (mesma régua).
+//  - Divide as unidades entre os filhotes PROPORCIONAL AO DÉFICIT de cada um.
 function rpCalcular(){
   _rpRecs = [];
   if(!_rpDados){ rpRender(); return; }
   const bloco = _rpDados.blocos[_rpDados.blocoIdx] || { itens:{} };
   const itens = bloco.itens || {};
+  const saldoDe = (cod) => (itens[cod] ? itens[cod].und : null);
 
-  const cobDe  = (cod) => {
-    const venda = parseFloat(VENDA_DIARIA_CIA[cod]) || 0;
-    const est   = _rpEstoqueCia[cod] || 0;
-    return venda > 0 ? { venda, est, cob: est/venda } : { venda:0, est, cob:null };
-  };
-  const nomeDe = (cod, fb) => (SKU[cod] ? SKU[cod].toUpperCase() : (fb||'').toUpperCase());
-  const obrig  = new Set();
-
-  // Reduz receitas (a partir do arredondamento p/ cima) até a cobertura projetada
-  // ficar ABAIXO da meta (pode terminar quebrada, ex.: 3.2, 3.8 — só não pode bater/exceder 4).
-  // undMin (opcional) = produção mínima que não pode ser reduzida (déficit obrigatório a cobrir).
-  const ajustarReceitas = (receitas, rend, est, venda, undMin) => {
-    while(receitas > 0){
-      const undReal = receitas*rend;
-      const cobProj = venda > 0 ? (est + undReal)/venda : null;
-      if(cobProj === null || cobProj < RP_META_COBERTURA) break;      // já ficou abaixo da meta
-      const proxUnd = (receitas-1)*rend;
-      if(undMin !== undefined && proxUnd < undMin) break;              // não pode reduzir mais (cobriria menos que o déficit)
-      receitas--;
-    }
-    return receitas;
-  };
-
-  // (a) OBRIGATÓRIO — saldo (QTDE UND) negativo no bloco escolhido.
-  //     Converte o déficit em RECEITAS (pães por receita = RENDIMENTO_PROD),
-  //     arredondando p/ cima (não se produz meia receita).
-  Object.keys(itens).forEach(cod => {
-    const it = itens[cod];
-    if(!(it.und < 0)) return;
-    const { venda, est, cob } = cobDe(cod);
-    if(cob !== null && cob > RP_META_COBERTURA) return;         // >4 dias de cobertura: não recomenda
-    obrig.add(cod);
-    const rend     = parseFloat(RENDIMENTO_PROD[cod]) || 0;
-    const undDef   = Math.abs(it.und);                          // déficit em unidades
-    let receitas   = rend > 0 ? Math.ceil(undDef/rend) : null;  // nº de receitas
-    if(receitas !== null) receitas = ajustarReceitas(receitas, rend, est, venda, undDef);
-    const undReal  = receitas !== null ? receitas*rend : undDef;// produção real (receitas inteiras)
-    const cobProj = venda > 0 ? (est + undReal)/venda : null;
-    _rpRecs.push({
-      cod, produto: nomeDe(cod, it.produto), familia: FAMILIA_PROD[cod] || '—',
-      motivo:'OBRIG', motivoLabel:'Obrigatório - saldo negativo',
-      cobAtual: cob, cobProj, undSug: undReal, receitas, caixa: it.caixa,
-      saldo: it.und
-    });
+  // Grupos a avaliar: as mães definidas + cada código restante como mãe única (1:1).
+  const grupos = RECEITAS_MAE.map(m => ({ nome:m.nome, unica:false, filhotes:m.filhotes.slice() }));
+  Object.keys(RENDIMENTO_PROD).forEach(cod => {
+    if(cod in _MAE_DE_COD) return;
+    grupos.push({ nome:(SKU[cod]||cod).toUpperCase(), unica:true, filhotes:[cod] });
   });
 
-  // (b) SUGESTÃO — cobertura CIA < meta (4 dias), p/ códigos não obrigatórios.
-  //     Produção = (meta - cobertura) * venda, convertida em receitas, sem passar da meta.
-  Object.keys(RENDIMENTO_PROD).forEach(cod => {
-    if(obrig.has(cod)) return;
-    if(!(cod in FAMILIA_PROD)) return;
-    const rend = parseFloat(RENDIMENTO_PROD[cod]) || 0;
+  grupos.forEach(g => {
+    const fs = g.filhotes.filter(c => (c in FAMILIA_PROD) && (c in RENDIMENTO_PROD));
+    if(!fs.length) return;
+    const rend = parseFloat(RENDIMENTO_PROD[fs[0]]) || 0;   // filhotes da mãe compartilham o rendimento
     if(rend <= 0) return;
-    const { venda, est, cob } = cobDe(cod);
-    if(cob === null || cob >= RP_META_COBERTURA) return;
-    const undIdeal = (RP_META_COBERTURA - cob) * venda;     // unidades p/ chegar na meta
-    if(undIdeal <= 0) return;
-    let receitas = ajustarReceitas(Math.ceil(undIdeal/rend), rend, est, venda, 0);
-    if(receitas <= 0) return;                                // qualquer receita já bateria/passaria a meta: não sugere
-    const undReal  = receitas*rend;
-    const cobProj  = (est + undReal)/venda;
+
+    let vendaMae = 0, estMae = 0, algumNeg = false, temVenda = false;
+    const det = fs.map(c => {
+      const venda = parseFloat(VENDA_DIARIA_CIA[c]) || 0;
+      const saldo = saldoDe(c);
+      // Se o saldo do relatório está negativo, o item já está praticamente vendido/oversold:
+      // considera estoque ZERADO na conta de cobertura (em vez do estoque "abs" da CIA),
+      // pra não inflar a cobertura de um produto que na prática já zerou.
+      const est   = (saldo !== null && saldo < 0) ? 0 : (_rpEstoqueCia[c] || 0);
+      vendaMae += venda; estMae += est;
+      if(venda > 0) temVenda = true;
+      if(saldo !== null && saldo < 0) algumNeg = true;
+      return { cod:c, produto:(SKU[c]||'').toUpperCase(), venda, est, saldo };
+    });
+    if(!temVenda) return;
+    const cobMae = estMae / vendaMae;
+    if(cobMae > RP_META_COBERTURA) return;                  // >4 dias: não recomenda
+
+    const receitas = _rpReceitasAteMeta(rend, estMae, vendaMae);
+    if(receitas < 1) return;
+    const undTotal   = receitas * rend;
+    const cobProjMae = (estMae + undTotal) / vendaMae;
+
+    // rateio das unidades por DÉFICIT (fallback: venda) de cada filhote
+    const defs = det.map(d => ({ ...d, deficit: Math.max(0, RP_META_COBERTURA*d.venda - d.est) }));
+    const somaDef = defs.reduce((s,d)=>s+d.deficit, 0);
+    const somaVen = defs.reduce((s,d)=>s+d.venda, 0);
+    const pesos = defs.map(d => somaDef>0 ? d.deficit/somaDef : (somaVen>0 ? d.venda/somaVen : 1/defs.length));
+    const undPorFilhote = _rpRatear(undTotal, pesos);
+
+    const filhotes = defs.map((d,i) => {
+      const und = undPorFilhote[i];
+      return {
+        cod:d.cod, produto:d.produto, peso:pesos[i], und,
+        cobAtual: d.venda>0 ? d.est/d.venda : null,
+        cobProj:  d.venda>0 ? (d.est+und)/d.venda : null,
+        saldo: d.saldo
+      };
+    });
+
+    const saldosVal = defs.map(d=>d.saldo).filter(s=>s!==null);
+    const saldoTotal = saldosVal.length ? saldosVal.reduce((s,v)=>s+v,0) : null;
+
     _rpRecs.push({
-      cod, produto: nomeDe(cod, itens[cod] && itens[cod].produto), familia: FAMILIA_PROD[cod] || '—',
-      motivo:'SUG', motivoLabel:'Sugestão - cobertura baixa',
-      cobAtual: cob, cobProj, undSug: undReal, receitas, caixa: (itens[cod] && itens[cod].caixa) || 0,
-      saldo: itens[cod] ? itens[cod].und : null
+      mae:g.nome, unica:g.unica, rend, familia: FAMILIA_PROD[fs[0]] || '—',
+      motivo: algumNeg ? 'OBRIG' : 'SUG',
+      motivoLabel: algumNeg ? 'Obrigatório - saldo negativo' : 'Sugestão - cobertura baixa',
+      cobAtual: cobMae, cobProj: cobProjMae, receitas, undTotal, filhotes, saldoTotal
     });
   });
 
   // Obrigatórios primeiro; dentro de cada grupo, menor cobertura no topo.
   _rpRecs.sort((a,b) => {
     if(a.motivo !== b.motivo) return a.motivo === 'OBRIG' ? -1 : 1;
-    const ca = a.cobAtual===null?Infinity:a.cobAtual, cb = b.cobAtual===null?Infinity:b.cobAtual;
-    return ca - cb;
+    return a.cobAtual - b.cobAtual;
   });
   rpRender();
 }
 
-// Famílias únicas (de FAMILIA_PROD), ordenadas em pt-BR.
-function _rpFamilias(){
-  return [...new Set(Object.values(FAMILIA_PROD))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+// Troca a sub-aba ativa (blend agrupado x P.A. achatado) e re-renderiza.
+function rpSetView(view){
+  _rpView = (view === 'pa') ? 'pa' : 'blend';
+  const busca = document.getElementById('rp-f-busca');
+  if(busca) busca.placeholder = _rpView === 'pa' ? 'Código ou nome do produto...' : 'Código ou nome do blend...';
+  rpRender();
 }
 
-// Renderiza a tabela aplicando filtros de família + busca.
-function rpRender(){
-  const selFam = document.getElementById('rp-f-familia');
-  if(selFam && selFam.options.length <= 1){
-    selFam.innerHTML = '<option value="">Todas as famílias</option>' +
-      _rpFamilias().map(f=>`<option value="${f}">${f}</option>`).join('');
-  }
-  const fFam = (selFam && selFam.value) || '';
-  const bq   = _normCab((document.getElementById('rp-f-busca')||{}).value || '');
+// Achata _rpRecs (agrupado por blend-mãe) em uma linha por P.A. (produto acabado),
+// reaproveitando os mesmos dados já calculados em mae.filhotes — sem recalcular nada.
+// Inclui tanto os filhotes de blends com múltiplos produtos quanto as mães "únicas" (1:1).
+function _rpFlattenPA(){
+  const lista = [];
+  _rpRecs.forEach(mae => {
+    mae.filhotes.forEach(f => {
+      lista.push({
+        cod: f.cod, produto: f.produto, saldo: f.saldo,
+        cobAtual: f.cobAtual, cobProj: f.cobProj, und: f.und,
+        motivo: mae.motivo, motivoLabel: mae.motivoLabel, mae: mae.mae
+      });
+    });
+  });
+  // Obrigatório (saldo negativo) primeiro; depois, menor cobertura atual no topo (— vai por último).
+  lista.sort((a,b) => {
+    if(a.motivo !== b.motivo) return a.motivo === 'OBRIG' ? -1 : 1;
+    const ca = (a.cobAtual===null||a.cobAtual===undefined) ? Infinity : a.cobAtual;
+    const cb = (b.cobAtual===null||b.cobAtual===undefined) ? Infinity : b.cobAtual;
+    return ca - cb;
+  });
+  return lista;
+}
 
-  const linhas = _rpRecs.filter(r => {
-    if(fFam && r.familia !== fFam) return false;
-    if(bq && !_normCab(r.cod + ' ' + r.produto).includes(bq)) return false;
+// Expande/oculta as linhas de P.A. filhas de um blend na sub-aba BLEND (clique na linha-mãe).
+function rpToggleBlend(groupId){
+  const rows = document.querySelectorAll(`tr[data-group="${groupId}"]`);
+  if(!rows.length) return;
+  const aberto = rows[0].style.display !== 'none';
+  rows.forEach(r => { r.style.display = aberto ? 'none' : ''; });
+  const arrow = document.getElementById(`${groupId}-arrow`);
+  if(arrow) arrow.textContent = aberto ? '▸' : '▾';
+}
+
+// Renderiza a tabela aplicando filtro de busca.
+// Reaproveita os mesmos _rpRecs já calculados por rpCalcular(); só muda como exibir,
+// de acordo com a sub-aba ativa (_rpView: 'blend' agrupado x 'pa' achatado).
+function rpRender(){
+  const bq = _normCab((document.getElementById('rp-f-busca')||{}).value || '');
+  const dstr = c => c===null||c===undefined ? '—' : c.toFixed(1)+'d';
+  const sstr = s => {
+    if(s===null||s===undefined) return '<span style="color:var(--txs);">—</span>';
+    const cor = s<0 ? '#B0281A' : '#1E7A34';
+    const txt = (s>0?'+':'') + s.toLocaleString('pt-BR');
+    return `<span style="color:${cor};font-weight:700;">${txt}</span>`;
+  };
+  // Unidades já alocadas na OP em montagem (Montar Produção), por código de P.A. —
+  // usado pra descontar da quantidade recomendada e mostrar o que ainda falta planejar.
+  const undPorCodPlano = _rpPlanoUndPorCod();
+  // Célula "restante" (recomendado - já na OP), com o valor original anotado embaixo quando reduzido.
+  // subtitulo(original, jaNoPlano) monta o texto de apoio; se omitido, usa o padrão "de X · Y na OP".
+  const celRestante = (restante, original, corNum, tamNum, jaNoPlano, subtitulo) => {
+    const num = `<span style="font-weight:700;color:${corNum};font-size:${tamNum};">${restante.toLocaleString('pt-BR')}</span>`;
+    if(!jaNoPlano) return num;
+    const sub = subtitulo ? subtitulo(original, jaNoPlano)
+      : `de ${original.toLocaleString('pt-BR')} · <span style="color:#1E7A34;">${jaNoPlano.toLocaleString('pt-BR')} na OP</span>`;
+    return `${num}<div style="font-size:9.5px;font-weight:400;color:var(--txs);white-space:nowrap;">${sub}</div>`;
+  };
+
+  const thead = document.getElementById('rp-thead');
+  const tbody = document.getElementById('rp-tbody');
+
+  // Botões de toggle: reflete o estado atual mesmo se rpRender for chamado de outro lugar
+  // (ex.: rpCalcular após trocar bloco), sem depender de rpSetView ter sido chamada antes.
+  const bBlend = document.getElementById('rp-view-blend');
+  const bPa    = document.getElementById('rp-view-pa');
+  [[bBlend,'blend'],[bPa,'pa']].forEach(([b,v]) => {
+    if(!b) return;
+    const ativo = _rpView === v;
+    b.style.background = ativo ? 'var(--p)' : 'var(--pc)';
+    b.style.color = ativo ? '#fff' : 'var(--sec)';
+  });
+
+  if(_rpView === 'pa'){
+    // -------- Sub-aba P.A. (embalagem): lista achatada, uma linha por produto acabado --------
+    if(thead) thead.innerHTML = `<tr>
+      <th>Motivo</th>
+      <th>P.A. (código / nome)</th>
+      <th style="text-align:right">Saldo relat.</th>
+      <th style="text-align:right">Cob. atual</th>
+      <th style="text-align:right">Cob. projetada</th>
+      <th style="text-align:right">Unidades a produzir</th>
+    </tr>`;
+
+    const itensPA = _rpFlattenPA().filter(it => {
+      if(bq){
+        const alvo = _normCab(it.cod + ' ' + it.produto);
+        if(!alvo.includes(bq)) return false;
+      }
+      return true;
+    });
+
+    if(tbody){
+      if(!_rpDados){
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--txs);padding:28px;">Importe um relatório de produção para ver as recomendações.</td></tr>';
+      } else if(!itensPA.length){
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--txs);padding:24px;">Nenhuma recomendação com os filtros aplicados.</td></tr>';
+      } else {
+        tbody.innerHTML = itensPA.map(it => {
+          const ob  = it.motivo === 'OBRIG';
+          const bg  = ob ? '#FDECEA' : '#FEF6E7';
+          const cor = ob ? '#B0281A' : '#8A5B00';
+          const jaNoPlano = undPorCodPlano[it.cod] || 0;
+          const restante  = Math.max(0, it.und - jaNoPlano);
+          return `<tr>
+            <td><span style="background:${bg};color:${cor};border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:600;white-space:nowrap;">${it.motivoLabel}</span></td>
+            <td style="font-size:12.5px;"><span style="color:var(--txs);">${it.cod}</span> · ${it.produto}</td>
+            <td style="text-align:right;font-size:12.5px;">${sstr(it.saldo)}</td>
+            <td style="text-align:right;font-size:12px;color:var(--txs);">${dstr(it.cobAtual)}</td>
+            <td style="text-align:right;font-size:12px;color:var(--txs);">${dstr(it.cobProj)}</td>
+            <td style="text-align:right;">${celRestante(restante, it.und, cor, '13px', jaNoPlano)}</td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    const cont = document.getElementById('rp-contagem');
+    if(cont){
+      if(!_rpDados){ cont.textContent = 'Importe um relatório para gerar o plano.'; }
+      else {
+        const nOb = itensPA.filter(it=>it.motivo==='OBRIG').length;
+        const nSu = itensPA.filter(it=>it.motivo==='SUG').length;
+        const totUnd = itensPA.reduce((s,it)=>s+(it.und||0),0);
+        cont.textContent = `${nOb} obrigatório(s) · ${nSu} sugestão(ões) · ${itensPA.length} produto(s) · ${totUnd.toLocaleString('pt-BR')} unidades no total`;
+      }
+    }
+    return;
+  }
+
+  // -------- Sub-aba BLEND (pré-pesagem): visão agrupada por receita-mãe (padrão atual) --------
+  if(thead) thead.innerHTML = `<tr>
+    <th>Motivo</th>
+    <th>BLEND / Produto</th>
+    <th style="text-align:right">Saldo relat.</th>
+    <th style="text-align:right">Cob. atual</th>
+    <th style="text-align:right">Cob. projetada</th>
+    <th style="text-align:right">Receitas</th>
+    <th style="text-align:right">Unidades</th>
+  </tr>`;
+
+  const linhas = _rpRecs.filter(mae => {
+    if(bq){
+      const alvo = _normCab(mae.mae + ' ' + mae.filhotes.map(f=>f.cod+' '+f.produto).join(' '));
+      if(!alvo.includes(bq)) return false;
+    }
     return true;
   });
 
-  const tbody = document.getElementById('rp-tbody');
   if(tbody){
     if(!_rpDados){
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--txs);padding:28px;">Importe um relatório de produção para ver as recomendações.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--txs);padding:28px;">Importe um relatório de produção para ver as recomendações.</td></tr>';
     } else if(!linhas.length){
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--txs);padding:24px;">Nenhuma recomendação com os filtros aplicados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--txs);padding:24px;">Nenhuma recomendação com os filtros aplicados.</td></tr>';
     } else {
-      tbody.innerHTML = linhas.map(r => {
-        const ob  = r.motivo === 'OBRIG';
+      tbody.innerHTML = linhas.map((mae, idx) => {
+        const ob  = mae.motivo === 'OBRIG';
         const bg  = ob ? '#FDECEA' : '#FEF6E7';
         const cor = ob ? '#B0281A' : '#8A5B00';
-        const cobA = r.cobAtual===null ? '—' : r.cobAtual.toFixed(1)+'d';
-        const cobP = r.cobProj ===null ? '—' : r.cobProj.toFixed(1)+'d';
-        const gr   = r.receitas===null ? '—' : r.receitas.toLocaleString('pt-BR');
-        const sd   = (r.saldo===null || r.saldo===undefined) ? '—' : r.saldo.toLocaleString('pt-BR');
-        const sdCor = (r.saldo!==null && r.saldo!==undefined && r.saldo < 0) ? '#B0281A' : 'var(--txs)';
-        const sdPeso = (r.saldo!==null && r.saldo!==undefined && r.saldo < 0) ? '700' : '500';
-        return `<tr>
-          <td><span style="background:${bg};color:${cor};border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:600;white-space:nowrap;">${r.motivoLabel}</span></td>
-          <td style="font-size:12px;color:var(--txs);font-weight:500;">${r.cod}</td>
-          <td style="font-size:12.5px;max-width:280px;">${r.produto}</td>
-          <td style="font-size:12px;color:var(--txs);">${r.familia}</td>
-          <td style="text-align:right;font-size:12px;color:${sdCor};font-weight:${sdPeso};">${sd}</td>
-          <td style="text-align:right;font-size:12px;color:var(--txs);">${cobA}</td>
-          <td style="text-align:right;font-size:12px;color:var(--txs);">${cobP}</td>
-          <td style="text-align:right;font-weight:600;">${r.undSug.toLocaleString('pt-BR')}</td>
-          <td style="text-align:right;font-weight:700;color:${cor};">${gr}</td>
+        const tint = ob ? 'rgba(176,40,26,.06)' : 'rgba(138,91,0,.06)';
+        const temFilhos = !mae.unica;
+        const groupId = `rp-blend-${idx}`;
+        const arrow = temFilhos ? `<span id="${groupId}-arrow" style="display:inline-block;width:12px;">▸</span> ` : '';
+        // Desconta o que já foi alocado na OP (Montar Produção) das quantidades recomendadas.
+        const jaNoPlanoMae   = mae.filhotes.reduce((s,f)=>s+(undPorCodPlano[f.cod]||0), 0);
+        const restanteUndMae = Math.max(0, mae.undTotal - jaNoPlanoMae);
+        const restanteRecMae = mae.rend>0 ? Math.min(mae.receitas, Math.ceil(restanteUndMae/mae.rend)) : mae.receitas;
+        const maeRow = `<tr style="background:${tint};${temFilhos?'cursor:pointer;':''}" ${temFilhos?`onclick="rpToggleBlend('${groupId}')"`:''}>
+          <td><span style="background:${bg};color:${cor};border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:600;white-space:nowrap;">${mae.motivoLabel}</span></td>
+          <td style="font-weight:700;font-size:13px;">${arrow}🍞 ${mae.mae}${mae.unica?'':` <span style="font-weight:500;color:var(--txs);font-size:11px;">(${mae.filhotes.length} produtos — clique p/ ver)</span>`}</td>
+          <td style="text-align:right;font-size:12.5px;">${sstr(mae.saldoTotal)}</td>
+          <td style="text-align:right;font-size:12px;color:var(--txs);">${dstr(mae.cobAtual)}</td>
+          <td style="text-align:right;font-size:12px;color:var(--txs);">${dstr(mae.cobProj)}</td>
+          <td style="text-align:right;">${celRestante(restanteRecMae, mae.receitas, cor, '15px', mae.receitas - restanteRecMae, o=>`de ${o.toLocaleString('pt-BR')} recomendada(s)`)}</td>
+          <td style="text-align:right;">${celRestante(restanteUndMae, mae.undTotal, 'var(--tx)', '13px', jaNoPlanoMae)}</td>
         </tr>`;
+        const filhoteRows = mae.unica ? '' : mae.filhotes.map(f => {
+          const jaNoPlanoF   = undPorCodPlano[f.cod] || 0;
+          const restanteUndF = Math.max(0, f.und - jaNoPlanoF);
+          return `
+          <tr class="rp-blend-child" data-group="${groupId}" style="display:none;">
+            <td></td>
+            <td style="padding-left:26px;font-size:12px;color:var(--tx);">↳ <span style="color:var(--txs);">${f.cod}</span> · ${f.produto}</td>
+            <td style="text-align:right;font-size:11.5px;">${sstr(f.saldo)}</td>
+            <td style="text-align:right;font-size:11.5px;color:var(--txs);">${dstr(f.cobAtual)}</td>
+            <td style="text-align:right;font-size:11.5px;color:var(--txs);">${dstr(f.cobProj)}</td>
+            <td></td>
+            <td style="text-align:right;">${celRestante(restanteUndF, f.und, 'var(--tx)', '12px', jaNoPlanoF)}</td>
+          </tr>`;
+        }).join('');
+        return maeRow + filhoteRows;
       }).join('');
     }
   }
@@ -2502,7 +2765,7 @@ function rpRender(){
       const nOb = _rpRecs.filter(r=>r.motivo==='OBRIG').length;
       const nSu = _rpRecs.filter(r=>r.motivo==='SUG').length;
       const totGr = _rpRecs.reduce((s,r)=>s+(r.receitas||0),0);
-      cont.textContent = `${nOb} obrigatório(s) · ${nSu} sugestão(ões) · ${totGr.toLocaleString('pt-BR')} receitas no total`;
+      cont.textContent = `${nOb} obrigatória(s) · ${nSu} sugestão(ões) · ${totGr.toLocaleString('pt-BR')} receitas no total`;
     }
   }
 }
@@ -2516,12 +2779,26 @@ function rpTrocarBloco(){
 function rpTrocarData(){ rpCarregarEstoqueECalcular(); }
 function rpFiltrar(){ rpRender(); }
 
-// Texto simples pronto p/ WhatsApp/e-mail (Código – Produto – Qtd. receitas).
+// Texto simples pronto p/ WhatsApp/e-mail. Formato depende da sub-aba ativa:
+//  - BLEND: agrupado por receita-mãe + divisão nos filhotes (formato original).
+//  - P.A.: lista achatada, uma linha por produto acabado.
 function rpCopiarResumo(){
   if(!_rpRecs.length){ alert('Nada para copiar. Importe um relatório primeiro.'); return; }
-  const linhas = _rpRecs.filter(r => r.receitas).map(r => `${r.cod} - ${r.produto} - ${r.receitas} receita(s)`);
+  const sfmt = s => s===null||s===undefined ? '' : ` (saldo ${s>0?'+':''}${s})`;
   const bloco = _rpDados ? (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo : '';
-  const txt = `RECOMENDAÇÃO DE PRODUÇÃO${bloco?(' — '+bloco):''}\n\n` + linhas.join('\n');
+  let linhas, titulo;
+  if(_rpView === 'pa'){
+    titulo = 'RECOMENDAÇÃO DE PRODUÇÃO — P.A. (EMBALAGEM)';
+    linhas = _rpFlattenPA().map(it => `▪ ${it.cod} · ${it.produto}: ${it.und} und${sfmt(it.saldo)}${it.motivo==='OBRIG'?' (obrigatório)':''}`);
+  } else {
+    titulo = 'RECOMENDAÇÃO DE PRODUÇÃO — BLEND (PRÉ-PESAGEM)';
+    linhas = _rpRecs.map(mae => {
+      let l = `▪ ${mae.mae}: ${mae.receitas} receita(s) = ${mae.undTotal} und${sfmt(mae.saldoTotal)}`;
+      if(!mae.unica) l += '\n' + mae.filhotes.map(f=>`     • ${f.produto}: ${f.und} und${sfmt(f.saldo)}`).join('\n');
+      return l;
+    });
+  }
+  const txt = `${titulo}${bloco?(' — '+bloco):''}\n\n` + linhas.join('\n');
   const done = () => { const b=document.getElementById('rp-btn-copiar'); if(b){ const t=b.innerHTML; b.innerHTML='✅ Copiado!'; setTimeout(()=>b.innerHTML=t,1800); } };
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(done, () => alert('Não consegui copiar automaticamente.'));
@@ -2532,22 +2809,140 @@ function rpCopiarResumo(){
   }
 }
 
-// Exporta a tabela p/ Excel (reaproveita XLSX.utils como no resto do sistema).
+// Exporta a recomendação p/ Excel. Formato depende da sub-aba ativa:
+//  - BLEND: uma linha por RECEITA-MÃE + uma por filhote (formato original).
+//  - P.A.: uma linha por produto acabado, já achatada.
 function rpExportarExcel(){
   if(!_rpRecs.length){ alert('Nada para exportar. Importe um relatório primeiro.'); return; }
   const bloco = _rpDados ? (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo : '';
-  const aoa = [['Código','Produto','Família','Motivo','Saldo (import.)','Cobertura atual (d)','Cobertura projetada (d)','Qtd. UND','Qtd. Receitas']];
-  _rpRecs.forEach(r => aoa.push([
-    r.cod, r.produto, r.familia, r.motivoLabel,
-    (r.saldo===null||r.saldo===undefined)?'':r.saldo,
-    r.cobAtual===null?'':+r.cobAtual.toFixed(1), r.cobProj===null?'':+r.cobProj.toFixed(1),
-    r.undSug, r.receitas===null?'':r.receitas
-  ]));
+  let aoa, aba;
+  if(_rpView === 'pa'){
+    aba = 'Recomendação P.A.';
+    aoa = [['Código','Produto','Motivo','Saldo relatório','Cobertura atual (d)','Cobertura projetada (d)','Unidades a produzir']];
+    _rpFlattenPA().forEach(it => aoa.push([it.cod, it.produto, it.motivoLabel,
+      it.saldo===null?'':it.saldo,
+      it.cobAtual===null?'':+it.cobAtual.toFixed(1), it.cobProj===null?'':+it.cobProj.toFixed(1), it.und]));
+  } else {
+    aba = 'Recomendação';
+    aoa = [['Tipo','BLEND','Código','Produto','Motivo','Saldo relatório','Cobertura atual (d)','Cobertura projetada (d)','Receitas','Unidades']];
+    _rpRecs.forEach(mae => {
+      aoa.push(['BLEND', mae.mae, '', '', mae.motivoLabel,
+        mae.saldoTotal===null?'':mae.saldoTotal,
+        mae.cobAtual===null?'':+mae.cobAtual.toFixed(1), mae.cobProj===null?'':+mae.cobProj.toFixed(1),
+        mae.receitas, mae.undTotal]);
+      if(!mae.unica) mae.filhotes.forEach(f => aoa.push(['  P.A.', mae.mae, f.cod, f.produto, '',
+        f.saldo===null?'':f.saldo,
+        f.cobAtual===null?'':+f.cobAtual.toFixed(1), f.cobProj===null?'':+f.cobProj.toFixed(1), '', f.und]));
+    });
+  }
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Recomendação');
-  const nome = `Recomendacao_Producao${bloco?('_'+bloco.replace(/[^\wÀ-ÿ]+/g,'_')):''}.xlsx`;
+  XLSX.utils.book_append_sheet(wb, ws, aba);
+  const sufixo = _rpView === 'pa' ? '_PA' : '';
+  const nome = `Recomendacao_Producao${sufixo}${bloco?('_'+bloco.replace(/[^\wÀ-ÿ]+/g,'_')):''}.xlsx`;
   XLSX.writeFile(wb, nome);
+}
+
+// Gera um PDF (A4, 1 página) com o detalhamento das recomendações de produção
+// exibidas em "Plano de Produção Sugerido". Reduz fonte/espaçamento progressivamente
+// até a tabela caber inteira em uma única folha.
+function rpExportarPDF(){
+  if(!_rpRecs.length){ alert('Nada para exportar. Importe um relatório primeiro.'); return; }
+  if(!window.jspdf || !window.jspdf.jsPDF){ alert('Biblioteca de PDF não carregou. Verifique sua conexão e tente novamente.'); return; }
+  const { jsPDF } = window.jspdf;
+
+  const bloco = _rpDados ? (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo : '';
+  const coberturaSel = document.getElementById('rp-sel-cobertura');
+  const coberturaTxt = coberturaSel ? (coberturaSel.value + ' dia(s)') : '—';
+  const dataEl = document.getElementById('rp-data');
+  const dataTxt = dataEl && dataEl.value ? dataEl.value.split('-').reverse().join('/') : '—';
+
+  // Monta as linhas: BLEND (mãe) seguido dos filhotes (P.A.) indentados,
+  // igual à hierarquia mostrada na tabela em tela.
+  const head = [['Motivo','BLEND / Produto','Saldo relat.','Cob. atual (d)','Cob. proj. (d)','Receitas','Unidades']];
+  const body = [];
+  _rpRecs.forEach(mae => {
+    // "OBRIGATÓRIO" só se aplica de fato ao P.A. com saldo negativo. Numa mãe "única"
+    // (1 produto só) a linha do blend e a do P.A. são a mesma coisa, então herda o motivo.
+    // Numa mãe com vários filhotes, a linha do blend é só um agrupador — o motivo real
+    // (obrigatório ou não) é decidido produto a produto, abaixo.
+    body.push([
+      mae.unica ? (mae.motivo === 'OBRIG' ? 'OBRIGATÓRIO' : 'Sugestão') : '',
+      mae.mae,
+      mae.saldoTotal===null||mae.saldoTotal===undefined ? '—' : mae.saldoTotal,
+      mae.cobAtual===null||mae.cobAtual===undefined ? '—' : mae.cobAtual.toFixed(1),
+      mae.cobProj===null||mae.cobProj===undefined ? '—' : mae.cobProj.toFixed(1),
+      mae.receitas,
+      mae.undTotal
+    ]);
+    if(!mae.unica){
+      mae.filhotes.forEach(f => {
+        const fObrig = (f.saldo !== null && f.saldo !== undefined && f.saldo < 0);
+        body.push([
+          fObrig ? 'OBRIGATÓRIO' : '',
+          '   › ' + f.produto,
+          f.saldo===null||f.saldo===undefined ? '—' : f.saldo,
+          f.cobAtual===null||f.cobAtual===undefined ? '—' : f.cobAtual.toFixed(1),
+          f.cobProj===null||f.cobProj===undefined ? '—' : f.cobProj.toFixed(1),
+          '',
+          f.und
+        ]);
+      });
+    }
+  });
+
+  const nObrig = _rpRecs.filter(r=>r.motivo==='OBRIG').length;
+  const nSug   = _rpRecs.filter(r=>r.motivo==='SUG').length;
+  const totReceitas = _rpRecs.reduce((s,r)=>s+(r.receitas||0),0);
+  const totUnd       = _rpRecs.reduce((s,r)=>s+(r.undTotal||0),0);
+
+  function montarDoc(fontSize, padding){
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    doc.setFont(undefined,'bold');
+    doc.setFontSize(13);
+    doc.text('Plano de Produção Sugerido', 14, 12);
+    doc.setFont(undefined,'normal');
+    doc.setFontSize(8.5);
+    doc.text(`Bloco: ${bloco||'—'}   |   Cobertura: ${coberturaTxt}   |   Estoque CIA em: ${dataTxt}   |   Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 18);
+    doc.setFont(undefined,'bold');
+    doc.text(`Obrigatórios: ${nObrig}   |   Sugestões: ${nSug}   |   Total receitas: ${totReceitas}   |   Total unidades: ${totUnd}`, 14, 23);
+
+    doc.autoTable({
+      head, body,
+      startY: 27,
+      margin: { left:8, right:8, bottom:8 },
+      styles: { fontSize, cellPadding: padding, overflow:'linebreak', valign:'middle' },
+      headStyles: { fillColor:[200,121,26], textColor:255, fontStyle:'bold', fontSize: Math.min(fontSize+0.5, 9) },
+      columnStyles: {
+        0:{cellWidth:'wrap', halign:'left'},
+        2:{halign:'right', cellWidth:18},
+        3:{halign:'right', cellWidth:20},
+        4:{halign:'right', cellWidth:20},
+        5:{halign:'right', cellWidth:16},
+        6:{halign:'right', cellWidth:18}
+      },
+      didParseCell: (data) => {
+        if(data.section==='body' && data.row.raw[0]==='OBRIGATÓRIO'){
+          data.cell.styles.textColor = [176,32,32];
+        }
+      }
+    });
+    return doc;
+  }
+
+  // Tenta reduzir fonte/espaçamento progressivamente até a tabela caber em 1 página só.
+  const tentativas = [[8,1.6],[7.5,1.3],[7,1.1],[6.5,0.9],[6,0.75],[5.5,0.6],[5,0.5],[4.5,0.4]];
+  let doc, coube = false;
+  for(const [fs,pad] of tentativas){
+    doc = montarDoc(fs, pad);
+    if(doc.internal.getNumberOfPages() === 1){ coube = true; break; }
+  }
+  if(!coube){
+    alert('Aviso: a lista de recomendações é muito extensa e o PDF ficou com mais de 1 página mesmo com a fonte reduzida ao mínimo.');
+  }
+
+  const sufixo = bloco ? ('_'+bloco.replace(/[^\wÀ-ÿ]+/g,'_')) : '';
+  doc.save(`Plano_Producao_Sugerido${sufixo}.pdf`);
 }
 
 // Carrega o último relatório salvo no banco (chamado ao entrar na aba PCP).
@@ -2568,7 +2963,7 @@ async function carregarRecomendacaoSalva(){
 //  Cada linha tem und ↔ receitas sincronizados por RENDIMENTO_PROD.
 //  Salva em producao_plano_cfg (api_producao_plano_get / _set).
 // ============================================================
-let _rpPlano          = [];    // [{cod, produto, familia, rend, receitas, und}]
+let _rpPlano          = [];    // [{mae, unica, rend, receitas, undTotal, filhotes:[{cod,produto,peso,und}]}]
 let _rpPlanoMeta      = null;  // { fonte, atualizado_em }
 let _rpPlanoLoadTried = false;
 let _rpPlanoOp        = '';    // nº da OP (ex.: "OP 40")
@@ -2582,62 +2977,105 @@ const RP_TURNOS = {
 function rpPlanoSetOp(v){ _rpPlanoOp = v || ''; }
 function rpPlanoSetTurno(v){ _rpPlanoTurno = v || ''; }
 
-// Popula o <select> de adicionar produto (uma vez), por nome.
+// Soma, por código de P.A., quantas unidades já estão alocadas no plano da OP em montagem.
+// Usado pra descontar da quantidade recomendada exibida em "Plano de Produção Sugerido".
+function _rpPlanoUndPorCod(){
+  const mapa = {};
+  _rpPlano.forEach(p => p.filhotes.forEach(f => { mapa[f.cod] = (mapa[f.cod]||0) + (f.und||0); }));
+  return mapa;
+}
+
+// Popula o <select> de adicionar: receitas-mãe + produtos de receita única.
 function _rpPlanoPopularSelect(){
   const sel = document.getElementById('rp-pl-add-sel');
   if(!sel || sel.options.length) return;
-  const cods = Object.keys(SKU).sort((a,b)=>(SKU[a]||'').localeCompare(SKU[b]||'','pt-BR'));
-  sel.innerHTML = cods.map(c=>`<option value="${c}">${c} — ${(SKU[c]||'').toUpperCase()}</option>`).join('');
+  const opMae = RECEITAS_MAE.map((m,i)=>`<option value="mae:${i}">🍞 ${m.nome}</option>`).join('');
+  const unicos = Object.keys(RENDIMENTO_PROD).filter(c=>!(c in _MAE_DE_COD))
+    .sort((a,b)=>(SKU[a]||'').localeCompare(SKU[b]||'','pt-BR'))
+    .map(c=>`<option value="cod:${c}">${c} — ${(SKU[c]||'').toUpperCase()}</option>`).join('');
+  sel.innerHTML = opMae + unicos;
 }
 
-// Copia a recomendação atual para o plano editável.
+// Rateia undTotal do item entre os filhotes pelo peso guardado (soma exata).
+function _rpPlanoRatear(item){
+  if(!item.filhotes.length) return;
+  const pesos = item.filhotes.map(f=>f.peso||0);
+  const soma  = pesos.reduce((s,p)=>s+p,0);
+  const norm  = soma>0 ? pesos.map(p=>p/soma) : pesos.map(()=>1/pesos.length);
+  const und   = _rpRatear(item.undTotal, norm);
+  item.filhotes.forEach((f,i)=>{ f.und = und[i]; });
+}
+
+// Copia a recomendação (mãe-agrupada) para o plano editável.
 function rpMontarPlano(){
   if(!_rpRecs.length){ alert('Sem recomendação para puxar. Importe um relatório primeiro.'); return; }
-  _rpPlano = _rpRecs.map(r => ({
-    cod:r.cod, produto:r.produto, familia:r.familia,
-    rend: parseFloat(RENDIMENTO_PROD[r.cod]) || 0,
-    receitas: r.receitas || 0,
-    und: r.undSug || 0
+  _rpPlano = _rpRecs.map(m => ({
+    mae:m.mae, unica:m.unica, rend:m.rend, receitas:m.receitas, undTotal:m.undTotal,
+    filhotes: m.filhotes.map(f=>({cod:f.cod, produto:f.produto, peso:f.peso, und:f.und}))
   }));
   rpPlanoRender();
 }
 
-// Adiciona um produto avulso ao plano.
+// Adiciona uma receita-mãe ou um produto de receita única ao plano.
 function rpPlanoAdd(){
   const sel = document.getElementById('rp-pl-add-sel');
-  const cod = sel && sel.value;
-  if(!cod) return;
-  if(_rpPlano.some(p=>p.cod===cod)){ alert('Esse produto já está no plano.'); return; }
-  _rpPlano.push({
-    cod, produto:(SKU[cod]||'').toUpperCase(), familia:FAMILIA_PROD[cod]||'—',
-    rend: parseFloat(RENDIMENTO_PROD[cod]) || 0, receitas:0, und:0
-  });
+  const v = sel && sel.value; if(!v) return;
+  let item;
+  if(v.indexOf('mae:')===0){
+    const mae = RECEITAS_MAE[+v.slice(4)]; if(!mae) return;
+    if(_rpPlano.some(p=>!p.unica && p.mae===mae.nome)){ alert('Esse BLEND já está no plano.'); return; }
+    const fs = mae.filhotes.filter(c=>c in RENDIMENTO_PROD);
+    const rend = parseFloat(RENDIMENTO_PROD[fs[0]])||0;
+    item = { mae:mae.nome, unica:false, rend, receitas:0, undTotal:0,
+      filhotes: fs.map(c=>({cod:c, produto:(SKU[c]||'').toUpperCase(), peso:1/fs.length, und:0})) };
+  } else {
+    const cod = v.slice(4);
+    if(_rpPlano.some(p=>p.unica && p.filhotes[0] && p.filhotes[0].cod===cod)){ alert('Esse produto já está no plano.'); return; }
+    const rend = parseFloat(RENDIMENTO_PROD[cod])||0;
+    item = { mae:(SKU[cod]||cod).toUpperCase(), unica:true, rend, receitas:0, undTotal:0,
+      filhotes:[{cod, produto:(SKU[cod]||'').toUpperCase(), peso:1, und:0}] };
+  }
+  _rpPlano.push(item);
   rpPlanoRender();
 }
 
 function rpPlanoRemove(i){ _rpPlano.splice(i,1); rpPlanoRender(); }
 
-// Edição sincronizada und ↔ receitas (via rendimento).
+// Edição no nível da MÃE: receitas ↔ unidades; filhotes recalculados pelo peso.
 function rpPlanoSetReceitas(i, val){
   const p = _rpPlano[i]; if(!p) return;
   p.receitas = Math.max(0, Math.round(parseFloat(val)||0));
-  if(p.rend > 0){ p.und = p.receitas * p.rend; const u=document.getElementById('rp-pl-und-'+i); if(u) u.value = p.und; }
-  _rpPlanoTotais();
+  p.undTotal = p.rend>0 ? p.receitas*p.rend : p.undTotal;
+  _rpPlanoRatear(p);
+  rpPlanoRender();
 }
 function rpPlanoSetUnd(i, val){
   const p = _rpPlano[i]; if(!p) return;
-  p.und = Math.max(0, Math.round(parseFloat(val)||0));
-  if(p.rend > 0){ p.receitas = Math.ceil(p.und / p.rend); const r=document.getElementById('rp-pl-rec-'+i); if(r) r.value = p.receitas; }
-  _rpPlanoTotais();
+  p.undTotal = Math.max(0, Math.round(parseFloat(val)||0));
+  if(p.rend>0) p.receitas = Math.round(p.undTotal/p.rend);
+  _rpPlanoRatear(p);
+  rpPlanoRender();
+}
+
+// Edição no nível do FILHOTE (P.A. individual): total editável, uma unidade de cada vez.
+// Recalcula o undTotal/receitas da mãe a partir da soma dos filhotes, e atualiza os pesos
+// pra que uma futura edição no nível da mãe rateie a partir da divisão manual atual.
+function rpPlanoSetFilhoteUnd(i, j, val){
+  const p = _rpPlano[i]; if(!p || !p.filhotes[j]) return;
+  p.filhotes[j].und = Math.max(0, Math.round(parseFloat(val)||0));
+  p.undTotal = p.filhotes.reduce((s,f)=>s+(f.und||0), 0);
+  if(p.rend>0) p.receitas = Math.round(p.undTotal/p.rend);
+  if(p.undTotal>0) p.filhotes.forEach(f => { f.peso = (f.und||0)/p.undTotal; });
+  rpPlanoRender();
 }
 
 function _rpPlanoTotais(){
   const tot = document.getElementById('rp-pl-total');
   if(!tot) return;
   const nR = _rpPlano.reduce((s,p)=>s+(+p.receitas||0),0);
-  const nU = _rpPlano.reduce((s,p)=>s+(+p.und||0),0);
+  const nU = _rpPlano.reduce((s,p)=>s+(+p.undTotal||0),0);
   tot.textContent = _rpPlano.length
-    ? `${_rpPlano.length} produto(s) · ${nR.toLocaleString('pt-BR')} receitas · ${nU.toLocaleString('pt-BR')} unidades`
+    ? `${_rpPlano.length} blend(s) · ${nR.toLocaleString('pt-BR')} receitas · ${nU.toLocaleString('pt-BR')} unidades`
     : '';
 }
 
@@ -2646,24 +3084,34 @@ function rpPlanoRender(){
   const tb = document.getElementById('rp-pl-tbody');
   if(tb){
     if(!_rpPlano.length){
-      tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--txs); padding:24px;">Nenhum item no plano. Puxe da recomendação ou adicione um produto.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--txs); padding:24px;">Nenhum item no plano. Puxe da recomendação ou adicione uma receita.</td></tr>';
     } else {
-      tb.innerHTML = _rpPlano.map((p,i)=>`
-        <tr>
-          <td style="font-size:12px;color:var(--txs);font-weight:500;">${p.cod}</td>
-          <td style="font-size:12.5px;max-width:260px;">${p.produto}</td>
-          <td style="font-size:12px;color:var(--txs);">${p.familia}</td>
+      tb.innerHTML = _rpPlano.map((p,i)=>{
+        const maeRow = `<tr style="background:rgba(91,141,239,.07);">
+          <td style="font-weight:700;font-size:13px;">🍞 ${p.mae}${p.unica?'':` <span style="font-weight:500;color:var(--txs);font-size:11px;">(${p.filhotes.length})</span>`}</td>
           <td style="text-align:right;font-size:12px;color:var(--txs);">${p.rend>0?p.rend:'—'}</td>
-          <td style="text-align:right;"><input id="rp-pl-rec-${i}" type="number" min="0" step="1" value="${p.receitas}" oninput="rpPlanoSetReceitas(${i}, this.value)" style="width:78px;text-align:right;padding:5px 7px;border:1px solid var(--out);border-radius:8px;font-size:13px;"></td>
-          <td style="text-align:right;"><input id="rp-pl-und-${i}" type="number" min="0" step="1" value="${p.und}" oninput="rpPlanoSetUnd(${i}, this.value)" style="width:92px;text-align:right;padding:5px 7px;border:1px solid var(--out);border-radius:8px;font-size:13px;"></td>
+          <td style="text-align:right;"><input id="rp-pl-rec-${i}" type="number" min="0" step="1" value="${p.receitas}" onchange="rpPlanoSetReceitas(${i}, this.value)" style="width:74px;text-align:right;padding:5px 7px;border:1px solid var(--out);border-radius:8px;font-size:13px;font-weight:700;"></td>
+          <td style="text-align:right;"><input id="rp-pl-und-${i}" type="number" min="0" step="1" value="${p.undTotal}" onchange="rpPlanoSetUnd(${i}, this.value)" style="width:92px;text-align:right;padding:5px 7px;border:1px solid var(--out);border-radius:8px;font-size:13px;"></td>
           <td style="text-align:center;"><button onclick="rpPlanoRemove(${i})" title="Remover" style="background:transparent;border:none;color:#B0281A;cursor:pointer;font-size:15px;line-height:1;">✕</button></td>
-        </tr>`).join('');
+        </tr>`;
+        const fRows = p.unica ? '' : p.filhotes.map((f,j)=>`
+          <tr>
+            <td style="padding-left:26px;font-size:12px;color:var(--tx);">↳ <span style="color:var(--txs);">${f.cod}</span> · ${f.produto}</td>
+            <td></td><td></td>
+            <td style="text-align:right;"><input id="rp-pl-fund-${i}-${j}" type="number" min="0" step="1" value="${f.und}" onchange="rpPlanoSetFilhoteUnd(${i}, ${j}, this.value)" style="width:88px;text-align:right;padding:4px 6px;border:1px solid var(--out);border-radius:8px;font-size:12px;"></td>
+            <td></td>
+          </tr>`).join('');
+        return maeRow + fRows;
+      }).join('');
     }
   }
   _rpPlanoTotais();
   _rpPlanoMostrarInfo();
   const opEl = document.getElementById('rp-pl-op'); if(opEl) opEl.value = _rpPlanoOp || '';
   const trEl = document.getElementById('rp-pl-turno'); if(trEl) trEl.value = _rpPlanoTurno || '';
+  // Toda edição no plano da OP muda o quanto já está "coberto" — recalcula o desconto
+  // exibido em "Plano de Produção Sugerido" (não recalcula _rpRecs, só a exibição).
+  rpRender();
 }
 
 function _rpPlanoMostrarInfo(){
@@ -2686,7 +3134,10 @@ async function rpPlanoSalvar(){
       dia: _rpDados ? _rpDados.diaSemana : '', dataBR: _rpDados ? _rpDados.dataBR : '',
       bloco: _rpDados ? (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo : '',
       op: _rpPlanoOp || '', turno: _rpPlanoTurno || '',
-      itens: _rpPlano.map(p=>({cod:p.cod, produto:p.produto, familia:p.familia, rend:p.rend, receitas:p.receitas, und:p.und}))
+      itens: _rpPlano.map(p=>({
+        mae:p.mae, unica:p.unica, rend:p.rend, receitas:p.receitas, undTotal:p.undTotal,
+        filhotes:p.filhotes.map(f=>({cod:f.cod, produto:f.produto, peso:f.peso, und:f.und}))
+      }))
     };
     const fonte = _rpDados ? (_rpDados.fonte||'') : '';
     const resp = await _rpc('api_producao_plano_set', { p_dados: dados, p_fonte: fonte });
@@ -2703,11 +3154,17 @@ async function carregarPlanoSalvo(){
   try {
     const cfg = await _rpc('api_producao_plano_get', {});
     if(cfg && cfg.dados && Array.isArray(cfg.dados.itens)){
-      _rpPlano = cfg.dados.itens.map(p=>({
-        cod:String(p.cod), produto:p.produto||(SKU[p.cod]||'').toUpperCase(), familia:p.familia||FAMILIA_PROD[p.cod]||'—',
-        rend: parseFloat(p.rend) || parseFloat(RENDIMENTO_PROD[p.cod]) || 0,
-        receitas:+p.receitas||0, und:+p.und||0
-      }));
+      _rpPlano = cfg.dados.itens.map(p=>{
+        if(Array.isArray(p.filhotes)){
+          return { mae:p.mae, unica:!!p.unica, rend:+p.rend||0, receitas:+p.receitas||0, undTotal:+p.undTotal||0,
+            filhotes:p.filhotes.map(f=>({cod:String(f.cod), produto:f.produto||(SKU[f.cod]||'').toUpperCase(), peso:+f.peso||0, und:+f.und||0})) };
+        }
+        // compat: formato antigo por código
+        const cod=String(p.cod);
+        return { mae:(SKU[cod]||cod).toUpperCase(), unica:true, rend:+p.rend||parseFloat(RENDIMENTO_PROD[cod])||0,
+          receitas:+p.receitas||0, undTotal:+p.und||0,
+          filhotes:[{cod, produto:p.produto||(SKU[cod]||'').toUpperCase(), peso:1, und:+p.und||0}] };
+      });
       _rpPlanoMeta = { fonte: cfg.fonte, atualizado_em: cfg.atualizado_em };
       _rpPlanoOp = cfg.dados.op || '';
       _rpPlanoTurno = cfg.dados.turno || '';
@@ -2719,7 +3176,11 @@ async function carregarPlanoSalvo(){
 // Texto simples do plano p/ WhatsApp/e-mail.
 function rpPlanoCopiar(){
   if(!_rpPlano.length){ alert('Nada para copiar. Monte o plano primeiro.'); return; }
-  const linhas = _rpPlano.filter(p=>p.receitas||p.und).map(p=>`${p.cod} - ${p.produto} - ${p.receitas} rec. (${p.und} und)`);
+  const linhas = _rpPlano.filter(p=>p.receitas||p.undTotal).map(p=>{
+    let l = `▪ ${p.mae}: ${p.receitas} rec. = ${p.undTotal} und`;
+    if(!p.unica) l += '\n' + p.filhotes.map(f=>`     • ${f.produto}: ${f.und} und`).join('\n');
+    return l;
+  });
   const cab = [
     `RELATÓRIO DE PRODUÇÃO (MRP)` + (_rpDados&&_rpDados.dataBR?` — ${_rpDados.dataBR}`:''),
     _rpPlanoOp ? `OP: ${_rpPlanoOp}` : '',
@@ -2738,14 +3199,117 @@ function rpPlanoExportar(){
   if(_rpPlanoOp) aoa.push(['OP:', _rpPlanoOp]);
   if(_rpPlanoTurno) aoa.push(['Turno:', RP_TURNOS[_rpPlanoTurno] || _rpPlanoTurno]);
   if(aoa.length) aoa.push([]);
-  aoa.push(['Código','Produto','Família','Rendimento (pães/receita)','Receitas','Unidades']);
-  _rpPlano.forEach(p=>aoa.push([p.cod, p.produto, p.familia, p.rend||'', p.receitas, p.und]));
-  aoa.push(['','','','TOTAL', _rpPlano.reduce((s,p)=>s+(+p.receitas||0),0), _rpPlano.reduce((s,p)=>s+(+p.und||0),0)]);
+  aoa.push(['Tipo','BLEND / Produto','Código','Rendimento (pães/receita)','Receitas','Unidades']);
+  _rpPlano.forEach(p=>{
+    aoa.push(['BLEND', p.mae, '', p.rend||'', p.receitas, p.undTotal]);
+    if(!p.unica) p.filhotes.forEach(f=>aoa.push(['  P.A.', f.produto, f.cod, '', '', f.und]));
+  });
+  aoa.push(['','TOTAL','','', _rpPlano.reduce((s,p)=>s+(+p.receitas||0),0), _rpPlano.reduce((s,p)=>s+(+p.undTotal||0),0)]);
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Produção MRP');
   const dia = _rpDados && _rpDados.dataBR ? '_'+_rpDados.dataBR.replace(/\//g,'-') : '';
   XLSX.writeFile(wb, `Relatorio_Producao_MRP${dia}.xlsx`);
+}
+
+// ============================================================
+//  CADASTRO DE BLENDS — o usuário define quais pães cada blend faz.
+//  Sobrescreve RECEITAS_MAE e salva na nuvem (blend_cfg / api_blend_*).
+// ============================================================
+let _blendEdit = null;   // cópia de trabalho enquanto o modal está aberto
+
+// Rendimento representativo de um blend (1º filhote com rendimento cadastrado).
+function _blendRend(m){ const f=(m.filhotes||[]).find(c=>c in RENDIMENTO_PROD); return f?RENDIMENTO_PROD[f]:0; }
+
+// Troca os blends ativos e reindexa código->blend.
+function _aplicarBlends(cfg){
+  RECEITAS_MAE = (cfg && cfg.length ? cfg : RECEITAS_MAE_DEFAULT).map(m=>({ nome:m.nome, filhotes:(m.filhotes||[]).slice() }));
+  _rebuildMaeIndex();
+  const s=document.getElementById('rp-pl-add-sel'); if(s) s.innerHTML=''; // força repopular o select do MRP
+}
+
+async function carregarBlendsSalvo(){
+  try{
+    const c = await _rpc('api_blend_get', {});
+    if(c && c.dados && Array.isArray(c.dados.blends) && c.dados.blends.length){ _aplicarBlends(c.dados.blends); }
+  }catch(_){ /* silencioso: mantém o padrão embutido */ }
+}
+
+function blendAbrir(){
+  _blendEdit = RECEITAS_MAE.map(m=>({ nome:m.nome, filhotes:m.filhotes.slice() }));
+  document.getElementById('modal-blend').style.display='flex';
+  blendRenderCadastro();
+}
+function blendFechar(){ document.getElementById('modal-blend').style.display='none'; _blendEdit=null; }
+function blendNovo(){ _blendEdit.push({ nome:'Novo blend', filhotes:[] }); blendRenderCadastro(); }
+function blendExcluir(i){ _blendEdit.splice(i,1); blendRenderCadastro(); }
+function blendRenomear(i,v){ if(_blendEdit[i]) _blendEdit[i].nome = (v||'').trim() || ('Blend '+(i+1)); }
+function blendRestaurarPadrao(){
+  if(!confirm('Restaurar os blends padrão? As alterações não salvas aqui serão perdidas.')) return;
+  _blendEdit = RECEITAS_MAE_DEFAULT.map(m=>({ nome:m.nome, filhotes:m.filhotes.slice() }));
+  blendRenderCadastro();
+}
+function blendAddProduto(i, cod){
+  if(!cod || !_blendEdit[i]) return;
+  _blendEdit.forEach(m=>{ const k=m.filhotes.indexOf(cod); if(k>=0) m.filhotes.splice(k,1); }); // 1 produto em 1 blend só
+  _blendEdit[i].filhotes.push(cod);
+  blendRenderCadastro();
+}
+function blendRemoverProduto(i, cod){
+  if(!_blendEdit[i]) return;
+  const k=_blendEdit[i].filhotes.indexOf(cod); if(k>=0) _blendEdit[i].filhotes.splice(k,1);
+  blendRenderCadastro();
+}
+
+function blendRenderCadastro(){
+  const usados = new Set(); _blendEdit.forEach(m=>m.filhotes.forEach(c=>usados.add(c)));
+  const disp = Object.keys(RENDIMENTO_PROD).filter(c=>!usados.has(c)).sort((a,b)=>(SKU[a]||'').localeCompare(SKU[b]||'','pt-BR'));
+  const optDisp = disp.map(c=>`<option value="${c}">${c} — ${(SKU[c]||'').toUpperCase()} (rend ${RENDIMENTO_PROD[c]})</option>`).join('');
+
+  const lista = document.getElementById('blend-lista');
+  lista.innerHTML = _blendEdit.map((m,i)=>{
+    const rend = _blendRend(m);
+    const chips = (m.filhotes||[]).map(c=>{
+      const r = RENDIMENTO_PROD[c];
+      const mismatch = rend>0 && r>0 && r!==rend;
+      const nome = (SKU[c]||c).toUpperCase();
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--surv);border:1px solid ${mismatch?'#C8941A':'var(--out)'};border-radius:16px;padding:3px 8px;font-size:11.5px;color:var(--tx);">
+        <span style="color:var(--txs);">${c}</span> ${nome.length>24?nome.slice(0,22)+'…':nome} <span style="color:var(--txs);">(${r||'—'})</span>${mismatch?' <span title="Rendimento diferente do blend">⚠️</span>':''}
+        <b onclick="blendRemoverProduto(${i},'${c}')" style="cursor:pointer;color:#B0281A;">✕</b></span>`;
+    }).join('') || '<span style="font-size:11.5px;color:var(--txs);font-style:italic;">Nenhum produto ainda.</span>';
+    return `<div style="border:1px solid var(--out);border-radius:14px;padding:12px;margin-bottom:10px;">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input value="${(m.nome||'').replace(/"/g,'&quot;')}" onchange="blendRenomear(${i}, this.value)" placeholder="Nome do blend" style="flex:1;padding:6px 9px;border:1px solid var(--out);border-radius:8px;font-size:13px;font-weight:600;background:var(--sur);color:var(--tx);">
+        <span style="font-size:11px;color:var(--txs);white-space:nowrap;">rend ${rend||'—'}</span>
+        <button onclick="blendExcluir(${i})" title="Excluir blend" style="background:transparent;border:none;color:#B0281A;cursor:pointer;font-size:16px;">🗑</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">${chips}</div>
+      <select onchange="blendAddProduto(${i}, this.value)" style="width:100%;padding:6px 9px;border:1px solid var(--out);border-radius:8px;font-size:12px;background:var(--sur);color:var(--tx);">
+        <option value="">+ adicionar produto...</option>${optDisp}
+      </select>
+    </div>`;
+  }).join('') || '<div style="font-size:12.5px;color:var(--txs);font-style:italic;padding:8px 0;">Nenhum blend. Clique em "+ Novo blend".</div>';
+
+  const sem = document.getElementById('blend-sem');
+  sem.innerHTML = disp.length
+    ? disp.map(c=>`<span style="background:var(--surv);border:1px solid var(--out);border-radius:14px;padding:3px 8px;font-size:11px;color:var(--txs);">${c} · ${(SKU[c]||'').toUpperCase()}</span>`).join('')
+    : '<span style="font-size:11.5px;color:var(--txs);font-style:italic;">Todos os produtos estão em algum blend.</span>';
+}
+
+async function blendSalvar(){
+  const btn=document.getElementById('blend-btn-salvar'); const t=btn?btn.innerHTML:'';
+  if(btn){ btn.disabled=true; btn.innerHTML='⏳ Salvando...'; }
+  try{
+    const cfg = _blendEdit.filter(m=>m.filhotes && m.filhotes.length).map(m=>({ nome:(m.nome||'Blend').trim(), filhotes:m.filhotes.slice() }));
+    await _rpc('api_blend_set', { p_dados: { blends: cfg }, p_fonte: (typeof cd!=='undefined'?cd:'')||'' });
+    _aplicarBlends(cfg);
+    if(_rpDados) rpCalcular();      // recalcula recomendação com os novos blends
+    if(btn){ btn.innerHTML='✅ Salvo!'; }
+    setTimeout(()=>{ blendFechar(); if(btn){ btn.innerHTML=t; btn.disabled=false; } }, 900);
+  }catch(err){
+    if(btn){ btn.innerHTML=t; btn.disabled=false; }
+    alert('❌ Não consegui salvar: '+(err&&err.message?err.message:'erro'));
+  }
 }
 
 const API_URL = "https://script.google.com/macros/s/AKfycbzBmKVbtKmX6-z4g25UDFKN5M5NhpiXt3K3tyn9gzOC7I1I1uvwGNGhhgTTbSrfYaxf/exec";
@@ -3759,8 +4323,11 @@ function switchTab(t){
   document.getElementById('tab-pcp').classList.toggle('active',t==='pcp');
 
   // Ao entrar na aba PCP pela 1ª vez, carrega o relatório salvo no banco
-  if(t==='pcp' && !_rpLoadTried){ _rpLoadTried = true; carregarRecomendacaoSalva(); }
-  if(t==='pcp' && !_rpPlanoLoadTried){ _rpPlanoLoadTried = true; carregarPlanoSalvo(); }
+  if(t==='pcp' && !_rpLoadTried){
+    _rpLoadTried = true;
+    // carrega os blends salvos ANTES de recalcular a recomendação
+    carregarBlendsSalvo().then(() => { carregarRecomendacaoSalva(); carregarPlanoSalvo(); });
+  }
 
   // Se entrou em Controle de datas e a sub-aba ativa é "manual", reconstrói se necessário
   if(t==='controle'){
