@@ -1477,7 +1477,7 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 
       <div class="bn bn-i">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-        <span>Importe o <strong>Relatório de Produção</strong> (aba <strong>Planilha1</strong>). O sistema detecta o dia pelo nome do arquivo, lê o bloco <strong>QUANTIDADES</strong> correspondente e salva na nuvem. Itens com <strong>saldo negativo</strong> viram produção obrigatória; os demais entram por <strong>cobertura baixa</strong> (&lt; 4 dias na CIA), projetando a produção até no máx. 4 dias.</span>
+        <span>Importe o <strong>Relatório de Produção</strong> (aba <strong>Planilha1</strong>). O sistema detecta o dia pelo nome do arquivo, lê o bloco <strong>QUANTIDADES</strong> correspondente e salva na nuvem. Itens com <strong>saldo negativo</strong> vão para a sub-aba <strong>🔴 Saldo Negativo</strong> (produção pra repor o que já furou o estoque). As sub-abas <strong>🥣 BLEND — PRODUZIR PARA ESTOQUE</strong> e <strong>📦 PRODUTO ACABADO — PRODUZIR PARA ESTOQUE</strong> mostram só produção por antecipação de demanda (cobertura baixa, &lt; 4 dias na CIA), incluindo os itens com cobertura alta (motivo "OK", nada a produzir agora) pra dar visão completa.</span>
       </div>
 
       <input type="file" id="rp-fi" accept=".xlsx,.xls" style="display:none" onchange="rpHandleFile(this.files[0])">
@@ -1496,14 +1496,6 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
         <div class="ci gn" style="font-size:18px;">🏭</div>
         <div><div class="ct" style="font-size:15px;">Plano de Produção Sugerido</div><div class="cs" id="rp-contagem">Importe um relatório para gerar o plano.</div></div>
         <div style="margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <label style="font-size:13px; color:var(--txs); display:flex; align-items:center; gap:6px;">Cobertura:
-            <select id="rp-sel-cobertura" onchange="rpMudarCobertura(this.value)" style="padding:6px 10px; font-size:13px; border-radius:6px; border:1px solid var(--bd,#ccc);">
-              <option value="1">1 dia</option>
-              <option value="2">2 dias</option>
-              <option value="3">3 dias</option>
-              <option value="4" selected>4 dias</option>
-            </select>
-          </label>
           <button class="btn btn-o" onclick="blendAbrir()" style="padding:8px 14px; font-size:13px;">⚙️ Cadastrar Blends</button>
           <button class="btn btn-o" id="rp-btn-copiar" onclick="rpCopiarResumo()" style="padding:8px 14px; font-size:13px;">📋 Copiar resumo</button>
           <button class="btn btn-o" onclick="rpExportarExcel()" style="padding:8px 14px; font-size:13px;">⬇️ Exportar Excel</button>
@@ -1525,12 +1517,31 @@ td select.rf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
           <label for="rp-f-busca" style="font-size:11px;">Buscar</label>
           <input type="text" id="rp-f-busca" placeholder="Código ou nome..." oninput="rpFiltrar()">
         </div>
+        <div class="f" style="margin:0;">
+          <label for="rp-f-familia" style="font-size:11px;">Família</label>
+          <select id="rp-f-familia" onchange="rpFiltrar()"><option value="">Todas as famílias</option></select>
+        </div>
       </div>
 
-      <!-- Toggle de visualização: BLEND x PRODUTO ACABADO -->
-      <div style="display:flex; gap:8px; margin-bottom:14px;">
-        <button class="btn btn-t" id="rp-view-blend" onclick="rpSetView('blend')" style="font-size:12.5px; padding:8px 16px; border-radius:14px;">🥣 BLEND</button>
-        <button class="btn btn-t" id="rp-view-pa" onclick="rpSetView('pa')" style="font-size:12.5px; padding:8px 16px; border-radius:14px;">📦 PRODUTO ACABADO</button>
+      <!-- Cobertura: só faz sentido pra produção pra estoque (BLEND/P.A.) — fica oculta na
+           sub-aba Saldo Negativo, onde a quantidade é o déficit exato, não uma projeção de dias. -->
+      <div id="rp-cobertura-wrap" style="display:flex; justify-content:center; margin-bottom:16px;">
+        <label style="font-size:14px; color:var(--tx); display:flex; align-items:center; gap:10px; font-weight:600;">
+          Produzir para quanto tempo de estoque?
+          <select id="rp-sel-cobertura" onchange="rpMudarCobertura(this.value)" style="padding:10px 18px; font-size:16px; font-weight:700; border-radius:10px; border:1.5px solid var(--bd,#ccc);">
+            <option value="1">1 dia</option>
+            <option value="2">2 dias</option>
+            <option value="3">3 dias</option>
+            <option value="4" selected>4 dias</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Toggle de visualização: SALDO NEGATIVO x PRODUTO ACABADO x BLEND -->
+      <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+        <button class="btn btn-t" id="rp-view-neg" onclick="rpSetView('neg')" style="font-size:12.5px; padding:8px 16px; border-radius:14px;">🔴 SALDO NEGATIVO</button>
+        <button class="btn btn-t" id="rp-view-pa" onclick="rpSetView('pa')" style="font-size:12.5px; padding:8px 16px; border-radius:14px;">📦 PRODUTO ACABADO — PRODUZIR PARA ESTOQUE</button>
+        <button class="btn btn-t" id="rp-view-blend" onclick="rpSetView('blend')" style="font-size:12.5px; padding:8px 16px; border-radius:14px;">🥣 BLEND — PRODUZIR PARA ESTOQUE</button>
       </div>
 
       <div class="tw">
@@ -2268,7 +2279,7 @@ let _rpMeta       = null;  // { fonte, atualizado_em }
 let _rpEstoqueCia = {};    // cod -> estoque total da CIA (soma abs(quantidade) de todos os CDs, da api_relatorio)
 let _rpRecs       = [];    // linhas calculadas (obrigatório + sugestão)
 let _rpLoadTried  = false; // já tentou carregar do banco?
-let _rpView       = 'blend'; // sub-aba ativa da tabela: 'blend' (pré-pesagem) | 'pa' (embalagem)
+let _rpView       = 'neg'; // sub-aba ativa da tabela: 'neg' (saldo negativo) | 'pa' (embalagem) | 'blend' (pré-pesagem)
 
 function rpEscolherArquivo(){
   const fi = document.getElementById('rp-fi');
@@ -2498,7 +2509,7 @@ function rpCalcular(){
     const rend = parseFloat(RENDIMENTO_PROD[fs[0]]) || 0;   // filhotes da mãe compartilham o rendimento
     if(rend <= 0) return;
 
-    let vendaMae = 0, estMae = 0, algumNeg = false, temVenda = false;
+    let vendaMae = 0, estMae = 0, algumNeg = false;
     const det = fs.map(c => {
       const venda = parseFloat(VENDA_DIARIA_CIA[c]) || 0;
       const saldo = saldoDe(c);
@@ -2507,18 +2518,15 @@ function rpCalcular(){
       // pra não inflar a cobertura de um produto que na prática já zerou.
       const est   = (saldo !== null && saldo < 0) ? 0 : (_rpEstoqueCia[c] || 0);
       vendaMae += venda; estMae += est;
-      if(venda > 0) temVenda = true;
       if(saldo !== null && saldo < 0) algumNeg = true;
       return { cod:c, produto:(SKU[c]||'').toUpperCase(), venda, est, saldo };
     });
-    if(!temVenda) return;
-    const cobMae = estMae / vendaMae;
-    if(cobMae > RP_META_COBERTURA) return;                  // >4 dias: não recomenda
-
+    // Mostra o item mesmo sem venda registrada ou com cobertura acima da meta —
+    // nesses casos receitas fica 0 e o motivo vira 'OK' (ver abaixo).
+    const cobMae = vendaMae > 0 ? estMae / vendaMae : null;
     const receitas = _rpReceitasAteMeta(rend, estMae, vendaMae);
-    if(receitas < 1) return;
     const undTotal   = receitas * rend;
-    const cobProjMae = (estMae + undTotal) / vendaMae;
+    const cobProjMae = vendaMae > 0 ? (estMae + undTotal) / vendaMae : null;
 
     // rateio das unidades por DÉFICIT (fallback: venda) de cada filhote
     const defs = det.map(d => ({ ...d, deficit: Math.max(0, RP_META_COBERTURA*d.venda - d.est) }));
@@ -2540,17 +2548,25 @@ function rpCalcular(){
     const saldosVal = defs.map(d=>d.saldo).filter(s=>s!==null);
     const saldoTotal = saldosVal.length ? saldosVal.reduce((s,v)=>s+v,0) : null;
 
+    const motivo = algumNeg ? 'OBRIG' : (receitas >= 1 ? 'SUG' : 'OK');
+    const motivoLabel = algumNeg ? 'Obrigatório - saldo negativo'
+      : (receitas >= 1 ? 'Sugestão - cobertura baixa' : 'OK - cobertura suficiente');
+
     _rpRecs.push({
       mae:g.nome, unica:g.unica, rend, familia: FAMILIA_PROD[fs[0]] || '—',
-      motivo: algumNeg ? 'OBRIG' : 'SUG',
-      motivoLabel: algumNeg ? 'Obrigatório - saldo negativo' : 'Sugestão - cobertura baixa',
+      motivo, motivoLabel,
       cobAtual: cobMae, cobProj: cobProjMae, receitas, undTotal, filhotes, saldoTotal
     });
   });
 
-  // Obrigatórios primeiro; dentro de cada grupo, menor cobertura no topo.
+  // Obrigatórios primeiro, depois sugestões, depois "OK" (cobertura suficiente);
+  // dentro de cada grupo, menor cobertura no topo (sem cobertura registrada vai ao final).
+  const ORDEM_MOTIVO = { OBRIG:0, SUG:1, OK:2 };
   _rpRecs.sort((a,b) => {
-    if(a.motivo !== b.motivo) return a.motivo === 'OBRIG' ? -1 : 1;
+    if(a.motivo !== b.motivo) return ORDEM_MOTIVO[a.motivo] - ORDEM_MOTIVO[b.motivo];
+    if(a.cobAtual === null && b.cobAtual === null) return a.mae.localeCompare(b.mae, 'pt-BR');
+    if(a.cobAtual === null) return 1;
+    if(b.cobAtual === null) return -1;
     return a.cobAtual - b.cobAtual;
   });
   rpRender();
@@ -2558,9 +2574,10 @@ function rpCalcular(){
 
 // Troca a sub-aba ativa (blend agrupado x P.A. achatado) e re-renderiza.
 function rpSetView(view){
-  _rpView = (view === 'pa') ? 'pa' : 'blend';
+  _rpView = (view === 'pa') ? 'pa' : (view === 'neg') ? 'neg' : 'blend';
   const busca = document.getElementById('rp-f-busca');
-  if(busca) busca.placeholder = _rpView === 'pa' ? 'Código ou nome do produto...' : 'Código ou nome do blend...';
+  if(busca) busca.placeholder = _rpView === 'pa' ? 'Código ou nome do produto...'
+    : _rpView === 'neg' ? 'Código ou nome do produto negativo...' : 'Código ou nome do blend...';
   rpRender();
 }
 
@@ -2574,18 +2591,43 @@ function _rpFlattenPA(){
       lista.push({
         cod: f.cod, produto: f.produto, saldo: f.saldo,
         cobAtual: f.cobAtual, cobProj: f.cobProj, und: f.und,
-        motivo: mae.motivo, motivoLabel: mae.motivoLabel, mae: mae.mae
+        motivo: mae.motivo, motivoLabel: mae.motivoLabel, mae: mae.mae,
+        familia: FAMILIA_PROD[f.cod] || mae.familia
       });
     });
   });
-  // Obrigatório (saldo negativo) primeiro; depois, menor cobertura atual no topo (— vai por último).
+  // Obrigatório (saldo negativo) primeiro, depois sugestão, depois OK;
+  // dentro de cada grupo, menor cobertura atual no topo (— vai por último).
+  const ORDEM_MOTIVO = { OBRIG:0, SUG:1, OK:2 };
   lista.sort((a,b) => {
-    if(a.motivo !== b.motivo) return a.motivo === 'OBRIG' ? -1 : 1;
+    if(a.motivo !== b.motivo) return ORDEM_MOTIVO[a.motivo] - ORDEM_MOTIVO[b.motivo];
     const ca = (a.cobAtual===null||a.cobAtual===undefined) ? Infinity : a.cobAtual;
     const cb = (b.cobAtual===null||b.cobAtual===undefined) ? Infinity : b.cobAtual;
     return ca - cb;
   });
   return lista;
+}
+
+// Itens do bloco importado (dia atual) com saldo negativo no relatório bruto —
+// quantidade EXATA (sem rateio pelas receitas), pra separar "produzir para
+// repor estoque" (o que já está negativo) de "produzir para demanda" (cobertura baixa).
+function _rpItensNegativos(){
+  if(!_rpDados) return [];
+  const bloco = _rpDados.blocos[_rpDados.blocoIdx] || { itens:{} };
+  const itens = bloco.itens || {};
+  return Object.keys(itens)
+    .filter(cod => itens[cod].und < 0)
+    .map(cod => {
+      // Arredonda o saldo pra cima (em módulo) — inteiro, nunca menos que o déficit real.
+      const saldo = -Math.ceil(Math.abs(itens[cod].und));
+      const rend  = parseFloat(RENDIMENTO_PROD[cod]) || 0;
+      const receitas = rend > 0 ? Math.ceil(Math.abs(saldo) / rend) : null;
+      return {
+        cod, produto: (SKU[cod] || itens[cod].produto || '').toUpperCase(),
+        saldo, rend, receitas, familia: FAMILIA_PROD[cod] || '—'
+      };
+    })
+    .sort((a,b) => a.saldo - b.saldo);
 }
 
 // Expande/oculta as linhas de P.A. filhas de um blend na sub-aba BLEND (clique na linha-mãe).
@@ -2598,16 +2640,38 @@ function rpToggleBlend(groupId){
   if(arrow) arrow.textContent = aberto ? '▸' : '▾';
 }
 
+// Popula o <select> de família (uma vez só) com as famílias de FAMILIA_PROD,
+// no mesmo padrão do filtro de família usado nos Indicadores da CIA/Consolidado.
+function _rpPopularFiltroFamilia(){
+  const sel = document.getElementById('rp-f-familia');
+  if(!sel || sel.options.length > 1) return;
+  const familias = _familiasUnicas();
+  sel.innerHTML = `<option value="">Todas as famílias</option>` +
+    familias.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+// Cores/estilo do selo de motivo — inclui o novo 'OK' (cobertura suficiente,
+// mostrado mesmo sem necessidade de produção, para dar visão de tudo).
+function _rpMotivoEstilo(motivo){
+  if(motivo === 'OBRIG') return { bg:'#FDECEA', cor:'#B0281A' };
+  if(motivo === 'SUG')   return { bg:'#FEF6E7', cor:'#8A5B00' };
+  return { bg:'#EAF3EA', cor:'#2E7D32' };
+}
+
 // Renderiza a tabela aplicando filtro de busca.
 // Reaproveita os mesmos _rpRecs já calculados por rpCalcular(); só muda como exibir,
 // de acordo com a sub-aba ativa (_rpView: 'blend' agrupado x 'pa' achatado).
 function rpRender(){
-  const bq = _normCab((document.getElementById('rp-f-busca')||{}).value || '');
+  _rpPopularFiltroFamilia();
+  const bq  = _normCab((document.getElementById('rp-f-busca')||{}).value || '');
+  const fam = (document.getElementById('rp-f-familia')||{}).value || '';
   const dstr = c => c===null||c===undefined ? '—' : c.toFixed(1)+'d';
   const sstr = s => {
     if(s===null||s===undefined) return '<span style="color:var(--txs);">—</span>';
-    const cor = s<0 ? '#B0281A' : '#1E7A34';
-    const txt = (s>0?'+':'') + s.toLocaleString('pt-BR');
+    // Só a cobertura (dstr) mostra casas decimais — saldo/quantidade é sempre inteiro.
+    const r = Math.round(s);
+    const cor = r<0 ? '#B0281A' : '#1E7A34';
+    const txt = (r>0?'+':'') + r.toLocaleString('pt-BR');
     return `<span style="color:${cor};font-weight:700;">${txt}</span>`;
   };
   // Unidades já alocadas na OP em montagem (Montar Produção), por código de P.A. —
@@ -2630,12 +2694,65 @@ function rpRender(){
   // (ex.: rpCalcular após trocar bloco), sem depender de rpSetView ter sido chamada antes.
   const bBlend = document.getElementById('rp-view-blend');
   const bPa    = document.getElementById('rp-view-pa');
-  [[bBlend,'blend'],[bPa,'pa']].forEach(([b,v]) => {
+  const bNeg   = document.getElementById('rp-view-neg');
+  [[bBlend,'blend'],[bPa,'pa'],[bNeg,'neg']].forEach(([b,v]) => {
     if(!b) return;
     const ativo = _rpView === v;
     b.style.background = ativo ? 'var(--p)' : 'var(--pc)';
     b.style.color = ativo ? '#fff' : 'var(--sec)';
   });
+
+  // Cobertura só se aplica à produção pra estoque (projeção de dias) — não existe
+  // conceito de "dias de cobertura" no Saldo Negativo (é o déficit exato do relatório).
+  const coberturaWrap = document.getElementById('rp-cobertura-wrap');
+  if(coberturaWrap) coberturaWrap.style.display = (_rpView === 'neg') ? 'none' : 'flex';
+
+  if(_rpView === 'neg'){
+    // -------- Sub-aba Saldo Negativo: só o que está negativo no relatório importado,
+    // com a quantidade EXATA do saldo (sem passar pelo rateio/rendimento das receitas) —
+    // usada pra separar "produzir para repor estoque" (aqui) de "produzir para demanda" (BLEND/P.A.).
+    if(thead) thead.innerHTML = `<tr>
+      <th>Código / Produto</th>
+      <th>Família</th>
+      <th style="text-align:right">Saldo negativo</th>
+      <th style="text-align:right">Receitas</th>
+    </tr>`;
+
+    const itensNeg = _rpItensNegativos().filter(it => {
+      if(fam && it.familia !== fam) return false;
+      if(bq){
+        const alvo = _normCab(it.cod + ' ' + it.produto);
+        if(!alvo.includes(bq)) return false;
+      }
+      return true;
+    });
+
+    if(tbody){
+      if(!_rpDados){
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--txs);padding:28px;">Importe um relatório de produção para ver os saldos negativos.</td></tr>';
+      } else if(!itensNeg.length){
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--txs);padding:24px;">Nenhum item com saldo negativo (com os filtros aplicados).</td></tr>';
+      } else {
+        tbody.innerHTML = itensNeg.map(it => `<tr>
+            <td style="font-size:12.5px;"><span style="color:var(--txs);">${it.cod}</span> · ${it.produto}</td>
+            <td style="font-size:12px;color:var(--txs);">${it.familia}</td>
+            <td style="text-align:right;">${sstr(it.saldo)}</td>
+            <td style="text-align:right;font-weight:700;">${it.receitas===null ? '—' : it.receitas.toLocaleString('pt-BR')}</td>
+          </tr>`).join('');
+      }
+    }
+
+    const cont = document.getElementById('rp-contagem');
+    if(cont){
+      if(!_rpDados){ cont.textContent = 'Importe um relatório para gerar o plano.'; }
+      else {
+        const totNeg = Math.abs(itensNeg.reduce((s,it)=>s+it.saldo, 0));
+        const totRec = itensNeg.reduce((s,it)=>s+(it.receitas||0), 0);
+        cont.textContent = `${itensNeg.length} item(ns) negativo(s) · ${totNeg.toLocaleString('pt-BR')} unidades a repor · ${totRec.toLocaleString('pt-BR')} receitas no total`;
+      }
+    }
+    return;
+  }
 
   if(_rpView === 'pa'){
     // -------- Sub-aba P.A. (embalagem): lista achatada, uma linha por produto acabado --------
@@ -2648,7 +2765,11 @@ function rpRender(){
       <th style="text-align:right">Unidades a produzir</th>
     </tr>`;
 
+    // Saldo negativo já tem aba própria (🔴 SALDO NEGATIVO) — aqui só entra o que é
+    // produção pra estoque (cobertura baixa ou OK), nunca o obrigatório por saldo negativo.
     const itensPA = _rpFlattenPA().filter(it => {
+      if(it.motivo === 'OBRIG') return false;
+      if(fam && it.familia !== fam) return false;
       if(bq){
         const alvo = _normCab(it.cod + ' ' + it.produto);
         if(!alvo.includes(bq)) return false;
@@ -2663,9 +2784,7 @@ function rpRender(){
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--txs);padding:24px;">Nenhuma recomendação com os filtros aplicados.</td></tr>';
       } else {
         tbody.innerHTML = itensPA.map(it => {
-          const ob  = it.motivo === 'OBRIG';
-          const bg  = ob ? '#FDECEA' : '#FEF6E7';
-          const cor = ob ? '#B0281A' : '#8A5B00';
+          const { bg, cor } = _rpMotivoEstilo(it.motivo);
           const jaNoPlano = undPorCodPlano[it.cod] || 0;
           const restante  = Math.max(0, it.und - jaNoPlano);
           return `<tr>
@@ -2684,10 +2803,10 @@ function rpRender(){
     if(cont){
       if(!_rpDados){ cont.textContent = 'Importe um relatório para gerar o plano.'; }
       else {
-        const nOb = itensPA.filter(it=>it.motivo==='OBRIG').length;
         const nSu = itensPA.filter(it=>it.motivo==='SUG').length;
+        const nOk = itensPA.filter(it=>it.motivo==='OK').length;
         const totUnd = itensPA.reduce((s,it)=>s+(it.und||0),0);
-        cont.textContent = `${nOb} obrigatório(s) · ${nSu} sugestão(ões) · ${itensPA.length} produto(s) · ${totUnd.toLocaleString('pt-BR')} unidades no total`;
+        cont.textContent = `${nSu} sugestão(ões) · ${nOk} sem necessidade · ${itensPA.length} produto(s) · ${totUnd.toLocaleString('pt-BR')} unidades no total`;
       }
     }
     return;
@@ -2704,7 +2823,11 @@ function rpRender(){
     <th style="text-align:right">Unidades</th>
   </tr>`;
 
+  // Saldo negativo já tem aba própria (🔴 SALDO NEGATIVO) — aqui só entra o que é
+  // produção pra estoque (cobertura baixa ou OK), nunca o obrigatório por saldo negativo.
   const linhas = _rpRecs.filter(mae => {
+    if(mae.motivo === 'OBRIG') return false;
+    if(fam && mae.familia !== fam) return false;
     if(bq){
       const alvo = _normCab(mae.mae + ' ' + mae.filhotes.map(f=>f.cod+' '+f.produto).join(' '));
       if(!alvo.includes(bq)) return false;
@@ -2719,10 +2842,8 @@ function rpRender(){
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--txs);padding:24px;">Nenhuma recomendação com os filtros aplicados.</td></tr>';
     } else {
       tbody.innerHTML = linhas.map((mae, idx) => {
-        const ob  = mae.motivo === 'OBRIG';
-        const bg  = ob ? '#FDECEA' : '#FEF6E7';
-        const cor = ob ? '#B0281A' : '#8A5B00';
-        const tint = ob ? 'rgba(176,40,26,.06)' : 'rgba(138,91,0,.06)';
+        const { bg, cor } = _rpMotivoEstilo(mae.motivo);
+        const tint = mae.motivo === 'SUG' ? 'rgba(138,91,0,.06)' : 'rgba(46,125,50,.06)';
         const temFilhos = !mae.unica;
         const groupId = `rp-blend-${idx}`;
         const arrow = temFilhos ? `<span id="${groupId}-arrow" style="display:inline-block;width:12px;">▸</span> ` : '';
@@ -2762,10 +2883,10 @@ function rpRender(){
   if(cont){
     if(!_rpDados){ cont.textContent = 'Importe um relatório para gerar o plano.'; }
     else {
-      const nOb = _rpRecs.filter(r=>r.motivo==='OBRIG').length;
-      const nSu = _rpRecs.filter(r=>r.motivo==='SUG').length;
-      const totGr = _rpRecs.reduce((s,r)=>s+(r.receitas||0),0);
-      cont.textContent = `${nOb} obrigatória(s) · ${nSu} sugestão(ões) · ${totGr.toLocaleString('pt-BR')} receitas no total`;
+      const nSu = linhas.filter(r=>r.motivo==='SUG').length;
+      const nOk = linhas.filter(r=>r.motivo==='OK').length;
+      const totGr = linhas.reduce((s,r)=>s+(r.receitas||0),0);
+      cont.textContent = `${nSu} sugestão(ões) · ${nOk} sem necessidade · ${totGr.toLocaleString('pt-BR')} receitas no total`;
     }
   }
 }
@@ -2787,12 +2908,14 @@ function rpCopiarResumo(){
   const sfmt = s => s===null||s===undefined ? '' : ` (saldo ${s>0?'+':''}${s})`;
   const bloco = _rpDados ? (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo : '';
   let linhas, titulo;
+  // Só entra o que é produção pra estoque (sugestão por cobertura baixa) — 'OK' (nada a
+  // produzir) e 'OBRIG' (saldo negativo, já coberto pela aba própria) ficam de fora.
   if(_rpView === 'pa'){
-    titulo = 'RECOMENDAÇÃO DE PRODUÇÃO — P.A. (EMBALAGEM)';
-    linhas = _rpFlattenPA().map(it => `▪ ${it.cod} · ${it.produto}: ${it.und} und${sfmt(it.saldo)}${it.motivo==='OBRIG'?' (obrigatório)':''}`);
+    titulo = 'RECOMENDAÇÃO DE PRODUÇÃO — P.A. (EMBALAGEM) — PRODUZIR PARA ESTOQUE';
+    linhas = _rpFlattenPA().filter(it => it.motivo === 'SUG').map(it => `▪ ${it.cod} · ${it.produto}: ${it.und} und${sfmt(it.saldo)}`);
   } else {
-    titulo = 'RECOMENDAÇÃO DE PRODUÇÃO — BLEND (PRÉ-PESAGEM)';
-    linhas = _rpRecs.map(mae => {
+    titulo = 'RECOMENDAÇÃO DE PRODUÇÃO — BLEND (PRÉ-PESAGEM) — PRODUZIR PARA ESTOQUE';
+    linhas = _rpRecs.filter(mae => mae.motivo === 'SUG').map(mae => {
       let l = `▪ ${mae.mae}: ${mae.receitas} receita(s) = ${mae.undTotal} und${sfmt(mae.saldoTotal)}`;
       if(!mae.unica) l += '\n' + mae.filhotes.map(f=>`     • ${f.produto}: ${f.und} und${sfmt(f.saldo)}`).join('\n');
       return l;
@@ -2816,16 +2939,18 @@ function rpExportarExcel(){
   if(!_rpRecs.length){ alert('Nada para exportar. Importe um relatório primeiro.'); return; }
   const bloco = _rpDados ? (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo : '';
   let aoa, aba;
+  // Só entra o que é produção pra estoque (sugestão por cobertura baixa) — 'OK' (nada a
+  // produzir) e 'OBRIG' (saldo negativo, já coberto pela aba própria) ficam de fora.
   if(_rpView === 'pa'){
     aba = 'Recomendação P.A.';
     aoa = [['Código','Produto','Motivo','Saldo relatório','Cobertura atual (d)','Cobertura projetada (d)','Unidades a produzir']];
-    _rpFlattenPA().forEach(it => aoa.push([it.cod, it.produto, it.motivoLabel,
+    _rpFlattenPA().filter(it => it.motivo === 'SUG').forEach(it => aoa.push([it.cod, it.produto, it.motivoLabel,
       it.saldo===null?'':it.saldo,
       it.cobAtual===null?'':+it.cobAtual.toFixed(1), it.cobProj===null?'':+it.cobProj.toFixed(1), it.und]));
   } else {
     aba = 'Recomendação';
     aoa = [['Tipo','BLEND','Código','Produto','Motivo','Saldo relatório','Cobertura atual (d)','Cobertura projetada (d)','Receitas','Unidades']];
-    _rpRecs.forEach(mae => {
+    _rpRecs.filter(mae => mae.motivo === 'SUG').forEach(mae => {
       aoa.push(['BLEND', mae.mae, '', '', mae.motivoLabel,
         mae.saldoTotal===null?'':mae.saldoTotal,
         mae.cobAtual===null?'':+mae.cobAtual.toFixed(1), mae.cobProj===null?'':+mae.cobProj.toFixed(1),
@@ -2839,107 +2964,160 @@ function rpExportarExcel(){
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, aba);
   const sufixo = _rpView === 'pa' ? '_PA' : '';
-  const nome = `Recomendacao_Producao${sufixo}${bloco?('_'+bloco.replace(/[^\wÀ-ÿ]+/g,'_')):''}.xlsx`;
+  const nome = `Recomendacao_Producao_Estoque${sufixo}${bloco?('_'+bloco.replace(/[^\wÀ-ÿ]+/g,'_')):''}.xlsx`;
   XLSX.writeFile(wb, nome);
 }
 
-// Gera um PDF (A4, 1 página) com o detalhamento das recomendações de produção
-// exibidas em "Plano de Produção Sugerido". Reduz fonte/espaçamento progressivamente
-// até a tabela caber inteira em uma única folha.
+// Gera um PDF com 3 páginas, uma por sub-aba — na mesma ordem e régua da tela:
+//  1) SALDO NEGATIVO — quantidade exata a repor + receitas.
+//  2) PRODUTO ACABADO — produzir para estoque (cobertura baixa), achatado por P.A.
+//  3) BLEND (pré-pesagem) — produzir para estoque, com os P.A. de cada blend sempre
+//     expandidos abaixo da linha-mãe (sem toggle/colapso, pra ficar tudo visível no papel).
+// Cada página tenta caber sozinha em 1 folha, reduzindo fonte/espaçamento progressivamente.
 function rpExportarPDF(){
-  if(!_rpRecs.length){ alert('Nada para exportar. Importe um relatório primeiro.'); return; }
+  if(!_rpDados){ alert('Nada para exportar. Importe um relatório primeiro.'); return; }
   if(!window.jspdf || !window.jspdf.jsPDF){ alert('Biblioteca de PDF não carregou. Verifique sua conexão e tente novamente.'); return; }
   const { jsPDF } = window.jspdf;
 
-  const bloco = _rpDados ? (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo : '';
+  const bloco = (_rpDados.blocos[_rpDados.blocoIdx]||{}).titulo || '';
   const coberturaSel = document.getElementById('rp-sel-cobertura');
   const coberturaTxt = coberturaSel ? (coberturaSel.value + ' dia(s)') : '—';
   const dataEl = document.getElementById('rp-data');
   const dataTxt = dataEl && dataEl.value ? dataEl.value.split('-').reverse().join('/') : '—';
+  const geradoTxt = new Date().toLocaleString('pt-BR');
 
-  // Monta as linhas: BLEND (mãe) seguido dos filhotes (P.A.) indentados,
-  // igual à hierarquia mostrada na tabela em tela.
-  const head = [['Motivo','BLEND / Produto','Saldo relat.','Cob. atual (d)','Cob. proj. (d)','Receitas','Unidades']];
-  const body = [];
-  _rpRecs.forEach(mae => {
-    // "OBRIGATÓRIO" só se aplica de fato ao P.A. com saldo negativo. Numa mãe "única"
-    // (1 produto só) a linha do blend e a do P.A. são a mesma coisa, então herda o motivo.
-    // Numa mãe com vários filhotes, a linha do blend é só um agrupador — o motivo real
-    // (obrigatório ou não) é decidido produto a produto, abaixo.
-    body.push([
-      mae.unica ? (mae.motivo === 'OBRIG' ? 'OBRIGATÓRIO' : 'Sugestão') : '',
-      mae.mae,
-      mae.saldoTotal===null||mae.saldoTotal===undefined ? '—' : mae.saldoTotal,
-      mae.cobAtual===null||mae.cobAtual===undefined ? '—' : mae.cobAtual.toFixed(1),
-      mae.cobProj===null||mae.cobProj===undefined ? '—' : mae.cobProj.toFixed(1),
-      mae.receitas,
-      mae.undTotal
-    ]);
-    if(!mae.unica){
-      mae.filhotes.forEach(f => {
-        const fObrig = (f.saldo !== null && f.saldo !== undefined && f.saldo < 0);
-        body.push([
-          fObrig ? 'OBRIGATÓRIO' : '',
-          '   › ' + f.produto,
-          f.saldo===null||f.saldo===undefined ? '—' : f.saldo,
-          f.cobAtual===null||f.cobAtual===undefined ? '—' : f.cobAtual.toFixed(1),
-          f.cobProj===null||f.cobProj===undefined ? '—' : f.cobProj.toFixed(1),
-          '',
-          f.und
-        ]);
-      });
-    }
-  });
+  // Mesmos conjuntos de dados das 3 sub-abas em tela.
+  const itensNeg  = _rpItensNegativos();
+  const itensPA   = _rpFlattenPA().filter(it => it.motivo === 'SUG');
+  const recsBlend = _rpRecs.filter(mae => mae.motivo === 'SUG');
 
-  const nObrig = _rpRecs.filter(r=>r.motivo==='OBRIG').length;
-  const nSug   = _rpRecs.filter(r=>r.motivo==='SUG').length;
-  const totReceitas = _rpRecs.reduce((s,r)=>s+(r.receitas||0),0);
-  const totUnd       = _rpRecs.reduce((s,r)=>s+(r.undTotal||0),0);
+  const cabecalho = (doc, titulo, linha2) => {
+    doc.setFont(undefined,'bold'); doc.setFontSize(13);
+    doc.text(titulo, 14, 12);
+    doc.setFont(undefined,'normal'); doc.setFontSize(8.5);
+    doc.text(`Bloco: ${bloco||'—'}${linha2?('   |   '+linha2):''}   |   Gerado em: ${geradoTxt}`, 14, 18);
+  };
 
-  function montarDoc(fontSize, padding){
-    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  // A fonte padrão do jsPDF (Helvetica/WinAnsi) não tem emoji nem símbolos como "↳" —
+  // eles saem corrompidos no PDF ("Ø<ß^"). E soma de floats do relatório (ex.: 0.1+0.2)
+  // gera resto de ponto flutuante (1845.6999999999998) — sempre arredonda pra inteiro
+  // e formata com separador de milhar, igual à tela.
+  const pdfNum = n => {
+    if(n===null || n===undefined) return '—';
+    const r = Math.round(n);
+    return (r>0?'+':'') + r.toLocaleString('pt-BR');
+  };
+  const pdfInt = n => (n===null||n===undefined) ? '—' : Math.round(n).toLocaleString('pt-BR');
+
+  // ---- Página 1: SALDO NEGATIVO — quantidade exata (inteira) a repor no estoque ----
+  function paginaNegativo(doc, fontSize, padding){
+    cabecalho(doc, '1/3 — SALDO NEGATIVO (produzir para sanar demanda)');
+    const totNeg = Math.abs(itensNeg.reduce((s,it)=>s+it.saldo,0));
+    const totRec = itensNeg.reduce((s,it)=>s+(it.receitas||0),0);
     doc.setFont(undefined,'bold');
-    doc.setFontSize(13);
-    doc.text('Plano de Produção Sugerido', 14, 12);
-    doc.setFont(undefined,'normal');
-    doc.setFontSize(8.5);
-    doc.text(`Bloco: ${bloco||'—'}   |   Cobertura: ${coberturaTxt}   |   Estoque CIA em: ${dataTxt}   |   Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 18);
-    doc.setFont(undefined,'bold');
-    doc.text(`Obrigatórios: ${nObrig}   |   Sugestões: ${nSug}   |   Total receitas: ${totReceitas}   |   Total unidades: ${totUnd}`, 14, 23);
+    doc.text(`Itens negativos: ${itensNeg.length}   |   Unidades a repor: ${totNeg.toLocaleString('pt-BR')}   |   Total receitas: ${totRec.toLocaleString('pt-BR')}`, 14, 23);
 
     doc.autoTable({
-      head, body,
+      head: [['Código','Produto','Família','Saldo negativo','Receitas']],
+      body: itensNeg.map(it => [it.cod, it.produto, it.familia, pdfNum(it.saldo), pdfInt(it.receitas)]),
+      startY: 27,
+      margin: { left:8, right:8, bottom:8 },
+      styles: { fontSize, cellPadding: padding, overflow:'linebreak', valign:'middle' },
+      headStyles: { fillColor:[176,32,32], textColor:255, fontStyle:'bold', fontSize: Math.min(fontSize+0.5, 9) },
+      columnStyles: {
+        0:{cellWidth:22, halign:'left'}, 1:{cellWidth:'auto', halign:'left'}, 2:{cellWidth:32, halign:'left'},
+        3:{halign:'right', cellWidth:28}, 4:{halign:'right', cellWidth:18}
+      },
+      didParseCell: (data) => {
+        if(data.section==='body' && data.column.index===3) data.cell.styles.textColor = [176,32,32];
+      }
+    });
+  }
+
+  // ---- Página 2: PRODUTO ACABADO — produzir para estoque (achatado, 1 linha por P.A.) ----
+  function paginaPA(doc, fontSize, padding){
+    cabecalho(doc, '2/3 — PRODUTO ACABADO (produzir para estoque)', `Cobertura: ${coberturaTxt}   |   Estoque CIA em: ${dataTxt}`);
+    const totUnd = itensPA.reduce((s,it)=>s+(it.und||0),0);
+    doc.setFont(undefined,'bold');
+    doc.text(`Sugestões: ${itensPA.length}   |   Total unidades: ${totUnd.toLocaleString('pt-BR')}`, 14, 23);
+
+    doc.autoTable({
+      head: [['Código','Produto','Saldo relat.','Cob. atual (d)','Cob. proj. (d)','Unidades a produzir']],
+      body: itensPA.map(it => [it.cod, it.produto,
+        pdfNum(it.saldo),
+        it.cobAtual===null||it.cobAtual===undefined?'—':it.cobAtual.toFixed(1),
+        it.cobProj===null||it.cobProj===undefined?'—':it.cobProj.toFixed(1),
+        pdfInt(it.und)]),
+      startY: 27,
+      margin: { left:8, right:8, bottom:8 },
+      styles: { fontSize, cellPadding: padding, overflow:'linebreak', valign:'middle' },
+      headStyles: { fillColor:[200,121,26], textColor:255, fontStyle:'bold', fontSize: Math.min(fontSize+0.5, 9) },
+      columnStyles: {
+        0:{cellWidth:22, halign:'left'}, 1:{cellWidth:'auto', halign:'left'},
+        2:{halign:'right', cellWidth:20}, 3:{halign:'right', cellWidth:20},
+        4:{halign:'right', cellWidth:20}, 5:{halign:'right', cellWidth:28}
+      }
+    });
+  }
+
+  // ---- Página 3: BLEND (pré-pesagem) — cada blend com os P.A. filhotes SEMPRE
+  // expandidos logo abaixo (sem toggle, pro papel mostrar tudo de uma vez). ----
+  function paginaBlend(doc, fontSize, padding){
+    cabecalho(doc, '3/3 — BLEND / PRÉ-PESAGEM (produzir para estoque)', `Cobertura: ${coberturaTxt}   |   Estoque CIA em: ${dataTxt}`);
+    const totReceitas = recsBlend.reduce((s,r)=>s+(r.receitas||0),0);
+    const totUnd = recsBlend.reduce((s,r)=>s+(r.undTotal||0),0);
+    doc.setFont(undefined,'bold');
+    doc.text(`Blends: ${recsBlend.length}   |   Total receitas: ${totReceitas.toLocaleString('pt-BR')}   |   Total unidades: ${totUnd.toLocaleString('pt-BR')}`, 14, 23);
+
+    const body = [];
+    const linhasMae = []; // índices (no body) das linhas-mãe, pra destacar em negrito
+    recsBlend.forEach(mae => {
+      linhasMae.push(body.length);
+      body.push([mae.mae,
+        pdfNum(mae.saldoTotal),
+        mae.cobAtual===null||mae.cobAtual===undefined?'—':mae.cobAtual.toFixed(1),
+        mae.cobProj===null||mae.cobProj===undefined?'—':mae.cobProj.toFixed(1),
+        pdfInt(mae.receitas), pdfInt(mae.undTotal)]);
+      if(!mae.unica){
+        mae.filhotes.forEach(f => body.push(['   - ' + f.produto,
+          pdfNum(f.saldo),
+          f.cobAtual===null||f.cobAtual===undefined?'—':f.cobAtual.toFixed(1),
+          f.cobProj===null||f.cobProj===undefined?'—':f.cobProj.toFixed(1),
+          '', pdfInt(f.und)]));
+      }
+    });
+
+    doc.autoTable({
+      head: [['BLEND / Produto','Saldo relat.','Cob. atual (d)','Cob. proj. (d)','Receitas','Unidades']],
+      body,
       startY: 27,
       margin: { left:8, right:8, bottom:8 },
       styles: { fontSize, cellPadding: padding, overflow:'linebreak', valign:'middle' },
       headStyles: { fillColor:[200,121,26], textColor:255, fontStyle:'bold', fontSize: Math.min(fontSize+0.5, 9) },
       columnStyles: {
         0:{cellWidth:'wrap', halign:'left'},
-        2:{halign:'right', cellWidth:18},
-        3:{halign:'right', cellWidth:20},
-        4:{halign:'right', cellWidth:20},
-        5:{halign:'right', cellWidth:16},
-        6:{halign:'right', cellWidth:18}
+        1:{halign:'right', cellWidth:22}, 2:{halign:'right', cellWidth:22}, 3:{halign:'right', cellWidth:22},
+        4:{halign:'right', cellWidth:18}, 5:{halign:'right', cellWidth:20}
       },
       didParseCell: (data) => {
-        if(data.section==='body' && data.row.raw[0]==='OBRIGATÓRIO'){
-          data.cell.styles.textColor = [176,32,32];
-        }
+        if(data.section==='body' && linhasMae.includes(data.row.index)) data.cell.styles.fontStyle = 'bold';
       }
     });
-    return doc;
   }
 
-  // Tenta reduzir fonte/espaçamento progressivamente até a tabela caber em 1 página só.
-  const tentativas = [[8,1.6],[7.5,1.3],[7,1.1],[6.5,0.9],[6,0.75],[5.5,0.6],[5,0.5],[4.5,0.4]];
-  let doc, coube = false;
-  for(const [fs,pad] of tentativas){
-    doc = montarDoc(fs, pad);
-    if(doc.internal.getNumberOfPages() === 1){ coube = true; break; }
-  }
-  if(!coube){
-    alert('Aviso: a lista de recomendações é muito extensa e o PDF ficou com mais de 1 página mesmo com a fonte reduzida ao mínimo.');
-  }
+  const secoes = [paginaNegativo, paginaPA, paginaBlend];
+
+  // Fonte fixa e legível — se a lista de uma seção não couber em 1 página, o autoTable
+  // continua sozinho pra página seguinte (repetindo o cabeçalho da tabela), em vez de
+  // espremer a fonte até cortar/sobrepor a última linha contra a borda da folha.
+  const FONT = 7.5, PADDING = 1.3;
+
+  // Monta o PDF final: uma seção por página, na ordem Negativo → P.A. → Blend.
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  secoes.forEach((montar, i) => {
+    if(i > 0) doc.addPage();
+    montar(doc, FONT, PADDING);
+  });
 
   const sufixo = bloco ? ('_'+bloco.replace(/[^\wÀ-ÿ]+/g,'_')) : '';
   doc.save(`Plano_Producao_Sugerido${sufixo}.pdf`);
@@ -3009,7 +3187,9 @@ function _rpPlanoRatear(item){
 // Copia a recomendação (mãe-agrupada) para o plano editável.
 function rpMontarPlano(){
   if(!_rpRecs.length){ alert('Sem recomendação para puxar. Importe um relatório primeiro.'); return; }
-  _rpPlano = _rpRecs.map(m => ({
+  // Só puxa produção pra estoque (sugestão por cobertura baixa) — 'OK' (nada a produzir)
+  // e 'OBRIG' (saldo negativo, já coberto pela aba própria) ficam de fora do MRP.
+  _rpPlano = _rpRecs.filter(m => m.motivo === 'SUG').map(m => ({
     mae:m.mae, unica:m.unica, rend:m.rend, receitas:m.receitas, undTotal:m.undTotal,
     filhotes: m.filhotes.map(f=>({cod:f.cod, produto:f.produto, peso:f.peso, und:f.und}))
   }));
